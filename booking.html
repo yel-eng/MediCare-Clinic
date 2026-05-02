@@ -8,16 +8,30 @@
 
 <body>
 
-<h2>حجز موعد</h2>
+<header class="header">
+  <div class="logo">🩺 MyDoctor</div>
+  <nav class="nav">
+    <a href="index.html">الرئيسية</a>
+    <a href="booking.html">الحجز</a>
+    <a href="login.html">تسجيل الدخول</a>
+  </nav>
+</header>
 
-<input id="name" placeholder="الاسم">
-<input id="phone" placeholder="الهاتف">
-<input type="date" id="date">
-<input type="time" id="time">
+<section class="section">
+  <h2>حجز موعد</h2>
 
-<button onclick="book()">احجز</button>
+  <input id="name" placeholder="الاسم">
+  <input id="phone" placeholder="الهاتف">
+  <input type="date" id="date">
+  <input type="time" id="time">
+
+  <button onclick="book()">احجز</button>
+</section>
+
+<footer class="footer">
+  <p>© 2026 MyDoctor Clinic</p>
+</footer>
 
 <script src="script.js"></script>
-
 </body>
 </html>
