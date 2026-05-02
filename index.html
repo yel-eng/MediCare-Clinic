@@ -18,7 +18,7 @@ body{
   display:flex;
   justify-content:center;
   gap:20px;
-  background:#1e88e5;
+  background:#1976d2;
   padding:15px;
 }
 
@@ -29,34 +29,27 @@ body{
 }
 
 .hero{
-  height:60vh;
+  height:65vh;
+  background:url("https://images.unsplash.com/photo-1580281657527-47f249e8f0a0") center/cover;
   display:flex;
-  flex-direction:column;
-  justify-content:center;
   align-items:center;
-  background:linear-gradient(135deg,#1e88e5,#42a5f5);
+  justify-content:center;
   color:white;
   text-align:center;
+  position:relative;
+}
+
+.hero::after{
+  content:"";
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
 }
 
 .hero h1{
-  font-size:40px;
-  margin:10px;
-}
-
-.btn{
-  background:white;
-  color:#1e88e5;
-  padding:12px 25px;
-  border-radius:30px;
-  text-decoration:none;
-  margin-top:15px;
-  font-weight:bold;
-  transition:0.3s;
-}
-
-.btn:hover{
-  transform:scale(1.05);
+  position:relative;
+  font-size:45px;
 }
 
 .section{
@@ -65,26 +58,43 @@ body{
 }
 
 .grid{
-  display:flex;
-  justify-content:center;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:20px;
-  flex-wrap:wrap;
 }
 
 .card{
   background:white;
-  padding:20px;
-  width:200px;
   border-radius:15px;
-  box-shadow:0 5px 20px rgba(0,0,0,0.1);
+  overflow:hidden;
+  box-shadow:0 10px 25px rgba(0,0,0,0.1);
+  transition:0.3s;
+}
+
+.card:hover{
+  transform:translateY(-5px);
+}
+
+.card img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+}
+
+.card h3{
+  padding:10px;
+}
+
+.video iframe{
+  width:100%;
+  height:180px;
 }
 
 footer{
-  background:#1e88e5;
+  background:#1976d2;
   color:white;
   text-align:center;
   padding:15px;
-  margin-top:30px;
 }
 </style>
 
@@ -101,9 +111,6 @@ footer{
 <!-- HERO -->
 <div class="hero">
   <h1>MyDoctor Clinic</h1>
-  <p>رعاية طبية متكاملة بأعلى جودة</p>
-
-  <a href="booking.html" class="btn">احجز الآن</a>
 </div>
 
 <!-- SERVICES -->
@@ -113,43 +120,40 @@ footer{
   <div class="grid">
 
     <div class="card">
-      <i class="fa-solid fa-stethoscope"></i>
-      <h3>كشف عام</h3>
+      <img src="https://images.unsplash.com/photo-1580281657527-47f249e8f0a0">
+      <h3>كشف طبي</h3>
     </div>
 
     <div class="card">
-      <i class="fa-solid fa-heart-pulse"></i>
-      <h3>متابعة القلب</h3>
-    </div>
-
-    <div class="card">
-      <i class="fa-solid fa-syringe"></i>
+      <img src="https://images.unsplash.com/photo-1581595219317-8fdbf0b7f0f5">
       <h3>تحاليل</h3>
+    </div>
+
+    <div class="card">
+      <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67">
+      <h3>متابعة</h3>
     </div>
 
   </div>
 </div>
 
-<!-- DOCTOR -->
+<!-- VIDEOS -->
 <div class="section">
-  <h2>الطبيب</h2>
-
-  <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7" width="200" style="border-radius:50%">
-
-  <h3>د/ أحمد علي</h3>
-  <p>استشاري باطنة وقلب</p>
+  <h2>فيديوهات طبية</h2>
+  <div id="videos" class="grid"></div>
 </div>
 
-<!-- CTA -->
-<div class="section" style="background:#e3f2fd">
-  <h2>احجز موعدك الآن</h2>
-  <a href="booking.html" class="btn">ابدأ الحجز</a>
+<!-- BLOG -->
+<div class="section">
+  <h2>مقالات طبية</h2>
+  <div id="blogs" class="grid"></div>
 </div>
 
-<!-- FOOTER -->
 <footer>
-  © 2026 MyDoctor Clinic - All Rights Reserved
+© MyDoctor Clinic
 </footer>
+
+<script src="script.js"></script>
 
 </body>
 </html>
