@@ -11,22 +11,15 @@
 
 <input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Password">
+
 <button onclick="login()">Login</button>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
+<script src="firebase.js"></script>
+
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
-  authDomain: "mydoctor-clinic.firebaseapp.com",
-  projectId: "mydoctor-clinic"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
 function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
