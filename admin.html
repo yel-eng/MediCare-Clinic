@@ -7,6 +7,22 @@
 
 <body>
 
+<script>
+if (localStorage.getItem("admin") !== "true") {
+  window.location.href = "login.html";
+}
+
+function logout() {
+  localStorage.removeItem("admin");
+  window.location.href = "login.html";
+}
+</script>
+
+<button onclick="logout()">Logout</button>
+
+
+
+  
 <h1>Admin Dashboard</h1>
 
 <button onclick="logout()">Logout</button>
