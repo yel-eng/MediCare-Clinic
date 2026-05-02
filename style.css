@@ -1,76 +1,59 @@
 body {
   font-family: Arial;
   margin: 0;
-  text-align: center;
   direction: rtl;
+  text-align: center;
   background: #f4f9ff;
 }
 
-/* الهيرو */
-
+/* HERO */
 .hero {
   height: 90vh;
+  background: url('https://images.unsplash.com/photo-1588776814546-1ffcf47267a5');
+  background-size: cover;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  position: relative;
 }
 
 .overlay {
   background: rgba(0,0,0,0.5);
   padding: 40px;
+  color: white;
   border-radius: 20px;
+  animation: fadeIn 1s ease-in;
 }
 
-
-/* زر */
+/* BUTTON */
 .btn {
-  background: white;
-  color: #0d6efd;
-  padding: 12px 22px;
-  text-decoration: none;
-  border-radius: 10px;
-  display: inline-block;
-  margin-top: 15px;
-  font-weight: bold;
-  transition: 0.3s;
-}
-
-.btn:hover {
-  transform: scale(1.05);
-}
-
-/* الخدمات */
-.services {
-  padding: 40px;
-}
-
-.doctor {
-  padding: 50px;
   background: #fff;
+  color: #0d6efd;
+  padding: 12px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 10px;
 }
 
-.doctor img {
-  width: 180px;
-  border-radius: 50%;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+/* SERVICES */
+.grid {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .card {
   background: white;
-  display: inline-block;
-  margin: 15px;
-  padding: 15px;
   width: 220px;
+  padding: 15px;
   border-radius: 15px;
   box-shadow: 0 10px 20px rgba(0,0,0,0.1);
   transition: 0.3s;
-  animation: fadeUp 0.8s ease-in;
 }
 
 .card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-10px);
 }
 
 .card img {
@@ -78,7 +61,13 @@ body {
   border-radius: 10px;
 }
 
-/* فورم */
+/* DOCTOR */
+.doctor img {
+  width: 150px;
+  border-radius: 50%;
+}
+
+/* FORM */
 .form-box {
   margin-top: 100px;
 }
@@ -86,33 +75,24 @@ body {
 input {
   display: block;
   margin: 10px auto;
-  padding: 12px;
-  width: 260px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  padding: 10px;
+  width: 250px;
 }
 
-button {
-  padding: 12px 20px;
-  background: #0d6efd;
+/* WHATSAPP FLOAT */
+.whatsapp {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #25D366;
   color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+  padding: 15px;
+  border-radius: 50%;
+  font-size: 22px;
 }
 
-/* تأكيد */
-.confirm-box {
-  margin-top: 120px;
-}
-
-/* أنيميشن */
+/* ANIMATION */
 @keyframes fadeIn {
   from {opacity: 0;}
   to {opacity: 1;}
-}
-
-@keyframes fadeUp {
-  from {transform: translateY(20px); opacity: 0;}
-  to {transform: translateY(0); opacity: 1;}
 }
