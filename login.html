@@ -7,12 +7,12 @@
 
 <body>
 
-<h2>Admin Login</h2>
+<h2>تسجيل الدخول</h2>
 
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 
-<button onclick="login()">Login</button>
+<button onclick="login()">دخول</button>
 
 <script>
 function login() {
@@ -23,7 +23,7 @@ function login() {
     localStorage.setItem("admin", "true");
     window.location.href = "admin.html";
   } else {
-    alert("بيانات غلط ❌");
+    alert("بيانات غير صحيحة ❌");
   }
 }
 </script>
