@@ -3,25 +3,32 @@ body {
   margin: 0;
   text-align: center;
   direction: rtl;
-  background: #f5f7fb;
+  background: #f4f9ff;
 }
 
 /* الهيرو */
 .hero {
-  background: linear-gradient(135deg, #2c7be5, #1a5fd1);
+  background: linear-gradient(135deg, #1e90ff, #0d6efd);
   color: white;
-  padding: 70px 20px;
+  padding: 80px 20px;
+  animation: fadeIn 1s ease-in;
 }
 
+/* زر */
 .btn {
   background: white;
-  color: #2c7be5;
-  padding: 12px 20px;
-  border-radius: 8px;
+  color: #0d6efd;
+  padding: 12px 22px;
   text-decoration: none;
+  border-radius: 10px;
   display: inline-block;
-  margin-top: 10px;
+  margin-top: 15px;
   font-weight: bold;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  transform: scale(1.05);
 }
 
 /* الخدمات */
@@ -34,9 +41,15 @@ body {
   display: inline-block;
   margin: 15px;
   padding: 15px;
-  width: 200px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  width: 220px;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transition: 0.3s;
+  animation: fadeUp 0.8s ease-in;
+}
+
+.card:hover {
+  transform: translateY(-8px);
 }
 
 .card img {
@@ -46,37 +59,39 @@ body {
 
 /* فورم */
 .form-box {
-  margin-top: 80px;
+  margin-top: 100px;
 }
 
 input {
   display: block;
   margin: 10px auto;
-  padding: 10px;
-  width: 250px;
+  padding: 12px;
+  width: 260px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 button {
-  padding: 10px 20px;
-  background: #2c7be5;
+  padding: 12px 20px;
+  background: #0d6efd;
   color: white;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
 }
 
 /* تأكيد */
 .confirm-box {
-  margin-top: 100px;
+  margin-top: 120px;
 }
 
-/* واتساب */
-.whatsapp {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #25D366;
-  color: white;
-  padding: 15px;
-  border-radius: 50%;
-  font-size: 22px;
+/* أنيميشن */
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+@keyframes fadeUp {
+  from {transform: translateY(20px); opacity: 0;}
+  to {transform: translateY(0); opacity: 1;}
 }
