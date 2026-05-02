@@ -34,7 +34,29 @@ function saveReview() {
 
   localStorage.setItem("reviews", JSON.stringify(reviews));
 
+  displayReviews(); // 👈 عرض مباشر
+
   alert("شكراً لرأيك ❤️");
 
   closeReviewForm();
+}
+function displayReviews() {
+  let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+
+  let container = document.getElementById("reviewsList");
+
+  container.innerHTML = "";
+
+  reviews.forEach(r => {
+    container.innerHTML += `
+      <div class="testi-card">
+        <p>"${r.text}"</p>
+        <h4>- ${r.name}</h4>
+      </div>
+    `;
+  });
+}
+
+window.onload = function() {
+  displayReviews();
 }
