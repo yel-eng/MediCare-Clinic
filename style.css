@@ -96,3 +96,27 @@ input {
   from {opacity: 0;}
   to {opacity: 1;}
 }
+.testimonials {
+  padding: 50px;
+  background: #fff;
+}
+
+.testi-grid {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.testi-card {
+  background: #f4f9ff;
+  padding: 20px;
+  width: 250px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+
+.testi-card:hover {
+  transform: scale(1.05);
+}
