@@ -9,23 +9,21 @@
 
 <h2>Admin Login</h2>
 
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 
 <button onclick="login()">Login</button>
 
 <script>
 function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  let email = document.getElementById("email").value;
+  let pass = document.getElementById("password").value;
 
-  // 👇 بيانات الأدمن الثابتة
-  if (email === "admin@clinic.com" && password === "12345678") {
+  if (email === "admin@clinic.com" && pass === "12345678") {
     localStorage.setItem("admin", "true");
-    alert("تم تسجيل الدخول ✅");
     window.location.href = "admin.html";
   } else {
-    alert("الإيميل أو الباسورد غلط ❌");
+    alert("بيانات غلط ❌");
   }
 }
 </script>
