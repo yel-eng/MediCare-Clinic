@@ -1,0 +1,17 @@
+<h2>لوحة تحكم الدكتور</h2>
+
+<div id="allReviews"></div>
+
+<script>
+let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+
+let container = document.getElementById("allReviews");
+
+reviews.forEach(r => {
+  container.innerHTML += `
+    <div>
+      <p>${r.name} - ${r.text} (${r.rating}⭐)</p>
+    </div>
+  `;
+});
+</script>
