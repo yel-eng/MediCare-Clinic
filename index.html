@@ -3,51 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <title>MyDoctor Clinic</title>
-
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
 
-<nav class="nav">
-  <a href="index.html">الرئيسية</a>
-  <a href="booking.html">الحجز</a>
-  <a href="login.html">تسجيل الدخول</a>
-</nav>
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">🩺 MyDoctor</div>
 
-<header class="hero">
-  <div class="overlay">
-    <h1>MyDoctor Clinic</h1>
-    <p>رعاية طبية متكاملة</p>
-  </div>
+  <nav class="nav">
+    <a href="index.html">الرئيسية</a>
+    <a href="booking.html">الحجز</a>
+    <a href="login.html">تسجيل الدخول</a>
+  </nav>
 </header>
 
+<!-- HERO -->
+<section class="hero">
+  <h1>MyDoctor Clinic</h1>
+  <p>رعاية طبية متكاملة بأعلى جودة</p>
+</section>
+
+<!-- SERVICES -->
 <section class="section">
   <h2>خدماتنا</h2>
-
   <div class="grid">
-    <div class="card">
-      <img src="https://images.unsplash.com/photo-1580281657527-47f249e8f0a0">
-      <h3>كشف طبي</h3>
-    </div>
-
-    <div class="card">
-      <img src="https://images.unsplash.com/photo-1581595219317-8fdbf0b7f0f5">
-      <h3>تحاليل</h3>
-    </div>
+    <div class="card">كشف طبي</div>
+    <div class="card">تحاليل</div>
+    <div class="card">متابعة مرضى</div>
   </div>
 </section>
 
+<!-- VIDEOS -->
 <section class="section">
   <h2>فيديوهات</h2>
   <div id="videos" class="grid"></div>
 </section>
 
+<!-- BLOGS -->
 <section class="section">
   <h2>مقالات</h2>
   <div id="blogs" class="grid"></div>
 </section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>© 2026 MyDoctor Clinic - جميع الحقوق محفوظة</p>
+  <div class="social">
+    <a href="#"><i class="fab fa-facebook"></i></a>
+    <a href="#"><i class="fab fa-whatsapp"></i></a>
+    <a href="#"><i class="fab fa-instagram"></i></a>
+  </div>
+</footer>
 
 <script src="script.js"></script>
 </body>
