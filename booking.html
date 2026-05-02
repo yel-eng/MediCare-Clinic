@@ -23,7 +23,12 @@ function book() {
   let date = document.getElementById("date").value;
   let time = document.getElementById("time").value;
 
-  let msg = `حجز موعد:\nالاسم: ${name}\nالهاتف: ${phone}\nالتاريخ: ${date}\nالوقت: ${time}`;
+  localStorage.setItem("name", name);
+  localStorage.setItem("phone", phone);
+  localStorage.setItem("date", date);
+  localStorage.setItem("time", time);
+
+  let msg = `حجز موعد:\n${name}\n${phone}\n${date}\n${time}`;
 
   window.open("https://wa.me/201227630041?text=" + encodeURIComponent(msg));
 
