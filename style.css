@@ -120,3 +120,37 @@ input {
 .testi-card:hover {
   transform: scale(1.05);
 }
+.review-box {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.review-content {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  width: 300px;
+}
+
+.review-content input,
+.review-content textarea {
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+}
+
+.review-btn {
+  background: #2c7be5;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
