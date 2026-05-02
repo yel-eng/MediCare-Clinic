@@ -1,17 +1,46 @@
-<h2>لوحة تحكم الدكتور</h2>
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+</head>
 
-<div id="allReviews"></div>
+<body>
+
+<h2>Admin Login</h2>
+
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
+<button onclick="login()">Login</button>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <script>
-let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic"
+};
 
-let container = document.getElementById("allReviews");
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-reviews.forEach(r => {
-  container.innerHTML += `
-    <div>
-      <p>${r.name} - ${r.text} (${r.rating}⭐)</p>
-    </div>
-  `;
-});
+function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      alert("تم تسجيل الدخول ✅");
+      window.location.href = "admin.html";
+    })
+    .catch(error => {
+      alert(error.message);
+    });
+}
 </script>
+
+</body>
+</html>
