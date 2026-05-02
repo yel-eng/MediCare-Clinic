@@ -1,62 +1,34 @@
+/**********************
+ * BOOKING SYSTEM
+***********************/
+
 function book() {
   let name = document.getElementById("name").value;
   let phone = document.getElementById("phone").value;
   let date = document.getElementById("date").value;
   let time = document.getElementById("time").value;
 
+  if (!name || !phone || !date || !time) {
+    alert("من فضلك املأ كل البيانات");
+    return;
+  }
+
   localStorage.setItem("name", name);
   localStorage.setItem("phone", phone);
   localStorage.setItem("date", date);
   localStorage.setItem("time", time);
 
-  // WhatsApp Auto Message
   let msg = `مرحبا، أريد حجز موعد:\nالاسم: ${name}\nالهاتف: ${phone}\nالتاريخ: ${date}\nالوقت: ${time}`;
 
-  window.open(`https://wa.me/201227630041?text=${encodeURIComponent(msg)}`);
+  window.open("https://wa.me/201227630041?text=" + encodeURIComponent(msg));
 
   window.location.href = "confirm.html";
 }
-function openReviewForm() {
-  document.getElementById("reviewBox").style.display = "flex";
-}
 
-function closeReviewForm() {
-  document.getElementById("reviewBox").style.display = "none";
-}
 
-function saveReview() {
-  let name = document.getElementById("rName").value;
-  let text = document.getElementById("rText").value;
-
-  let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
-
-  reviews.push({ name, text, rating: selectedRating });
-
-  localStorage.setItem("reviews", JSON.stringify(reviews));
-
-  displayReviews();
-  closeReviewForm();
-}
-function displayReviews() {
-  let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
-
-  let container = document.getElementById("reviewsList");
-
-  container.innerHTML = "";
-
-  reviews.forEach(r => {
-    container.innerHTML += `
-      <div class="testi-card">
-        <p>"${r.text}"</p>
-        <h4>- ${r.name}</h4>
-      </div>
-    `;
-  });
-}
-
-window.onload = function() {
-  displayReviews();
-}
+/**********************
+ * REVIEWS SYSTEM
+***********************/
 
 let selectedRating = 0;
 
@@ -69,18 +41,75 @@ function rate(num) {
     s.style.color = i < num ? "gold" : "gray";
   });
 }
-function loadDashboard(){
 
+function openReviewForm() {
+  document.getElementById("reviewBox").style.display = "flex";
+}
+
+function closeReviewForm() {
+  document.getElementById("reviewBox").style.display = "none";
+}
+
+function saveReview() {
+  let name = document.getElementById("rName").value;
+  let text = document.getElementById("rText").value;
+
+  if (!name || !text || selectedRating === 0) {
+    alert("من فضلك اكتب الاسم والتقييم والرأي");
+    return;
+  }
+
+  let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+
+  reviews.push({
+    name: name,
+    text: text,
+    rating: selectedRating
+  });
+
+  localStorage.setItem("reviews", JSON.stringify(reviews));
+
+  displayReviews();
+  closeReviewForm();
+}
+
+function displayReviews() {
+  let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+
+  let container = document.getElementById("reviewsList");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  reviews.forEach(r => {
+    container.innerHTML += `
+      <div class="testi-card">
+        <p>"${r.text}"</p>
+        <h4>- ${r.name}</h4>
+        <small>⭐ ${r.rating}/5</small>
+      </div>
+    `;
+  });
+}
+
+
+/**********************
+ * LOAD ON PAGE START
+***********************/
+
+window.onload = function () {
+  displayReviews();
+};
+
+
+/**********************
+ * ADMIN DASHBOARD (LOCAL VERSION)
+***********************/
+
+function loadDashboard() {
   document.body.innerHTML += `
-    <h3>إضافة فيديو</h3>
-    <input id="videoUrl" placeholder="Video URL">
-    <input id="videoText" placeholder="وصف">
-    <button onclick="addVideo()">إضافة</button>
-
-    <h3>إضافة مقال</h3>
-    <input id="blogTitle" placeholder="العنوان">
-    <textarea id="blogText"></textarea>
-    <button onclick="addBlog()">إضافة</button>
+    <h2>Admin Dashboard</h2>
 
     <h3>الحجوزات</h3>
     <div id="bookings"></div>
@@ -89,93 +118,33 @@ function loadDashboard(){
     <div id="reviews"></div>
   `;
 
-  // تحميل البيانات
-  db.collection("bookings").get().then(snap=>{
-    snap.forEach(doc=>{
-      document.getElementById("bookings").innerHTML += `
-        <p>${doc.data().name} - ${doc.data().phone}</p>
-      `;
-    });
-  });
+  // bookings from localStorage (simple version)
+  let name = localStorage.getItem("name");
+  let phone = localStorage.getItem("phone");
+  let date = localStorage.getItem("date");
+  let time = localStorage.getItem("time");
 
-  db.collection("reviews").get().then(snap=>{
-    snap.forEach(doc=>{
-      document.getElementById("reviews").innerHTML += `
-        <p>${doc.data().name} ⭐${doc.data().rating}</p>
-      `;
-    });
-  });
-}
-function addVideo(){
-  db.collection("videos").add({
-    url: videoUrl.value,
-    text: videoText.value
-  });
-}
-function addBlog(){
-  db.collection("blogs").add({
-    title: blogTitle.value,
-    text: blogText.value
-  });
-}
-db.collection("bookings").add({
-  name: name,
-  phone: phone,
-  date: date,
-  time: time
-});
+  let bookingsDiv = document.getElementById("bookings");
 
-db.collection("reviews").add({
-  name: name,
-  text: text,
-  rating: selectedRating
-});
+  if (name) {
+    bookingsDiv.innerHTML = `
+      <p>الاسم: ${name}</p>
+      <p>الهاتف: ${phone}</p>
+      <p>التاريخ: ${date}</p>
+      <p>الوقت: ${time}</p>
+    `;
+  }
 
-db.collection("videos").get().then(snap=>{
-  snap.forEach(doc=>{
-    document.getElementById("videosSection").innerHTML += `
-      <div>
-        <iframe src="${doc.data().url}"></iframe>
-        <p>${doc.data().text}</p>
-      </div>
+  // reviews
+  let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+
+  let reviewsDiv = document.getElementById("reviews");
+
+  reviews.forEach(r => {
+    reviewsDiv.innerHTML += `
+      <p>${r.name} ⭐ ${r.rating}</p>
+      <p>${r.text}</p>
+      <hr>
     `;
   });
-});
-
-db.collection("blogs").get().then(snap=>{
-  snap.forEach(doc=>{
-    document.getElementById("blogSection").innerHTML += `
-      <div>
-        <h3>${doc.data().title}</h3>
-        <p>${doc.data().text}</p>
-      </div>
-    `;
-  });
-});
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-
-const auth = getAuth();
-
-function register() {
-  const email = "admin@clinic.com";
-  const password = "12345678";
-
-  createUserWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      console.log("Admin created:", userCredential.user);
-      alert("تم إنشاء الأدمن");
-    })
-    .catch((error) => {
-      console.log(error.message);
-    });
-}
-
-import { signInWithEmailAndPassword } from "firebase/auth";
-
-function login() {
-  signInWithEmailAndPassword(auth, "admin@clinic.com", "12345678")
-    .then(() => {
-      window.location.href = "/admin";
-    })
-    .catch(err => alert(err.message));
 }
