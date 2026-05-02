@@ -30,14 +30,11 @@ function saveReview() {
 
   let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
 
-  reviews.push({ name, text });
+  reviews.push({ name, text, rating: selectedRating });
 
   localStorage.setItem("reviews", JSON.stringify(reviews));
 
-  displayReviews(); // 👈 عرض مباشر
-
-  alert("شكراً لرأيك ❤️");
-
+  displayReviews();
   closeReviewForm();
 }
 function displayReviews() {
@@ -59,4 +56,16 @@ function displayReviews() {
 
 window.onload = function() {
   displayReviews();
+}
+
+let selectedRating = 0;
+
+function rate(num) {
+  selectedRating = num;
+
+  let stars = document.querySelectorAll(".stars span");
+
+  stars.forEach((s, i) => {
+    s.style.color = i < num ? "gold" : "gray";
+  });
 }
