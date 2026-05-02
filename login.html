@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Login</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -15,15 +16,15 @@
 <button onclick="login()">دخول</button>
 
 <script>
-function login() {
-  let email = document.getElementById("email").value;
-  let pass = document.getElementById("password").value;
+function login(){
+  let email=document.getElementById("email").value;
+  let pass=document.getElementById("password").value;
 
-  if (email === "admin@clinic.com" && pass === "12345678") {
-    localStorage.setItem("admin", "true");
-    window.location.href = "admin.html";
-  } else {
-    alert("بيانات غير صحيحة ❌");
+  if(email==="admin@clinic.com" && pass==="12345678"){
+    localStorage.setItem("admin","true");
+    window.location.href="admin.html";
+  }else{
+    alert("بيانات خطأ ❌");
   }
 }
 </script>
