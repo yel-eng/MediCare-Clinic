@@ -5,24 +5,151 @@
 <title>MyDoctor Clinic</title>
 
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f5f7fb;
+}
+
+.nav{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  background:#1e88e5;
+  padding:15px;
+}
+
+.nav a{
+  color:white;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.hero{
+  height:60vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#1e88e5,#42a5f5);
+  color:white;
+  text-align:center;
+}
+
+.hero h1{
+  font-size:40px;
+  margin:10px;
+}
+
+.btn{
+  background:white;
+  color:#1e88e5;
+  padding:12px 25px;
+  border-radius:30px;
+  text-decoration:none;
+  margin-top:15px;
+  font-weight:bold;
+  transition:0.3s;
+}
+
+.btn:hover{
+  transform:scale(1.05);
+}
+
+.section{
+  padding:50px 20px;
+  text-align:center;
+}
+
+.grid{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  width:200px;
+  border-radius:15px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+footer{
+  background:#1e88e5;
+  color:white;
+  text-align:center;
+  padding:15px;
+  margin-top:30px;
+}
+</style>
+
 </head>
 
 <body>
 
-<h1>MyDoctor Clinic</h1>
-
 <!-- NAV -->
-<nav class="nav">
+<div class="nav">
   <a href="booking.html">الحجز</a>
   <a href="login.html">تسجيل الدخول</a>
-</nav>
+</div>
 
-<section class="hero">
-  <h2>احجز موعدك بسهولة</h2>
-  <p>خدمة طبية سريعة واحترافية</p>
+<!-- HERO -->
+<div class="hero">
+  <h1>MyDoctor Clinic</h1>
+  <p>رعاية طبية متكاملة بأعلى جودة</p>
 
+  <a href="booking.html" class="btn">احجز الآن</a>
+</div>
+
+<!-- SERVICES -->
+<div class="section">
+  <h2>خدماتنا</h2>
+
+  <div class="grid">
+
+    <div class="card">
+      <i class="fa-solid fa-stethoscope"></i>
+      <h3>كشف عام</h3>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-heart-pulse"></i>
+      <h3>متابعة القلب</h3>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-syringe"></i>
+      <h3>تحاليل</h3>
+    </div>
+
+  </div>
+</div>
+
+<!-- DOCTOR -->
+<div class="section">
+  <h2>الطبيب</h2>
+
+  <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7" width="200" style="border-radius:50%">
+
+  <h3>د/ أحمد علي</h3>
+  <p>استشاري باطنة وقلب</p>
+</div>
+
+<!-- CTA -->
+<div class="section" style="background:#e3f2fd">
+  <h2>احجز موعدك الآن</h2>
   <a href="booking.html" class="btn">ابدأ الحجز</a>
-</section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  © 2026 MyDoctor Clinic - All Rights Reserved
+</footer>
 
 </body>
 </html>
