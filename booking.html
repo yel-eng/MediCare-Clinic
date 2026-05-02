@@ -2,28 +2,34 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>حجز موعد</title>
-<link rel="stylesheet" href="style.css">
+<title>Booking</title>
 </head>
 
 <body>
 
-<div class="form-box">
+<h2>حجز موعد</h2>
 
-<h2>احجز موعدك</h2>
-
-<input type="text" id="name" placeholder="اسم المريض">
-<input type="text" id="phone" placeholder="رقم الهاتف">
-
-<!-- Booking Calendar -->
+<input id="name" placeholder="الاسم">
+<input id="phone" placeholder="الهاتف">
 <input type="date" id="date">
 <input type="time" id="time">
 
-<button onclick="book()">تأكيد الحجز</button>
+<button onclick="book()">احجز</button>
 
-</div>
+<script>
+function book() {
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+  let date = document.getElementById("date").value;
+  let time = document.getElementById("time").value;
 
-<script src="script.js"></script>
+  let msg = `حجز موعد:\nالاسم: ${name}\nالهاتف: ${phone}\nالتاريخ: ${date}\nالوقت: ${time}`;
+
+  window.open("https://wa.me/201227630041?text=" + encodeURIComponent(msg));
+
+  window.location.href = "confirm.html";
+}
+</script>
 
 </body>
 </html>
