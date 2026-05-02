@@ -15,18 +15,15 @@
 <input type="text" id="name" placeholder="اسم المريض">
 <input type="text" id="phone" placeholder="رقم الهاتف">
 
+<!-- Booking Calendar -->
+<input type="date" id="date">
+<input type="time" id="time">
+
 <button onclick="book()">تأكيد الحجز</button>
 
 </div>
 
-<script>
-function book() {
-  localStorage.setItem("name", document.getElementById("name").value);
-  localStorage.setItem("phone", document.getElementById("phone").value);
-
-  window.location.href = "confirm.html";
-}
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
