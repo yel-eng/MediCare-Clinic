@@ -9,24 +9,54 @@
 </head>
 
 <body>
- <h2>Admin Login</h2>
 
-<input id="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Password">
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+</head>
 
+<body>
+
+<h2>Admin Login</h2>
+
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
 <button onclick="login()">Login</button>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+
 <script>
-function login(){
-  auth.signInWithEmailAndPassword(
-    email.value,
-    pass.value
-  ).then(()=>{
-    document.body.innerHTML = "<h2>Welcome Doctor Dashboard</h2>";
-    loadDashboard();
-  });
+// Firebase config
+const firebaseConfig = {
+  apiKey: "XXXX",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic",
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// Login function
+function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      alert("تم تسجيل الدخول ✅");
+      window.location.href = "admin.html";
+    })
+    .catch(error => {
+      alert(error.message);
+    });
 }
 </script>
+
+</body>
+</html>
 <header class="hero">
   <div class="overlay">
     <h1>عيادة MyDoctor</h1>
