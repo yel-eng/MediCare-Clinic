@@ -2,50 +2,84 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Admin</title>
+<title>حجز موعد | MyDoctor Clinic</title>
+
+<link rel="stylesheet" href="style.css">
+
+<style>
+body{
+  font-family: Arial;
+  background:#f4f7fb;
+  text-align:center;
+  margin:0;
+}
+
+.container{
+  width:90%;
+  max-width:500px;
+  margin:50px auto;
+  background:white;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+h2{
+  color:#1e88e5;
+}
+
+input{
+  width:90%;
+  padding:12px;
+  margin:10px 0;
+  border:1px solid #ddd;
+  border-radius:10px;
+  outline:none;
+}
+
+button{
+  width:95%;
+  padding:12px;
+  background:#1e88e5;
+  color:white;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:16px;
+  transition:0.3s;
+}
+
+button:hover{
+  background:#1565c0;
+}
+
+.note{
+  font-size:12px;
+  color:gray;
+  margin-top:10px;
+}
+</style>
+
 </head>
 
 <body>
 
-<h1>لوحة التحكم</h1>
+<div class="container">
 
-<button onclick="logout()">تسجيل خروج</button>
+  <h2>احجز موعدك الآن</h2>
+  <p class="note">املأ البيانات وسيتم تأكيد الحجز عبر واتساب</p>
 
-<h2>الحجوزات</h2>
-<div id="bookings"></div>
+  <input id="name" placeholder="الاسم الكامل">
+  <input id="phone" placeholder="رقم الهاتف">
 
-<h2>التقييمات</h2>
-<div id="reviews"></div>
+  <input type="date" id="date">
+  <input type="time" id="time">
 
-<script>
-if (localStorage.getItem("admin") !== "true") {
-  window.location.href = "login.html";
-}
+  <button onclick="book()">تأكيد الحجز</button>
 
-function logout() {
-  localStorage.removeItem("admin");
-  window.location.href = "login.html";
-}
+</div>
 
-// bookings
-document.getElementById("bookings").innerHTML = `
-${localStorage.getItem("name") || ""} <br>
-${localStorage.getItem("phone") || ""} <br>
-${localStorage.getItem("date") || ""} <br>
-${localStorage.getItem("time") || ""}
-`;
-
-// reviews
-let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
-
-reviews.forEach(r => {
-  document.getElementById("reviews").innerHTML += `
-    <p>${r.name} ⭐ ${r.rating}</p>
-    <p>${r.text}</p>
-    <hr>
-  `;
-});
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
