@@ -153,6 +153,25 @@ function login(){
 <a class="whatsapp" href="https://wa.me/201227630041?text=مرحبا%20أريد%20حجز%20موعد" target="_blank">
   <i class="fa-brands fa-whatsapp"></i>
 </a>
+ <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+ <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic",
+  storageBucket: "mydoctor-clinic.firebasestorage.app",
+  messagingSenderId: "996532645974",
+  appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7",
+  measurementId: "G-33CQLHP3WP"
+};
+
+// تشغيل Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Auth
+const auth = firebase.auth();
+</script>
 <script src="script.js"></script>
 </body>
 </html>
