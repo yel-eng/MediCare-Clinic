@@ -7,34 +7,16 @@
 
 <body>
 
-<h2>حجز موعد</h2>
+<h2>احجز موعد</h2>
 
 <input id="name" placeholder="الاسم">
 <input id="phone" placeholder="الهاتف">
 <input type="date" id="date">
 <input type="time" id="time">
 
-<button onclick="book()">احجز</button>
+<button onclick="book()">حجز</button>
 
-<script>
-function book() {
-  let name = document.getElementById("name").value;
-  let phone = document.getElementById("phone").value;
-  let date = document.getElementById("date").value;
-  let time = document.getElementById("time").value;
-
-  localStorage.setItem("name", name);
-  localStorage.setItem("phone", phone);
-  localStorage.setItem("date", date);
-  localStorage.setItem("time", time);
-
-  let msg = `حجز موعد:\n${name}\n${phone}\n${date}\n${time}`;
-
-  window.open("https://wa.me/201227630041?text=" + encodeURIComponent(msg));
-
-  window.location.href = "confirm.html";
-}
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
