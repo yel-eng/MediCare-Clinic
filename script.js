@@ -69,3 +69,86 @@ function rate(num) {
     s.style.color = i < num ? "gold" : "gray";
   });
 }
+function loadDashboard(){
+
+  document.body.innerHTML += `
+    <h3>إضافة فيديو</h3>
+    <input id="videoUrl" placeholder="Video URL">
+    <input id="videoText" placeholder="وصف">
+    <button onclick="addVideo()">إضافة</button>
+
+    <h3>إضافة مقال</h3>
+    <input id="blogTitle" placeholder="العنوان">
+    <textarea id="blogText"></textarea>
+    <button onclick="addBlog()">إضافة</button>
+
+    <h3>الحجوزات</h3>
+    <div id="bookings"></div>
+
+    <h3>الآراء</h3>
+    <div id="reviews"></div>
+  `;
+
+  // تحميل البيانات
+  db.collection("bookings").get().then(snap=>{
+    snap.forEach(doc=>{
+      document.getElementById("bookings").innerHTML += `
+        <p>${doc.data().name} - ${doc.data().phone}</p>
+      `;
+    });
+  });
+
+  db.collection("reviews").get().then(snap=>{
+    snap.forEach(doc=>{
+      document.getElementById("reviews").innerHTML += `
+        <p>${doc.data().name} ⭐${doc.data().rating}</p>
+      `;
+    });
+  });
+}
+function addVideo(){
+  db.collection("videos").add({
+    url: videoUrl.value,
+    text: videoText.value
+  });
+}
+function addBlog(){
+  db.collection("blogs").add({
+    title: blogTitle.value,
+    text: blogText.value
+  });
+}
+db.collection("bookings").add({
+  name: name,
+  phone: phone,
+  date: date,
+  time: time
+});
+
+db.collection("reviews").add({
+  name: name,
+  text: text,
+  rating: selectedRating
+});
+
+db.collection("videos").get().then(snap=>{
+  snap.forEach(doc=>{
+    document.getElementById("videosSection").innerHTML += `
+      <div>
+        <iframe src="${doc.data().url}"></iframe>
+        <p>${doc.data().text}</p>
+      </div>
+    `;
+  });
+});
+
+db.collection("blogs").get().then(snap=>{
+  snap.forEach(doc=>{
+    document.getElementById("blogSection").innerHTML += `
+      <div>
+        <h3>${doc.data().title}</h3>
+        <p>${doc.data().text}</p>
+      </div>
+    `;
+  });
+});
