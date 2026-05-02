@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Admin</title>
@@ -7,11 +7,31 @@
 
 <body>
 
-<h1>لوحة التحكم</h1>
+<h1>Admin Dashboard</h1>
 
-<p>مرحبًا بالأدمن 👋</p>
+<button onclick="logout()">Logout</button>
 
-<a href="index.html">الرجوع للموقع</a>
+<script>
+function logout() {
+  auth.signOut().then(() => {
+    window.location.href = "login.html";
+  });
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script src="firebase.js"></script>
+
+<script>
+// حماية الصفحة
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "login.html";
+  }
+});
+</script>
 
 </body>
 </html>
