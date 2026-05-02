@@ -1,175 +1,55 @@
-body {
-  font-family: Arial;
-  margin: 0;
-  direction: rtl;
-  text-align: center;
-  background: #f4f9ff;
+body{
+  font-family:Arial;
+  margin:0;
+  background:#f5f7fb;
+  text-align:center;
 }
 
-/* HERO */
-.hero {
-  height: 90vh;
-  background: url('https://images.unsplash.com/photo-1588776814546-1ffcf47267a5');
-  background-size: cover;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.nav{
+  background:#1976d2;
+  padding:15px;
 }
 
-.overlay {
-  background: rgba(0,0,0,0.5);
-  padding: 40px;
-  color: white;
-  border-radius: 20px;
-  animation: fadeIn 1s ease-in;
+.nav a{
+  color:white;
+  margin:10px;
+  text-decoration:none;
+  font-weight:bold;
 }
 
-/* BUTTON */
-.btn {
-  background: #fff;
-  color: #0d6efd;
-  padding: 12px 20px;
-  border-radius: 10px;
-  text-decoration: none;
-  display: inline-block;
-  margin-top: 10px;
+.hero{
+  background:#1976d2;
+  color:white;
+  padding:60px;
 }
 
-/* SERVICES */
-.grid {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
+.section{
+  padding:40px;
 }
 
-.card {
-  background: white;
-  width: 220px;
-  padding: 15px;
-  border-radius: 15px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  transition: 0.3s;
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
 }
 
-.card:hover {
-  transform: translateY(-10px);
+.card{
+  background:white;
+  padding:15px;
+  border-radius:15px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.1);
 }
 
-.card img {
-  width: 100%;
-  border-radius: 10px;
+input,textarea{
+  padding:10px;
+  margin:5px;
+  width:250px;
 }
 
-/* DOCTOR */
-.doctor img {
-  width: 150px;
-  border-radius: 50%;
-}
-
-/* FORM */
-.form-box {
-  margin-top: 100px;
-}
-
-input {
-  display: block;
-  margin: 10px auto;
-  padding: 10px;
-  width: 250px;
-}
-
-/* WHATSAPP FLOAT */
-.whatsapp {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #25D366;
-  color: white;
-  padding: 15px;
-  border-radius: 50%;
-  font-size: 22px;
-}
-
-/* ANIMATION */
-@keyframes fadeIn {
-  from {opacity: 0;}
-  to {opacity: 1;}
-}
-.testimonials {
-  padding: 50px;
-  background: #fff;
-}
-
-.testi-grid {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.testi-card {
-  background: #f4f9ff;
-  padding: 20px;
-  width: 250px;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  transition: 0.3s;
-}
-
-.testi-card:hover {
-  transform: scale(1.05);
-}
-.review-box {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-}
-
-.review-content {
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  width: 300px;
-}
-
-.review-content input,
-.review-content textarea {
-  width: 100%;
-  margin: 10px 0;
-  padding: 10px;
-}
-
-.review-btn {
-  background: #2c7be5;
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-
-.stars span {
-  font-size: 25px;
-  cursor: pointer;
-  color: gray;
-}
-
-.video-box video {
-  width: 300px;
-  border-radius: 10px;
-}
-
-.blog-card {
-  background: white;
-  margin: 15px;
-  padding: 15px;
-  border-radius: 10px;
+button{
+  padding:10px 20px;
+  background:#1976d2;
+  color:white;
+  border:none;
+  cursor:pointer;
 }
