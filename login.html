@@ -8,8 +8,6 @@
 
 <body>
 
-<div class="section">
-
 <h2>تسجيل دخول الأدمن</h2>
 
 <input id="email" placeholder="Email">
@@ -19,15 +17,15 @@
 
 <p id="msg"></p>
 
-</div>
-
 <script>
+// 👇 لازم تكون هنا في نفس الصفحة
+
 function login(){
 
   let email = document.getElementById("email").value;
   let pass = document.getElementById("password").value;
 
-  console.log(email, pass); // للتأكد
+  console.log("clicked", email, pass);
 
   if(email === "admin@clinic.com" && pass === "12345678"){
 
@@ -36,9 +34,8 @@ function login(){
     window.location.href = "admin.html";
 
   } else {
-    document.getElementById("msg").innerText = "بيانات غلط ❌";
+    document.getElementById("msg").innerText = "❌ بيانات غير صحيحة";
   }
-
 }
 </script>
 
