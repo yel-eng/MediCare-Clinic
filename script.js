@@ -152,3 +152,30 @@ db.collection("blogs").get().then(snap=>{
     `;
   });
 });
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+
+const auth = getAuth();
+
+function register() {
+  const email = "admin@clinic.com";
+  const password = "12345678";
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      console.log("Admin created:", userCredential.user);
+      alert("تم إنشاء الأدمن");
+    })
+    .catch((error) => {
+      console.log(error.message);
+    });
+}
+
+import { signInWithEmailAndPassword } from "firebase/auth";
+
+function login() {
+  signInWithEmailAndPassword(auth, "admin@clinic.com", "12345678")
+    .then(() => {
+      window.location.href = "/admin";
+    })
+    .catch(err => alert(err.message));
+}
