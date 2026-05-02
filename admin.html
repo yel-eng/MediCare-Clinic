@@ -2,48 +2,36 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Admin</title>
+<title>Admin Dashboard</title>
 </head>
 
 <body>
 
-<script>
-if (localStorage.getItem("admin") !== "true") {
-  window.location.href = "login.html";
-}
-
-function logout() {
-  localStorage.removeItem("admin");
-  window.location.href = "login.html";
-}
-</script>
-
-<button onclick="logout()">Logout</button>
-
-
-
-  
 <h1>Admin Dashboard</h1>
 
 <button onclick="logout()">Logout</button>
 
-<h3>الحجوزات</h3>
+<hr>
+
+<h2>الحجوزات</h2>
 <div id="bookings"></div>
 
-<h3>الآراء</h3>
+<h2>الآراء</h2>
 <div id="reviews"></div>
 
 <script>
+// 🔴 حماية الصفحة
 if (localStorage.getItem("admin") !== "true") {
   window.location.href = "login.html";
 }
 
+// 🔴 logout
 function logout() {
   localStorage.removeItem("admin");
   window.location.href = "login.html";
 }
 
-// عرض بيانات الحجز
+// 🔴 عرض الحجز
 let name = localStorage.getItem("name");
 let phone = localStorage.getItem("phone");
 let date = localStorage.getItem("date");
@@ -51,23 +39,25 @@ let time = localStorage.getItem("time");
 
 if (name) {
   document.getElementById("bookings").innerHTML = `
-    <p>الاسم: ${name}</p>
-    <p>الهاتف: ${phone}</p>
-    <p>التاريخ: ${date}</p>
-    <p>الوقت: ${time}</p>
+    <p>👤 الاسم: ${name}</p>
+    <p>📞 الهاتف: ${phone}</p>
+    <p>📅 التاريخ: ${date}</p>
+    <p>⏰ الوقت: ${time}</p>
   `;
 }
 
-// reviews
+// 🔴 عرض التقييمات
 let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
 
 let html = "";
 
 reviews.forEach(r => {
   html += `
-    <p>${r.name} ⭐ ${r.rating}</p>
-    <p>${r.text}</p>
-    <hr>
+    <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+      <p>⭐ ${r.rating}/5</p>
+      <p>${r.text}</p>
+      <b>- ${r.name}</b>
+    </div>
   `;
 });
 
