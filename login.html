@@ -8,26 +8,23 @@
 
 <body>
 
-<h2>تسجيل الدخول</h2>
+<header class="header">
+  <div class="logo">🩺 MyDoctor</div>
+</header>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+<section class="section">
+  <h2>تسجيل دخول الأدمن</h2>
 
-<button onclick="login()">دخول</button>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-<script>
-function login(){
-  let email=document.getElementById("email").value;
-  let pass=document.getElementById("password").value;
+  <button onclick="login()">دخول</button>
+</section>
 
-  if(email==="admin@clinic.com" && pass==="12345678"){
-    localStorage.setItem("admin","true");
-    window.location.href="admin.html";
-  }else{
-    alert("بيانات خطأ ❌");
-  }
-}
-</script>
+<footer class="footer">
+  <p>Admin Panel</p>
+</footer>
 
+<script src="script.js"></script>
 </body>
 </html>
