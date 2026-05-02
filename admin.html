@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>Admin</title>
-<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<h1>Dashboard</h1>
+<h1>لوحة التحكم</h1>
 
-<button onclick="logout()">Logout</button>
+<button onclick="logout()">تسجيل خروج</button>
 
 <h2>الحجوزات</h2>
 <div id="bookings"></div>
@@ -28,29 +27,22 @@ function logout() {
   window.location.href = "login.html";
 }
 
-let name = localStorage.getItem("name");
-let phone = localStorage.getItem("phone");
-let date = localStorage.getItem("date");
-let time = localStorage.getItem("time");
+// bookings
+document.getElementById("bookings").innerHTML = `
+${localStorage.getItem("name") || ""} <br>
+${localStorage.getItem("phone") || ""} <br>
+${localStorage.getItem("date") || ""} <br>
+${localStorage.getItem("time") || ""}
+`;
 
-if (name) {
-  document.getElementById("bookings").innerHTML = `
-    <p>${name}</p>
-    <p>${phone}</p>
-    <p>${date}</p>
-    <p>${time}</p>
-  `;
-}
-
+// reviews
 let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
 
 reviews.forEach(r => {
   document.getElementById("reviews").innerHTML += `
-    <div class="card">
-      <p>${r.text}</p>
-      <b>${r.name}</b>
-      <small>⭐ ${r.rating}</small>
-    </div>
+    <p>${r.name} ⭐ ${r.rating}</p>
+    <p>${r.text}</p>
+    <hr>
   `;
 });
 </script>
