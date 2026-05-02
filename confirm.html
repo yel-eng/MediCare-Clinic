@@ -1,1 +1,26 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تأكيد الحجز</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 
+<body>
+
+<div class="confirm-box">
+
+  <h2>تم الحجز بنجاح 🎉</h2>
+
+  <p>الاسم: <span id="n"></span></p>
+  <p>رقم الهاتف: <span id="p"></span></p>
+
+</div>
+
+<script>
+document.getElementById("n").innerText = localStorage.getItem("name");
+document.getElementById("p").innerText = localStorage.getItem("phone");
+</script>
+
+</body>
+</html>
