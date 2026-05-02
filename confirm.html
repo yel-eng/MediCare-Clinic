@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>تأكيد الحجز</title>
+<title>تم الحجز</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
@@ -10,18 +10,20 @@
 
 <div class="confirm-box">
 
-<h2>🎉 تم تأكيد الحجز بنجاح</h2>
+<h2>🎉 تم تأكيد الحجز</h2>
 
-<p>👤 الاسم: <span id="n"></span></p>
-<p>📞 رقم الهاتف: <span id="p"></span></p>
-
-<a class="btn" href="index.html">العودة للرئيسية</a>
+<p>الاسم: <span id="n"></span></p>
+<p>الهاتف: <span id="p"></span></p>
+<p>التاريخ: <span id="d"></span></p>
+<p>الوقت: <span id="t"></span></p>
 
 </div>
 
 <script>
 document.getElementById("n").innerText = localStorage.getItem("name");
 document.getElementById("p").innerText = localStorage.getItem("phone");
+document.getElementById("d").innerText = localStorage.getItem("date");
+document.getElementById("t").innerText = localStorage.getItem("time");
 </script>
 
 </body>
