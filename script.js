@@ -16,3 +16,25 @@ function book() {
 
   window.location.href = "confirm.html";
 }
+function openReviewForm() {
+  document.getElementById("reviewBox").style.display = "flex";
+}
+
+function closeReviewForm() {
+  document.getElementById("reviewBox").style.display = "none";
+}
+
+function saveReview() {
+  let name = document.getElementById("rName").value;
+  let text = document.getElementById("rText").value;
+
+  let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+
+  reviews.push({ name, text });
+
+  localStorage.setItem("reviews", JSON.stringify(reviews));
+
+  alert("شكراً لرأيك ❤️");
+
+  closeReviewForm();
+}
