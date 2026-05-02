@@ -2,36 +2,32 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard</title>
+<title>Admin</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<h1>Admin Dashboard</h1>
+<h1>Dashboard</h1>
 
 <button onclick="logout()">Logout</button>
-
-<hr>
 
 <h2>الحجوزات</h2>
 <div id="bookings"></div>
 
-<h2>الآراء</h2>
+<h2>التقييمات</h2>
 <div id="reviews"></div>
 
 <script>
-// 🔴 حماية الصفحة
 if (localStorage.getItem("admin") !== "true") {
   window.location.href = "login.html";
 }
 
-// 🔴 logout
 function logout() {
   localStorage.removeItem("admin");
   window.location.href = "login.html";
 }
 
-// 🔴 عرض الحجز
 let name = localStorage.getItem("name");
 let phone = localStorage.getItem("phone");
 let date = localStorage.getItem("date");
@@ -39,29 +35,24 @@ let time = localStorage.getItem("time");
 
 if (name) {
   document.getElementById("bookings").innerHTML = `
-    <p>👤 الاسم: ${name}</p>
-    <p>📞 الهاتف: ${phone}</p>
-    <p>📅 التاريخ: ${date}</p>
-    <p>⏰ الوقت: ${time}</p>
+    <p>${name}</p>
+    <p>${phone}</p>
+    <p>${date}</p>
+    <p>${time}</p>
   `;
 }
 
-// 🔴 عرض التقييمات
 let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
 
-let html = "";
-
 reviews.forEach(r => {
-  html += `
-    <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-      <p>⭐ ${r.rating}/5</p>
+  document.getElementById("reviews").innerHTML += `
+    <div class="card">
       <p>${r.text}</p>
-      <b>- ${r.name}</b>
+      <b>${r.name}</b>
+      <small>⭐ ${r.rating}</small>
     </div>
   `;
 });
-
-document.getElementById("reviews").innerHTML = html;
 </script>
 
 </body>
