@@ -1,1 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>حجز موعد</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 
+<body>
+
+<div class="form-box">
+
+  <h2>احجز موعدك</h2>
+
+  <input type="text" id="name" placeholder="اسم المريض">
+  <input type="text" id="phone" placeholder="رقم الهاتف">
+
+  <button onclick="book()">تأكيد الحجز</button>
+
+</div>
+
+<script>
+function book() {
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+
+  localStorage.setItem("name", name);
+  localStorage.setItem("phone", phone);
+
+  window.location.href = "confirm.html";
+}
+</script>
+
+</body>
+</html>
