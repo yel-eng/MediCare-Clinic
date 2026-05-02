@@ -3,205 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <title>MyDoctor Clinic</title>
-
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
 
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Login</title>
-</head>
-
-<body>
-
-<h2>Admin Login</h2>
-
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
-<button onclick="login()">Login</button>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-
-<script>
-// Firebase config
-const firebaseConfig = {
-  apiKey: "XXXX",
-  authDomain: "mydoctor-clinic.firebaseapp.com",
-  projectId: "mydoctor-clinic",
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
-// Login function
-function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  auth.signInWithEmailAndPassword(email, password)
-    .then(() => {
-      alert("تم تسجيل الدخول ✅");
-      window.location.href = "admin.html";
-    })
-    .catch(error => {
-      alert(error.message);
-    });
-}
-</script>
-
-</body>
-</html>
 <header class="hero">
   <div class="overlay">
     <h1>عيادة MyDoctor</h1>
-    <p>رعاية طبية متكاملة بأعلى جودة</p>
+    <p>رعاية طبية متكاملة</p>
 
-    <a href="booking.html" class="btn">احجز موعدك الآن</a>
+    <a href="login.html" class="btn">دخول الأدمن</a>
+    <a href="booking.html" class="btn">احجز موعد</a>
   </div>
 </header>
 
 <!-- SERVICES -->
-<section class="services">
+<section>
   <h2>خدماتنا</h2>
-
-  <div class="grid">
-
-    <div class="card">
-      <img src="https://images.unsplash.com/photo-1580281657527-47f249e8f0a0">
-      <h3>كشف عام</h3>
-    </div>
-
-    <div class="card">
-      <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67">
-      <h3>تشخيص دقيق</h3>
-    </div>
-
-    <div class="card">
-      <img src="https://images.unsplash.com/photo-1581595219317-8fdbf0b7f0f5">
-      <h3>متابعة حالات</h3>
-    </div>
-
-  </div>
 </section>
 
-<!-- DOCTOR -->
-<section class="doctor">
-  <h2>الطبيب المعالج</h2>
-
-  <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7">
-  <h3>د/ أحمد علي</h3>
-  <p>استشاري باطنة وقلب - خبرة 15 سنة</p>
-</section>
-
-<section class="videos">
-
-<h2>فيديوهات توعوية</h2>
-
-<div class="video-box">
-  <video controls>
-    <source src="video1.mp4" type="video/mp4">
-  </video>
-  <p>شرح بسيط عن أهمية الكشف المبكر</p>
-</div>
-
-</section>
-
-  <section class="blog">
-
-<h2>مقالات طبية</h2>
-
-<div class="blog-card">
-  <h3>أعراض الضغط المرتفع</h3>
-  <p>تعرف على أهم الأعراض وطرق الوقاية...</p>
-</div>
-
-<div class="blog-card">
-  <h3>نصائح للحفاظ على صحتك</h3>
-  <p>مجموعة نصائح يومية بسيطة...</p>
-</div>
-
-</section>
-  <!-- TESTIMONIALS -->
-<section class="testimonials">
-
-  <section class="testimonials">
-<div id="reviewsList" class="testi-grid"></div>
-
-  <h2>آراء المرضى</h2>
-       <button class="review-btn" onclick="openReviewForm()">
-  اكتب رأيك
-       </button>
-
-    <div id="reviewBox" class="review-box">
-
-  <div class="review-content">
-    
-      <div class="stars">
-  <span onclick="rate(1)">★</span>
-  <span onclick="rate(2)">★</span>
-  <span onclick="rate(3)">★</span>
-  <span onclick="rate(4)">★</span>
-  <span onclick="rate(5)">★</span>
-      </div>
-    <input type="text" id="rName" placeholder="اسمك">
-    <textarea id="rText" placeholder="رأيك عن العيادة"></textarea>
-
-    <button onclick="saveReview()">إرسال</button>
-    <button onclick="closeReviewForm()">إغلاق</button>
-
-  </div>
-
-</div>
-    
-    <div class="card">"أفضل دكتور تعاملت معه" - سارة</div>
-  <div class="card">"تشخيص دقيق وخدمة ممتازة" - محمد</div>
-  <div class="card">"عيادة احترافية جدًا" - أحمد</div>
-</section>
-
-<!-- MAP -->
-<section class="map">
-  <h2>موقع العيادة</h2>
-
- <section class="map">
-  <h2>موقع العيادة</h2>
-
-  <iframe
-    src="https://www.google.com/maps?q=clinic&output=embed"
-    width="100%" 
-    height="300"
-    style="border:0;">
-  </iframe>
-</section>
-
-<!-- FLOATING WHATSAPP -->
-<a class="whatsapp" href="https://wa.me/201227630041?text=مرحبا%20أريد%20حجز%20موعد" target="_blank">
+<!-- WHATSAPP -->
+<a class="whatsapp" href="https://wa.me/201227630041" target="_blank">
   <i class="fa-brands fa-whatsapp"></i>
 </a>
- <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
- <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
-  authDomain: "mydoctor-clinic.firebaseapp.com",
-  projectId: "mydoctor-clinic",
-  storageBucket: "mydoctor-clinic.firebasestorage.app",
-  messagingSenderId: "996532645974",
-  appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7",
-  measurementId: "G-33CQLHP3WP"
-};
 
-// تشغيل Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Auth
-const auth = firebase.auth();
-</script>
-<script src="script.js"></script>
 </body>
 </html>
