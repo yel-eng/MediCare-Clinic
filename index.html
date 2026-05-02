@@ -63,7 +63,24 @@
        <button class="review-btn" onclick="openReviewForm()">
   اكتب رأيك
        </button>
-  <div class="card">"أفضل دكتور تعاملت معه" - سارة</div>
+
+    <div id="reviewBox" class="review-box">
+
+  <div class="review-content">
+
+    <h3>اكتب رأيك</h3>
+
+    <input type="text" id="rName" placeholder="اسمك">
+    <textarea id="rText" placeholder="رأيك عن العيادة"></textarea>
+
+    <button onclick="saveReview()">إرسال</button>
+    <button onclick="closeReviewForm()">إغلاق</button>
+
+  </div>
+
+</div>
+    
+    <div class="card">"أفضل دكتور تعاملت معه" - سارة</div>
   <div class="card">"تشخيص دقيق وخدمة ممتازة" - محمد</div>
   <div class="card">"عيادة احترافية جدًا" - أحمد</div>
 </section>
