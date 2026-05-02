@@ -9,7 +9,24 @@
 </head>
 
 <body>
+ <h2>Admin Login</h2>
 
+<input id="email" placeholder="Email">
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<script>
+function login(){
+  auth.signInWithEmailAndPassword(
+    email.value,
+    pass.value
+  ).then(()=>{
+    document.body.innerHTML = "<h2>Welcome Doctor Dashboard</h2>";
+    loadDashboard();
+  });
+}
+</script>
 <header class="hero">
   <div class="overlay">
     <h1>عيادة MyDoctor</h1>
