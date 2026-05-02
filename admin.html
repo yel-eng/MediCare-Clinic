@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
 <title>Admin</title>
@@ -11,26 +11,51 @@
 
 <button onclick="logout()">Logout</button>
 
+<h3>الحجوزات</h3>
+<div id="bookings"></div>
+
+<h3>الآراء</h3>
+<div id="reviews"></div>
+
 <script>
-function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "login.html";
-  });
+if (localStorage.getItem("admin") !== "true") {
+  window.location.href = "login.html";
 }
-</script>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+function logout() {
+  localStorage.removeItem("admin");
+  window.location.href = "login.html";
+}
 
-<script src="firebase.js"></script>
+// عرض بيانات الحجز
+let name = localStorage.getItem("name");
+let phone = localStorage.getItem("phone");
+let date = localStorage.getItem("date");
+let time = localStorage.getItem("time");
 
-<script>
-// حماية الصفحة
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "login.html";
-  }
+if (name) {
+  document.getElementById("bookings").innerHTML = `
+    <p>الاسم: ${name}</p>
+    <p>الهاتف: ${phone}</p>
+    <p>التاريخ: ${date}</p>
+    <p>الوقت: ${time}</p>
+  `;
+}
+
+// reviews
+let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+
+let html = "";
+
+reviews.forEach(r => {
+  html += `
+    <p>${r.name} ⭐ ${r.rating}</p>
+    <p>${r.text}</p>
+    <hr>
+  `;
 });
+
+document.getElementById("reviews").innerHTML = html;
 </script>
 
 </body>
