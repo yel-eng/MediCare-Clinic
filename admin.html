@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard</title>
+<title>Admin CRM Dashboard</title>
 
 <style>
 body{
@@ -12,30 +12,50 @@ body{
   direction:rtl;
 }
 
+/* Sections */
 .box{
   background:#fff;
   padding:15px;
-  margin:10px 0;
-  border-radius:10px;
+  margin:15px 0;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.05);
 }
 
+/* Cards */
 .card{
   background:#fff;
   padding:15px;
   margin:10px 0;
-  border-radius:10px;
+  border-radius:12px;
   box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
-button{
-  padding:8px 12px;
-  margin:5px;
-}
-
+/* Inputs */
 input,textarea{
   width:100%;
-  padding:8px;
+  padding:10px;
+  margin:6px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+/* Buttons */
+button{
+  padding:8px 12px;
   margin:5px 0;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  background:#0d47a1;
+  color:white;
+}
+
+button:hover{
+  background:#08306b;
+}
+
+h1,h2{
+  color:#0d47a1;
 }
 </style>
 
@@ -43,11 +63,11 @@ input,textarea{
 
 <body>
 
-<h1>Admin Dashboard 🏥</h1>
+<h1>🏥 CRM Admin Dashboard</h1>
 
-<!-- VIDEOS -->
+<!-- ================= VIDEOS ================= -->
 <div class="box">
-<h2>Videos</h2>
+<h2>🎥 Videos</h2>
 
 <input id="videoUrl" placeholder="Video URL">
 <input id="videoText" placeholder="Description">
@@ -56,9 +76,9 @@ input,textarea{
 <div id="videos"></div>
 </div>
 
-<!-- BLOGS -->
+<!-- ================= BLOGS ================= -->
 <div class="box">
-<h2>Articles</h2>
+<h2>📰 Articles</h2>
 
 <input id="blogTitle" placeholder="Title">
 <textarea id="blogText" placeholder="Text"></textarea>
@@ -69,21 +89,28 @@ input,textarea{
 <div id="blogs"></div>
 </div>
 
-<!-- BOOKINGS -->
+<!-- ================= PATIENTS CRM ================= -->
 <div class="box">
-<h2>Bookings</h2>
+<h2>🏥 Patients CRM</h2>
+
+<div id="patients"></div>
+</div>
+
+<!-- ================= BOOKINGS ================= -->
+<div class="box">
+<h2>📅 Bookings System</h2>
 
 <div id="bookings"></div>
-<div id="patients"></div>
+
 <h3 id="income"></h3>
 </div>
 
-<!-- Firebase -->
+<!-- ================= FIREBASE ================= -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-<!-- JS -->
+<!-- ================= SCRIPT ================= -->
 <script src="script.js"></script>
 
 </body>
