@@ -9,7 +9,7 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-// --- وظائف المحتوى (بدون تغيير) ---
+// --- وظائف المحتوى ---
 function addVideo() {
     const url = document.getElementById("videoUrl").value;
     const text = document.getElementById("videoText").value;
@@ -21,13 +21,13 @@ function addBlog() {
     db.collection("blogs").add({ title, text, date: new Date().toLocaleDateString() }).then(() => location.reload());
 }
 
-// --- توليد المواعيد المطور (التعديل المطلوب) ---
+// --- توليد المواعيد المخصص ---
 async function generateSmartSlots() {
     const rows = document.querySelectorAll(".day-setup-row");
     const duration = parseInt(document.getElementById("duration").value);
-    if (!rows.length) return alert("اختر تاريخ البداية أولاً");
+    if (!rows.length) return alert("برجاء اختيار تاريخ البداية أولاً");
     
-    let price = prompt("سعر الكشف الموحد:", "200");
+    let price = prompt("سعر الكشف:", "200");
     let batch = db.batch();
     let count = 0;
 
@@ -57,46 +57,59 @@ async function generateSmartSlots() {
         }
     });
 
-    if (count === 0) return alert("لم يتم تحديد ساعات عمل لأي يوم!");
+    if (count === 0) return alert("لم يتم إدخال ساعات عمل لأي يوم");
     
     await batch.commit();
     alert(`تم توليد ${count} موعد بنجاح ✅`);
     location.reload();
 }
 
-// --- عرض للأدمن (كما هو مع تحسين العرض) ---
+// --- عرض للأدمن (مع فلترة الأيام القديمة) ---
 function loadAdminSlots() {
     let container = document.getElementById("slotsContainer");
     if (!container) return;
 
-    db.collection("slots").get().then(snap => {
+    let today = new Date().toISOString().split('T')[0];
+
+    // فلترة: جلب المواعيد التي تاريخها يساوي اليوم أو أكبر (المستقبل)
+    db.collection("slots").where("date", ">=", today).get().then(snap => {
         let daysMap = {};
         let totalRev = 0;
-        let today = new Date().toISOString().split('T')[0];
 
         snap.forEach(doc => {
             let s = doc.data();
             if (!daysMap[s.date]) daysMap[s.date] = [];
             daysMap[s.date].push({id: doc.id, ...s});
-            if (s.date === today && s.status === "attended") totalRev += (Number(s.price) || 0);
+            
+            // حساب الأرباح لليوم الحالي فقط
+            if (s.date === today && s.status === "attended") {
+                totalRev += (Number(s.price) || 0);
+            }
         });
 
         container.innerHTML = "";
+        // ترتيب الأيام وتوليد الأعمدة
         Object.keys(daysMap).sort().forEach(date => {
             let dayDiv = document.createElement("div");
             dayDiv.className = "day-column";
-            dayDiv.innerHTML = `<div class="day-header">${date}</div>`;
+            let dayName = new Date(date).toLocaleDateString('ar-EG', {weekday: 'long'});
+            dayDiv.innerHTML = `<div class="day-header">${dayName}<br><small>${date}</small></div>`;
             
+            let slotsList = "";
             daysMap[date].sort((a,b)=>a.time.localeCompare(b.time)).forEach(slot => {
-                dayDiv.innerHTML += `
+                slotsList += `
                     <div class="slot-item">
                         <span>${slot.time} - ${slot.booked ? slot.patient.name : '🟢'}</span>
                         <button onclick="viewPatientDetails('${slot.id}')" style="width:auto; padding:2px 8px;">إدارة</button>
                     </div>`;
             });
+            dayDiv.innerHTML += slotsList;
             container.appendChild(dayDiv);
         });
-        document.getElementById("dailyRevenue").innerText = `دخل اليوم المحصل: ${totalRev} ج.م`;
+        
+        if(document.getElementById("dailyRevenue")) {
+            document.getElementById("dailyRevenue").innerText = `دخل اليوم المحصل: ${totalRev} ج.م`;
+        }
     });
 }
 
@@ -106,7 +119,12 @@ function loadPatientData() {
     let daySelect = document.getElementById("daySelect");
     if (!daySelect) return;
 
-    db.collection("slots").where("booked", "==", false).get().then(snap => {
+    let today = new Date().toISOString().split('T')[0];
+
+    db.collection("slots")
+      .where("booked", "==", false)
+      .where("date", ">=", today)
+      .get().then(snap => {
         allAvailableSlots = [];
         let days = new Set();
         snap.forEach(doc => {
@@ -117,7 +135,8 @@ function loadPatientData() {
         
         daySelect.innerHTML = '<option value="">-- اختر اليوم --</option>';
         Array.from(days).sort().forEach(d => {
-            daySelect.innerHTML += `<option value="${d}">${d}</option>`;
+            let dayName = new Date(d).toLocaleDateString('ar-EG', {weekday: 'long'});
+            daySelect.innerHTML += `<option value="${d}">${dayName} (${d})</option>`;
         });
     });
 }
@@ -151,12 +170,16 @@ function viewPatientDetails(id) {
         document.getElementById("overlay").style.display = "block";
         document.getElementById("modalContent").innerHTML = `
             <h3>${s.date} | ${s.time}</h3>
+            <label>اسم المريض:</label>
             <input id="en" value="${p.name}" placeholder="الاسم">
+            <label>رقم الهاتف:</label>
             <input id="ep" value="${p.phone}" placeholder="الهاتف">
+            <label>الحالة:</label>
             <select id="es">
                 <option value="pending" ${s.status==='pending'?'selected':''}>انتظار</option>
                 <option value="attended" ${s.status==='attended'?'selected':''}>تم الكشف</option>
             </select>
+            <label>ملاحظات طبية:</label>
             <textarea id="enot" placeholder="ملاحظات">${p.note||""}</textarea>
             <button onclick="saveAdmin('${id}')">حفظ التعديلات</button>
             <div id="qr" style="margin-top:10px; display:flex; justify-content:center;"></div>`;
