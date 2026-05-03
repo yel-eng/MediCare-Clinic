@@ -39,10 +39,12 @@ function book() {
 
 
 /**********************
-UPLOAD IMAGE
+UPLOAD IMAGE (ROSHETA)
 **********************/
 function uploadImage(id, file) {
-  const storageRef = firebase.storage().ref("patients/" + id + "/" + file.name);
+
+  const storageRef =
+    firebase.storage().ref("patients/" + id + "/" + file.name);
 
   storageRef.put(file).then(snapshot => {
     snapshot.ref.getDownloadURL().then(url => {
@@ -59,68 +61,47 @@ function uploadImage(id, file) {
 
 
 /**********************
-GENERATE QR
+🔥 QR (FIXED - PROFESSIONAL)
 **********************/
 function generatePatientQR(id) {
 
-  db.collection("patients").doc(id).get().then(doc => {
+  let url =
+    "https://yel-eng.github.io/MediCare-Clinic/patient.html?id=" + id;
 
-    let d = doc.data();
+  let qrImage =
+    "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
+    encodeURIComponent(url);
 
-    let qrText =
-      "Name: " + d.name +
-      "\nPhone: " + d.phone +
-      "\nDate: " + d.date +
-      "\nImages: " + (d.images ? d.images.length : 0);
-
-    let qrURL =
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
-      encodeURIComponent(qrText);
-
-    db.collection("patients").doc(id).update({
-      qr: qrURL
-    }).then(() => {
-      loadPatients();
-    });
-
+  db.collection("patients").doc(id).update({
+    qr: qrImage
+  }).then(() => {
+    loadPatients();
   });
 
 }
 
 
 /**********************
-DELETE PATIENT 🚨 (NEW)
+DELETE PATIENT
 **********************/
 function deletePatient(id, images) {
 
-  // حذف الصور من Storage
   if (images && images.length) {
     images.forEach(url => {
       try {
         let ref = firebase.storage().refFromURL(url);
         ref.delete();
       } catch (e) {
-        console.log("image delete error", e);
+        console.log(e);
       }
     });
   }
 
-  // حذف البيانات من Firestore
   db.collection("patients").doc(id).delete()
     .then(() => {
-      alert("تم حذف العميل بالكامل");
+      alert("تم حذف العميل");
       loadPatients();
     });
-}
-
-
-/**********************
-WHATSAPP
-**********************/
-function sendWhatsApp(phone, text) {
-  window.open(
-    "https://wa.me/" + phone + "?text=" + encodeURIComponent(text)
-  );
 }
 
 
@@ -145,6 +126,16 @@ function finishPatient(id, images) {
     alert("تم الانتهاء");
     loadPatients();
   });
+}
+
+
+/**********************
+WHATSAPP
+**********************/
+function sendWhatsApp(phone, text) {
+  window.open(
+    "https://wa.me/" + phone + "?text=" + encodeURIComponent(text)
+  );
 }
 
 
@@ -175,7 +166,8 @@ function loadPatients() {
             📱 Generate QR
           </button>
 
-          <input type="file" onchange="uploadImage('${doc.id}', this.files[0])">
+          <input type="file"
+            onchange="uploadImage('${doc.id}', this.files[0])">
 
           <button onclick="
             sendWhatsApp('${d.phone}',
@@ -188,8 +180,7 @@ function loadPatients() {
           ✅ تم الانتهاء
           </button>
 
-          <!-- 🗑 DELETE -->
-          <button style="background:red" 
+          <button style="background:red"
             onclick="deletePatient('${doc.id}', ${JSON.stringify(d.images || [])})">
             🗑 حذف العميل
           </button>
