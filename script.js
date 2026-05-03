@@ -13,7 +13,7 @@ const db = firebase.firestore();
 
 
 /**********************
-BOOK PATIENT (بدون QR)
+BOOK PATIENT
 **********************/
 function book() {
   let name = document.getElementById("name").value;
@@ -39,7 +39,7 @@ function book() {
 
 
 /**********************
-UPLOAD IMAGE (ROSHETA)
+UPLOAD IMAGE
 **********************/
 function uploadImage(id, file) {
   const storageRef = firebase.storage().ref("patients/" + id + "/" + file.name);
@@ -59,7 +59,7 @@ function uploadImage(id, file) {
 
 
 /**********************
-GENERATE QR AFTER UPLOAD
+GENERATE QR
 **********************/
 function generatePatientQR(id) {
 
@@ -89,7 +89,33 @@ function generatePatientQR(id) {
 
 
 /**********************
-SEND WHATSAPP
+DELETE PATIENT 🚨 (NEW)
+**********************/
+function deletePatient(id, images) {
+
+  // حذف الصور من Storage
+  if (images && images.length) {
+    images.forEach(url => {
+      try {
+        let ref = firebase.storage().refFromURL(url);
+        ref.delete();
+      } catch (e) {
+        console.log("image delete error", e);
+      }
+    });
+  }
+
+  // حذف البيانات من Firestore
+  db.collection("patients").doc(id).delete()
+    .then(() => {
+      alert("تم حذف العميل بالكامل");
+      loadPatients();
+    });
+}
+
+
+/**********************
+WHATSAPP
 **********************/
 function sendWhatsApp(phone, text) {
   window.open(
@@ -99,14 +125,16 @@ function sendWhatsApp(phone, text) {
 
 
 /**********************
-FINISH + DELETE IMAGES
+FINISH PATIENT
 **********************/
 function finishPatient(id, images) {
 
   if (images && images.length) {
     images.forEach(url => {
-      let ref = firebase.storage().refFromURL(url);
-      ref.delete();
+      try {
+        let ref = firebase.storage().refFromURL(url);
+        ref.delete();
+      } catch (e) {}
     });
   }
 
@@ -114,14 +142,14 @@ function finishPatient(id, images) {
     images: [],
     done: true
   }).then(() => {
-    alert("تم الانتهاء وحذف الصور");
+    alert("تم الانتهاء");
     loadPatients();
   });
 }
 
 
 /**********************
-LOAD PATIENTS (CRM VIEW)
+LOAD PATIENTS
 **********************/
 function loadPatients() {
   let container = document.getElementById("patients");
@@ -141,18 +169,14 @@ function loadPatients() {
           <p>${d.phone}</p>
           <p>${d.date} - ${d.time}</p>
 
-          <!-- QR يظهر فقط لو اتعمل -->
           ${d.qr ? `<img src="${d.qr}" width="120">` : ""}
 
-          <!-- زرار إنشاء QR بعد رفع الصور -->
           <button onclick="generatePatientQR('${doc.id}')">
             📱 Generate QR
           </button>
 
-          <!-- رفع صور الروشتة -->
           <input type="file" onchange="uploadImage('${doc.id}', this.files[0])">
 
-          <!-- واتساب -->
           <button onclick="
             sendWhatsApp('${d.phone}',
             'بياناتك جاهزة 👇\\n${d.name}\\n${d.date}')
@@ -160,12 +184,16 @@ function loadPatients() {
           📩 واتساب
           </button>
 
-          <!-- إنهاء الحالة -->
           <button onclick="finishPatient('${doc.id}', ${JSON.stringify(d.images || [])})">
           ✅ تم الانتهاء
           </button>
 
-          <!-- عرض الصور -->
+          <!-- 🗑 DELETE -->
+          <button style="background:red" 
+            onclick="deletePatient('${doc.id}', ${JSON.stringify(d.images || [])})">
+            🗑 حذف العميل
+          </button>
+
           <div>
             ${(d.images || []).map(img => `
               <img src="${img}" width="80">
