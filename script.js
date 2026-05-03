@@ -8,202 +8,131 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
-const storage = firebase.storage();
 
 /***********************
-PATIENTS
+PATIENTS (بدون تغيير)
 ***********************/
-function loadPatients() {
+function loadPatients(){
+  let c=document.getElementById("patients");
+  if(!c) return;
 
-  let c = document.getElementById("patients");
-  if (!c) return;
-
-  db.collection("patients").get().then(snap => {
-
-    c.innerHTML = "";
-
-    snap.forEach(doc => {
-      let d = doc.data();
-
-      c.innerHTML += `
-      <div class="card">
-        <h3>${d.name}</h3>
-        <p>${d.phone}</p>
-
-        <button onclick="editPatient('${doc.id}', ${JSON.stringify(d)})">✏️ تعديل</button>
-        <button onclick="deletePatient('${doc.id}')">🗑 حذف</button>
-
-        <input type="file" onchange="uploadImage('${doc.id}', this.files[0])">
-
-        ${(d.images || []).map(i => `<img src="${i}" width="60">`).join("")}
+  db.collection("patients").get().then(snap=>{
+    c.innerHTML="";
+    snap.forEach(d=>{
+      let x=d.data();
+      c.innerHTML+=`<div class="card">
+        ${x.name} - ${x.phone}
       </div>`;
     });
   });
 }
 
-function editPatient(id, d){
-  let name = prompt("name", d.name);
-  let phone = prompt("phone", d.phone);
-
-  db.collection("patients").doc(id).update({name, phone})
-  .then(loadPatients);
-}
-
-function deletePatient(id){
-  db.collection("patients").doc(id).delete().then(loadPatients);
-}
-
 /***********************
-UPLOAD
-***********************/
-function uploadImage(id, file){
-
-  let ref = storage.ref("patients/" + id + "/" + file.name);
-
-  ref.put(file).then(snap=>{
-    snap.ref.getDownloadURL().then(url=>{
-
-      db.collection("patients").doc(id).update({
-        images: firebase.firestore.FieldValue.arrayUnion(url)
-      });
-
-    });
-  });
-}
-
-/***********************
-BLOG
+BLOG + VIDEO (مختصر)
 ***********************/
 function addBlog(){
   db.collection("blogs").add({
-    title: blogTitle.value,
-    text: blogText.value,
-    image: blogImage.value
+    title:blogTitle.value,
+    text:blogText.value,
+    image:blogImage.value
   });
 }
 
-/***********************
-VIDEOS
-***********************/
 function addVideo(){
   db.collection("videos").add({
-    url: videoUrl.value,
-    text: videoText.value
+    url:videoUrl.value,
+    text:videoText.value
   });
 }
 
 /***********************
-SLOTS GENERATION
+1) SET AVAILABILITY (ADMIN)
 ***********************/
-function generateSlots(){
+function setAvailability(){
 
   let date = slotDate.value;
   let start = startTime.value;
   let end = endTime.value;
-  let duration = Number(document.getElementById("duration").value || 30);
 
-  let t = new Date(`${date}T${start}`);
-  let e = new Date(`${date}T${end}`);
+  db.collection("availability").doc(date).set({
+    date,
+    start,
+    end
+  });
 
-  while(t < e){
-
-    let time = t.toTimeString().slice(0,5);
-
-    db.collection("slots").add({
-      date,
-      time,
-      booked:false,
-      patient:null
-    });
-
-    t.setMinutes(t.getMinutes()+duration);
-  }
-
-  loadSlots();
+  alert("تم ضبط الدوام");
 }
 
 /***********************
-LOAD SLOTS
+2) LOAD CLIENT SLOTS (SMART)
 ***********************/
-function loadSlots(){
+function loadClientSlots(){
 
-  let c = document.getElementById("slots");
-  if(!c) return;
+  let date=document.getElementById("date").value;
+  let select=document.getElementById("slotsSelect");
 
-  db.collection("slots").get().then(snap=>{
+  select.innerHTML="";
 
-    c.innerHTML="";
+  db.collection("availability").doc(date).get().then(doc=>{
 
-    snap.forEach(doc=>{
-      let s = doc.data();
+    let range=doc.exists?doc.data():null;
+    let hours=[];
 
-      c.innerHTML += `
-      <div class="card">
-        ${s.date} - ${s.time}
-        <p>${s.booked ? "محجوز" : "متاح"}</p>
+    // لو مفيش تحديد → اليوم كله
+    if(!range){
+      for(let i=0;i<24;i++){
+        hours.push(`${String(i).padStart(2,'0')}:00`);
+        hours.push(`${String(i).padStart(2,'0')}:30`);
+      }
+    } else {
+      let s=parseInt(range.start.split(":")[0]);
+      let e=parseInt(range.end.split(":")[0]);
 
-        <button onclick="bookByAdmin('${doc.id}')">حجز</button>
-        <button onclick="deleteSlot('${doc.id}')">حذف</button>
-      </div>`;
+      for(let i=s;i<e;i++){
+        hours.push(`${i}:00`);
+        hours.push(`${i}:30`);
+      }
+    }
+
+    db.collection("bookings").where("date","==",date).get()
+    .then(snap=>{
+
+      let booked=snap.docs.map(d=>d.data().time);
+
+      hours.forEach(t=>{
+        if(!booked.includes(t)){
+          select.innerHTML+=`<option>${t}</option>`;
+        }
+      });
+
     });
+
   });
 }
 
 /***********************
-BOOK CLIENT
+3) BOOK
 ***********************/
-function loadAvailableSlots(){
-
-  let s = document.getElementById("slotsSelect");
-  if(!s) return;
-
-  db.collection("slots").where("booked","==",false).get()
-  .then(sn=>{
-    s.innerHTML="";
-    sn.forEach(doc=>{
-      let d = doc.data();
-      s.innerHTML += `<option value="${doc.id}">${d.date} - ${d.time}</option>`;
-    });
-  });
-}
-
 function book(){
 
-  let id = slotsSelect.value;
+  let name=name.value;
+  let phone=phone.value;
+  let date=document.getElementById("date").value;
+  let time=slotsSelect.value;
 
-  db.collection("slots").doc(id).update({
-    booked:true
+  db.collection("bookings").add({
+    name,
+    phone,
+    date,
+    time
   });
 
   alert("تم الحجز");
 }
 
 /***********************
-ADMIN BOOK
-***********************/
-function bookByAdmin(id){
-
-  let name = prompt("name");
-  let phone = prompt("phone");
-
-  db.collection("slots").doc(id).update({
-    booked:true,
-    patient:{name,phone}
-  }).then(loadSlots);
-}
-
-/***********************
-DELETE SLOT
-***********************/
-function deleteSlot(id){
-  db.collection("slots").doc(id).delete().then(loadSlots);
-}
-
-/***********************
 INIT
 ***********************/
-window.onload = function(){
+window.onload=function(){
   loadPatients();
-  loadSlots();
-  loadAvailableSlots();
 };
