@@ -11,7 +11,7 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-// 1. توليد واجهة الـ 7 أيام
+// 1. توليد واجهة الأيام (اليوم الذي تملئيه فقط هو ما يتم توليده)
 function setupWeekUI() {
     const grid = document.getElementById("weekSetupGrid");
     if (!grid) return;
@@ -34,7 +34,7 @@ function setupWeekUI() {
     }
 }
 
-// 2. توليد المواعيد - تم تعديلها لمنع خطأ الـ Null (TypeError)
+// 2. توليد المواعيد (تم التعديل ليكون مرناً)
 async function generateSmartSlots() {
     const rows = document.querySelectorAll(".day-setup-row");
     const durationEl = document.getElementById("duration");
@@ -51,7 +51,7 @@ async function generateSmartSlots() {
         const startInput = row.querySelector(".start-t");
         const endInput = row.querySelector(".end-t");
 
-        // تحقق من وجود المدخلات وقيمتها قبل القراءة (حل مشكلة Error السطر 55)
+        // سيقوم بتوليد المواعيد فقط للأيام التي أدخلتِ لها وقتاً
         if (startInput && endInput && startInput.value && endInput.value) {
             let current = new Date(`${dateStr}T${startInput.value}`);
             let limit = new Date(`${dateStr}T${endInput.value}`);
@@ -73,20 +73,19 @@ async function generateSmartSlots() {
         }
     });
 
-    if (count === 0) return alert("يرجى إدخال ساعات العمل للأيام أولاً!");
+    if (count === 0) return alert("يرجى إدخال وقت (من وإلى) ليوم واحد على الأقل!");
     
     await batch.commit();
     alert(`تم توليد ${count} موعد بنجاح!`);
     location.reload();
 }
 
-// 3. تحميل الجدول - تم تعديلها لتعمل بـ onSnapshot (تحديث لحظي فور الحجز)
+// 3. تحميل الجدول (إظهار اسم المريض مباشرة)
 function loadAdminSlots() {
     const container = document.getElementById("slotsContainer");
     if (!container) return;
     let today = new Date().toISOString().split('T')[0];
 
-    // استخدام onSnapshot لمراقبة التغييرات فور حدوثها
     db.collection("slots").where("date", ">=", today).onSnapshot(snap => {
         let daysMap = {};
         let totalRev = 0;
@@ -104,11 +103,6 @@ function loadAdminSlots() {
         container.innerHTML = "";
         let sortedDates = Object.keys(daysMap).sort();
 
-        if (sortedDates.length === 0) {
-            container.innerHTML = "<p style='padding:20px;'>لا توجد مواعيد حالية.</p>";
-            return;
-        }
-
         sortedDates.forEach(date => {
             let dayDiv = document.createElement("div");
             dayDiv.className = "day-column";
@@ -122,9 +116,14 @@ function loadAdminSlots() {
             
             daysMap[date].sort((a,b)=>a.time.localeCompare(b.time)).forEach(slot => {
                 const isBooked = slot.booked === true;
+                const pName = (isBooked && slot.patient) ? slot.patient.name : "متاح";
+                
                 dayDiv.innerHTML += `
                     <div class="slot-item ${isBooked ? 'booked-card' : ''}" style="${isBooked ? 'border-right:5px solid #e74c3c; background:#fff5f5;' : ''}">
-                        <span><b>${slot.time}</b> ${isBooked ? '👤' : '🟢'}</span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span><b>${slot.time}</b> ${isBooked ? '👤' : '🟢'}</span>
+                            <small style="color:#555; font-weight:bold;">${pName}</small>
+                        </div>
                         <button onclick="viewPatientDetails('${slot.id}')" class="btn-outline" style="font-size:11px; padding:4px;">إدارة</button>
                     </div>`;
             });
@@ -133,70 +132,74 @@ function loadAdminSlots() {
     });
 }
 
-// 4. حجز يدوي
-async function addManualSlot() {
-    let n = prompt("اسم المريض:");
-    let d = prompt("التاريخ (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-    let t = prompt("الوقت (مثال 10:30):");
-    if(n && d && t) {
-        await db.collection("slots").add({
-            date: d, time: t, 
-            booked: true, 
-            status: "pending", price: 200,
-            patient: { name: n, phone: "-", note: "حجز يدوي" }
-        });
-        alert("تم الحجز اليدوي!");
-    }
+// 4. عرض تفاصيل المريض (إضافة زر واتساب وتصليح البيانات)
+function viewPatientDetails(id) {
+    db.collection("slots").doc(id).get().then(doc => {
+        if (!doc.exists) return;
+        let s = doc.data();
+        let p = s.patient || {name:"", phone:"", note:""};
+        
+        // زر الواتساب
+        let whatsappBtn = p.phone && p.phone !== "-" ? 
+            `<a href="https://wa.me/${p.phone}" target="_blank" style="background:#25D366; color:white; text-decoration:none; padding:8px; border-radius:5px; display:inline-block; margin-top:5px; font-size:12px;">💬 تواصل واتساب</a>` : "";
+
+        document.getElementById("modal").style.display = "block";
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("modalContent").innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>📋 إدارة الحجز</h3>
+                ${whatsappBtn}
+            </div>
+            <p><b>التوقيت:</b> ${s.date} | ${s.time}</p>
+            <hr>
+            <label>اسم المريض:</label><br>
+            <input id="en" value="${p.name}" placeholder="الاسم" style="width:100%; padding:8px; margin-bottom:10px;"><br>
+            <label>الموبايل:</label><br>
+            <input id="ep" value="${p.phone}" placeholder="رقم الهاتف" style="width:100%; padding:8px; margin-bottom:10px;"><br>
+            <label>الحالة:</label><br>
+            <select id="es" style="width:100%; padding:8px; margin-bottom:10px;">
+                <option value="pending" ${s.status==='pending'?'selected':''}>انتظار</option>
+                <option value="attended" ${s.status==='attended'?'selected':''}>تم الكشف</option>
+            </select><br>
+            <label>ملاحظات:</label><br>
+            <textarea id="enot" style="width:100%; height:50px; padding:8px;">${p.note||""}</textarea><br>
+            <button onclick="saveAdmin('${id}')" class="btn-main" style="width:100%; margin-top:10px;">حفظ التغييرات</button>
+            <button onclick="deleteSlot('${id}')" style="background:none; color:red; border:none; width:100%; cursor:pointer; margin-top:10px;">❌ حذف الموعد نهائياً</button>
+        `;
+    });
 }
 
 // 5. حفظ التعديلات
 async function saveAdmin(id) {
-    const status = document.getElementById("es").value;
     const name = document.getElementById("en").value;
+    const phone = document.getElementById("ep").value;
+    const status = document.getElementById("es").value;
+    const note = document.getElementById("enot").value;
     
     await db.collection("slots").doc(id).update({
         status: status,
         booked: name.trim() !== "", 
         patient: {
             name: name,
-            phone: document.getElementById("ep").value,
-            note: document.getElementById("enot").value
+            phone: phone,
+            note: note
         }
     });
     closeModal();
+    alert("تم التحديث");
 }
 
-// 6. عرض تفاصيل المريض والـ QR
-function viewPatientDetails(id) {
-    db.collection("slots").doc(id).get().then(doc => {
-        let s = doc.data();
-        let p = s.patient || {name:"", phone:"", note:""};
-        let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(id)}`;
-
-        document.getElementById("modal").style.display = "block";
-        document.getElementById("overlay").style.display = "block";
-        document.getElementById("modalContent").innerHTML = `
-            <div style="display:flex; justify-content:space-between;">
-                <h3>📋 تفاصيل الحجز</h3>
-                <img src="${qrUrl}" style="border:1px solid #ddd;">
-            </div>
-            <p><b>التوقيت:</b> ${s.date} | ${s.time}</p>
-            <hr>
-            <label>اسم المريض:</label><br>
-            <input id="en" value="${p.name}" style="width:100%"><br>
-            <label>الموبايل:</label><br>
-            <input id="ep" value="${p.phone}" style="width:100%"><br>
-            <label>الحالة:</label><br>
-            <select id="es" style="width:100%">
-                <option value="pending" ${s.status==='pending'?'selected':''}>انتظار</option>
-                <option value="attended" ${s.status==='attended'?'selected':''}>تم الكشف</option>
-            </select><br>
-            <label>ملاحظات:</label><br>
-            <textarea id="enot" style="width:100%; height:50px;">${p.note||""}</textarea><br>
-            <button onclick="saveAdmin('${id}')" class="btn-main" style="width:100%; margin-top:10px;">حفظ التغييرات</button>
-            <button onclick="deleteSlot('${id}')" style="background:none; color:red; border:none; width:100%; cursor:pointer; margin-top:10px;">❌ حذف الموعد نهائياً</button>
-        `;
-    });
+async function addManualSlot() {
+    let n = prompt("اسم المريض:");
+    let ph = prompt("رقم الهاتف:");
+    let d = prompt("التاريخ (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+    let t = prompt("الوقت (مثال 10:30):");
+    if(n && d && t) {
+        await db.collection("slots").add({
+            date: d, time: t, booked: true, status: "pending", price: 200,
+            patient: { name: n, phone: ph || "-", note: "حجز يدوي" }
+        });
+    }
 }
 
 async function deleteDay(date) {
