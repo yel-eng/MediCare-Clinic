@@ -1,151 +1,93 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
-  authDomain: "mydoctor-clinic.firebaseapp.com",
-  projectId: "mydoctor-clinic",
-  storageBucket: "mydoctor-clinic.appspot.com",
-  messagingSenderId: "996532645974",
-  appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7"
-};
+// دالة لتوليد المواعيد بناءً على مدة الجلسة
+function generateSmartSlots() {
+    let date = document.getElementById("slotDate").value;
+    let start = document.getElementById("startTime").value;
+    let end = document.getElementById("endTime").value;
+    let duration = parseInt(document.getElementById("duration").value);
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-/* =========================
-   ADMIN: CREATE SLOTS
-========================= */
-function setAvailability() {
-
-  let date = document.getElementById("slotDate").value;
-  let start = document.getElementById("startTime").value;
-  let end = document.getElementById("endTime").value;
-
-  if (!date || !start || !end) {
-    alert("املأ البيانات");
-    return;
-  }
-
-  let startDate = new Date(`${date}T${start}`);
-  let endDate = new Date(`${date}T${end}`);
-
-  while (startDate < endDate) {
-
-    let time = startDate.toTimeString().slice(0, 5);
-
-    db.collection("slots").add({
-      date,
-      time,
-      booked: false,
-      patient: null
-    });
-
-    startDate.setMinutes(startDate.getMinutes() + 30);
-  }
-
-  loadSlots();
-}
-
-/* =========================
-   ADMIN LOAD
-========================= */
-function loadSlots() {
-
-  let container = document.getElementById("slots");
-  if (!container) return;
-
-  db.collection("slots").orderBy("date").get().then(snap => {
-
-    container.innerHTML = "";
-
-    snap.forEach(doc => {
-
-      let s = doc.data();
-
-      container.innerHTML += `
-        <div class="card">
-
-          <p>📅 ${s.date} - ⏰ ${s.time}</p>
-
-          <p>${s.booked ? "❌ محجوز" : "✅ متاح"}</p>
-
-          ${s.booked && s.patient ? `
-            <p>👤 ${s.patient.name}</p>
-            <p>📞 ${s.patient.phone}</p>
-          ` : ""}
-
-        </div>
-      `;
-    });
-
-  });
-}
-
-/* =========================
-   CLIENT LOAD SLOTS
-========================= */
-function loadAvailableSlots() {
-
-  let select = document.getElementById("slotsSelect");
-  select.innerHTML = "";
-
-  db.collection("slots")
-    .where("booked", "==", false)
-    .get()
-    .then(snap => {
-
-      snap.forEach(doc => {
-
-        let s = doc.data();
-
-        select.innerHTML += `
-          <option value="${doc.id}">
-            ${s.date} - ${s.time}
-          </option>
-        `;
-      });
-
-    });
-}
-
-/* =========================
-   BOOK SLOT
-========================= */
-function book() {
-
-  let name = document.getElementById("name").value;
-  let phone = document.getElementById("phone").value;
-  let slotId = document.getElementById("slotsSelect").value;
-
-  if (!name || !phone || !slotId) {
-    alert("املأ البيانات");
-    return;
-  }
-
-  let ref = db.collection("slots").doc(slotId);
-
-  ref.get().then(doc => {
-
-    if (doc.data().booked) {
-      alert("الموعد اتحجز ❌");
-      return;
+    if (!date || !start || !end || !duration) {
+        alert("برجاء إدخال كافة التفاصيل");
+        return;
     }
 
-    ref.update({
-      booked: true,
-      patient: { name, phone }
-    }).then(() => {
+    let startDateTime = new Date(`${date}T${start}`);
+    let endDateTime = new Date(`${date}T${end}`);
 
-      alert("تم الحجز ✅");
-      loadAvailableSlots();
+    while (startDateTime < endDateTime) {
+        let timeLabel = startDateTime.toTimeString().slice(0, 5);
+        
+        db.collection("slots").add({
+            date: date,
+            time: timeLabel,
+            booked: false,
+            patient: null,
+            timestamp: startDateTime.getTime()
+        });
 
-    });
-
-  });
+        // زيادة الوقت حسب مدة الجلسة
+        startDateTime.setMinutes(startDateTime.getMinutes() + duration);
+    }
+    alert("تم توليد المواعيد بنجاح");
+    loadSlots();
 }
 
-/* =========================
-   INIT
-========================= */
-window.onload = function () {
-  loadSlots();
-  loadAvailableSlots();
-};
+// دالة عرض بيانات المريض مع الملاحظات والـ QR
+function viewPatientDetails(slotId, patientData) {
+    const modal = document.getElementById("patientModal");
+    const content = document.getElementById("modalContent");
+    modal.style.display = "block";
+
+    content.innerHTML = `
+        <h3>الملف الطبي: ${patientData.name}</h3>
+        <p>رقم الهاتف: ${patientData.phone}</p>
+        <textarea id="adminNote" placeholder="أضف ملاحظات طبية هنا...">${patientData.note || ''}</textarea>
+        <input type="file" id="patientImage" accept="image/*">
+        <div id="qrcode" style="margin:20px auto;"></div>
+        <button onclick="updatePatientInfo('${slotId}')">حفظ التعديلات</button>
+    `;
+
+    // توليد الـ QR Code يحتوي على رابط صفحة المريض
+    new QRCode(document.getElementById("qrcode"), {
+        text: `https://yourdomain.com/patient.html?id=${slotId}`,
+        width: 128,
+        height: 128
+    });
+}
+
+// تحديث الملاحظات والصور
+function updatePatientInfo(slotId) {
+    let note = document.getElementById("adminNote").value;
+    // هنا ممكن تضيفي كود رفع الصورة لـ Firebase Storage لو حابة مستقبلاً
+    
+    db.collection("slots").doc(slotId).update({
+        "patient.note": note
+    }).then(() => {
+        alert("تم تحديث الملف الطبي");
+        closeModal();
+    });
+}
+
+function closeModal() {
+    document.getElementById("patientModal").style.display = "none";
+}
+
+// تعديل دالة التحميل لعرض الأزرار بشكل أفضل
+function loadSlots() {
+    let container = document.getElementById("slots");
+    if (!container) return;
+
+    db.collection("slots").orderBy("date").get().then(snap => {
+        container.innerHTML = "";
+        snap.forEach(doc => {
+            let s = doc.data();
+            let statusClass = s.booked ? "booked-card" : "available-card";
+            container.innerHTML += `
+                <div class="card ${statusClass}">
+                    <p>📅 ${s.date} | ⏰ ${s.time}</p>
+                    <p>${s.booked ? "🔴 محجوز" : "🟢 متاح"}</p>
+                    ${s.booked ? `<button onclick='viewPatientDetails("${doc.id}", ${JSON.stringify(s.patient)})'>فتح الملف الطبي</button>` : ""}
+                </div>
+            `;
+        });
+    });
+}
