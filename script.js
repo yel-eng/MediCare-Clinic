@@ -1,4 +1,4 @@
-// 1. Config (تأكدي من صحة بياناتك هنا)
+// 1. Config (سيبيه زي ما هو عندك)
 const firebaseConfig = {
     apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
     authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -10,9 +10,10 @@ const firebaseConfig = {
 
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
+let currentActiveSlot = null; // عشان نعرف إحنا فاتحين ميعاد مين
 
 /* =========================================
-   توليد المواعيد (7 أيام كاملة)
+   توليد المواعيد (7 أيام كاملة - الأسبوعي)
    ========================================= */
 function generateSmartSlots() {
     let startDateInput = document.getElementById("slotDate").value;
@@ -22,15 +23,14 @@ function generateSmartSlots() {
     let price = prompt("سعر الكشف الموحد للأسبوع:", "200");
 
     if (!startDateInput || !start || !end || !duration) {
-        alert("املئي كل الحقول (التاريخ، بداية ونهاية الوقت، والمدة)");
-        return;
+        alert("املئي كل الحقول أولاً"); return;
     }
 
-    // الـ Loop السحري لـ 7 أيام
+    // Loop الأسبوع (7 أيام)
     for (let i = 0; i < 7; i++) {
-        let currentLoopDate = new Date(startDateInput);
-        currentLoopDate.setDate(currentLoopDate.getDate() + i);
-        let dateStr = currentLoopDate.toISOString().split('T')[0];
+        let currentDay = new Date(startDateInput);
+        currentDay.setDate(currentDay.getDate() + i);
+        let dateStr = currentDay.toISOString().split('T')[0];
 
         let startDateTime = new Date(`${dateStr}T${start}`);
         let endDateTime = new Date(`${dateStr}T${end}`);
@@ -44,15 +44,121 @@ function generateSmartSlots() {
                 patient: null,
                 price: parseFloat(price) || 0,
                 status: "pending",
-                timestamp: startDateTime.getTime() // بنحفظ الوقت كرقم عشان الترتيب السهل
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             startDateTime.setMinutes(startDateTime.getMinutes() + duration);
         }
     }
-    alert("تم توليد جدول أسبوعي (7 أيام) بنجاح ✅");
+    alert("تم توليد جدول أسبوعي كامل بنجاح ✅");
     loadSlots();
 }
 
+/* =========================================
+   إدارة الحجز والتعديل (الأدمن)
+   ========================================= */
+function viewPatientDetails(id) {
+    currentActiveSlot = id;
+    db.collection("slots").doc(id).get().then(doc => {
+        let s = doc.data();
+        let p = s.patient || { name: "", phone: "", note: "", photo: "" };
+        
+        document.getElementById("patientModal").style.display = "block";
+        document.getElementById("modalContent").innerHTML = `
+            <h3>إدارة ميعاد: ${s.date} | ${s.time}</h3>
+            <label>اسم المريض (للحجز اليدوي):</label>
+            <input id="editName" value="${p.name}" placeholder="الاسم">
+            <label>رقم الهاتف:</label>
+            <input id="editPhone" value="${p.phone}" placeholder="الهاتف مع كود الدولة">
+            <label>المبلغ:</label>
+            <input id="editPrice" type="number" value="${s.price || 0}">
+            <label>الحالة:</label>
+            <select id="editStatus">
+                <option value="pending" ${s.status === 'pending' ? 'selected' : ''}>انتظار</option>
+                <option value="attended" ${s.status === 'attended' ? 'selected' : ''}>حضر</option>
+                <option value="missed" ${s.status === 'missed' ? 'selected' : ''}>لم يحضر</option>
+            </select>
+            <label>ملاحظات:</label>
+            <textarea id="editNote" style="width:100%; height:60px;">${p.note || ""}</textarea>
+            <label>رابط صورة التحاليل/الأشعة:</label>
+            <input id="editPhoto" value="${p.photo || ""}" placeholder="رابط الصورة">
+            
+            <div id="qrcode_area" style="margin:15px auto; display:flex; justify-content:center;"></div>
+            
+            <button onclick="updateFullBooking('${id}')">حفظ كل البيانات ✅</button>
+        `;
+
+        // توليد QR بكل البيانات
+        let qrData = `المريض: ${p.name}\nالتاريخ: ${s.date}\nالوقت: ${s.time}\nالملاحظات: ${p.note}`;
+        new QRCode(document.getElementById("qrcode_area"), { text: qrData, width: 120, height: 120 });
+    });
+}
+
+// تحديث وحجز يدوي من الأدمن
+function updateFullBooking(id) {
+    let name = document.getElementById("editName").value;
+    let phone = document.getElementById("editPhone").value;
+    let price = parseFloat(document.getElementById("editPrice").value);
+    let status = document.getElementById("editStatus").value;
+    let note = document.getElementById("editNote").value;
+    let photo = document.getElementById("editPhoto").value;
+
+    db.collection("slots").doc(id).update({
+        booked: name.trim() !== "",
+        price: price,
+        status: status,
+        patient: { name, phone, note, photo }
+    }).then(() => {
+        alert("تم تحديث البيانات بنجاح");
+        loadSlots();
+    });
+}
+
+/* =========================================
+   ميزة إرسال واتساب
+   ========================================= */
+function sendWhatsApp() {
+    let name = document.getElementById("editName").value;
+    let phone = document.getElementById("editPhone").value;
+    let note = document.getElementById("editNote").value;
+    
+    if(!phone) { alert("لا يوجد رقم هاتف!"); return; }
+    
+    let msg = `أهلاً يا ${name}%0Aنود إبلاغك بخصوص حجزك في عيادة ماي دكتور.%0Aملاحظات الطبيب: ${note}`;
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+}
+
+/* =========================================
+   عرض المواعيد (تحسين الترتيب)
+   ========================================= */
+function loadSlots() {
+    let container = document.getElementById("slots");
+    if (!container) return;
+
+    db.collection("slots").get().then(snap => {
+        let slots = [];
+        snap.forEach(doc => slots.push({id: doc.id, ...doc.data()}));
+        
+        // ترتيب يدوي بالأيام والساعات
+        slots.sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+        container.innerHTML = "";
+        slots.forEach(s => {
+            let isBooked = s.booked;
+            container.innerHTML += `
+                <div class="card" style="border-right: 8px solid ${isBooked ? '#f1c40f' : '#2ecc71'}">
+                    <p>📅 ${s.date} | ⏰ ${s.time}</p>
+                    <p>${isBooked ? "👤 " + s.patient.name : "🟢 متاح"}</p>
+                    <button onclick='viewPatientDetails("${s.id}")'>تعديل / حجز يدوي</button>
+                </div>`;
+        });
+    });
+}
+
+// تشغيل عند التحميل
+window.onload = function() {
+    if(typeof loadAvailableSlots === 'function') loadAvailableSlots();
+    loadSlots();
+};
 /* =========================================
    عرض المواعيد للمريض (حل مشكلة الاختفاء)
    ========================================= */
