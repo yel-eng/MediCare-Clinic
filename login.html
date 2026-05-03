@@ -1,43 +1,22 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>Login</title>
-<link rel="stylesheet" href="style.css">
-</head>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
 
-<body>
+<button onclick="login()">Login</button>
 
-<h2>تسجيل دخول الأدمن</h2>
+<script type="module">
+import { auth } from "./script.js";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+window.login = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-<button onclick="login()">دخول</button>
-
-<p id="msg"></p>
-
-<script>
-// 👇 لازم تكون هنا في نفس الصفحة
-
-function login(){
-
-  let email = document.getElementById("email").value;
-  let pass = document.getElementById("password").value;
-
-  console.log("clicked", email, pass);
-
-  if(email === "admin@clinic.com" && pass === "12345678"){
-
-    localStorage.setItem("admin","true");
-
-    window.location.href = "admin.html";
-
-  } else {
-    document.getElementById("msg").innerText = "❌ بيانات غير صحيحة";
-  }
-}
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      window.location.href = "admin.html";
+    })
+    .catch((err) => {
+      alert("خطأ: " + err.message);
+    });
+};
 </script>
-
-</body>
-</html>
