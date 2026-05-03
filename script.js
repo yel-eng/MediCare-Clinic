@@ -204,3 +204,41 @@ AUTO LOAD
 window.onload = function () {
   loadPatients();
 };
+
+function generateSlots() {
+
+  let date = document.getElementById("slotDate").value;
+  let start = document.getElementById("startTime").value;
+  let end = document.getElementById("endTime").value;
+
+  if (!date || !start || !end) {
+    alert("املأ البيانات");
+    return;
+  }
+
+  let startDate = new Date(`${date}T${start}`);
+  let endDate = new Date(`${date}T${end}`);
+
+  let slots = [];
+
+  while (startDate < endDate) {
+
+    let time = startDate.toTimeString().slice(0,5);
+
+    slots.push({
+      date: date,
+      time: time,
+      booked: false,
+      patient: null,
+      price: 0
+    });
+
+    startDate.setMinutes(startDate.getMinutes() + 30);
+  }
+
+  slots.forEach(slot => {
+    db.collection("slots").add(slot);
+  });
+
+  alert("تم إنشاء المواعيد");
+}
