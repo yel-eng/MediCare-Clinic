@@ -3,99 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الطبيب | MyDoctor</title>
+    <title>لوحة التحكم الاحترافية | MyDoctor</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .days-grid { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 20px; padding: 15px; min-height: 400px; background: #f0f2f5; border-radius: 15px; }
-        .day-column { flex: 0 0 300px; background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .day-header { background: #1a237e; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: bold; }
-        .setup-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .setup-table th, .setup-table td { border: 1px solid #eee; padding: 12px; text-align: center; }
-        .setup-table th { background: #f8f9fa; color: #333; }
-        .slot-item { background: #fff; border: 1px solid #eee; margin: 8px 0; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
-        .slot-item:hover { border-color: #1a237e; }
-        .booked-card { border-right: 5px solid #d32f2f; background: #fff5f5; }
-        input[type="time"], input[type="date"], input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-        #patientModal { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:white; padding:25px; z-index:2000; border-radius:15px; box-shadow:0 0 30px rgba(0,0,0,0.3); width: 90%; max-width: 500px; }
-        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999; }
+        :root { --primary: #1a237e; --secondary: #c62828; --bg: #f4f7f9; }
+        body { background: var(--bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .admin-grid { display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 20px; }
+        .main-panel, .side-panel { display: flex; flex-direction: column; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .days-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; }
+        .day-col { min-width: 280px; background: #fff; border: 1px solid #ddd; border-radius: 10px; flex-shrink: 0; }
+        .day-head { background: var(--primary); color: white; padding: 10px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .slot-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; align-items: center; font-size: 14px; }
+        .slot-row:hover { background: #f9f9f9; }
+        .btn-add { background: #2e7d32; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-del { background: var(--secondary); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .setup-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .setup-table th, .setup-table td { padding: 10px; border: 1px solid #eee; text-align: center; }
+        input, textarea, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        #modal { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%,-50%); background:white; padding:25px; border-radius:15px; box-shadow:0 0 50px rgba(0,0,0,0.5); z-index:2001; width:400px; }
+        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; }
     </style>
 </head>
 <body>
 
-<div class="section">
-    <div class="box">
-        <h2>📅 إعداد جدول العمل الأسبوعي</h2>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; background: #e8eaed; padding: 15px; border-radius: 10px;">
-            <div>
-                <label>تاريخ البداية:</label>
-                <input type="date" id="slotDate" onchange="initWeekTable()">
+<div class="admin-grid">
+    <!-- اللوحة الرئيسية: إدارة المواعيد -->
+    <div class="main-panel">
+        <div class="card">
+            <h2>📅 إعداد جدول الأسبوع</h2>
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
+                <input type="date" id="slotDate" onchange="initWeekTable()" style="width:200px">
+                <input type="number" id="duration" placeholder="المدة (دقيقة)" value="30" style="width:120px">
+                <button onclick="generateSmartSlots()" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer">توليد المواعيد</button>
             </div>
-            <div>
-                <label>مدة الكشف (دقيقة):</label>
-                <input type="number" id="duration" value="30" style="width: 70px;">
-            </div>
-            <button onclick="generateSmartSlots()" style="background: #2e7d32; color: white; padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer;">حفظ وتوليد المواعيد ✅</button>
+            <table class="setup-table">
+                <tbody id="weekSetupBody"></tbody>
+            </table>
         </div>
 
-        <table class="setup-table">
-            <thead>
-                <tr>
-                    <th>اليوم</th>
-                    <th>التاريخ</th>
-                    <th>وقت البداية</th>
-                    <th>وقت النهاية</th>
-                </tr>
-            </thead>
-            <tbody id="weekSetupBody">
-                <tr><td colspan="4" style="color: #666;">يرجى اختيار تاريخ البداية لتحديد الساعات</td></tr>
-            </tbody>
-        </table>
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <h2>📑 جدول المواعيد التشغيلي</h2>
+                <h3 id="dailyRevenue" style="margin:0; color:var(--primary)">دخل اليوم: 0 ج.م</h3>
+            </div>
+            <div class="days-container" id="slotsContainer"></div>
+        </div>
     </div>
 
-    <div class="box" style="margin-top: 30px;">
-        <h2 id="dailyRevenue" style="color: #1a237e; border-bottom: 2px solid #1a237e; padding-bottom: 10px;">💰 دخل اليوم: 0 ج.م</h2>
-        <h3>📑 الجدول التشغيلي الحالي</h3>
-        <div id="slotsContainer" class="days-grid">
-            <p style="padding: 20px; color: #888;">جاري تحميل الجدول...</p>
+    <!-- اللوحة الجانبية: المحتوى الطبي + إضافة موعد سريع -->
+    <div class="side-panel">
+        <div class="card">
+            <h3>🆕 حجز موعد يدوي (للطبيب)</h3>
+            <p style="font-size:12px; color:#666">أضف مريض مباشرة للجدول</p>
+            <input type="date" id="manualDate">
+            <input type="time" id="manualTime">
+            <input type="text" id="manualName" placeholder="اسم المريض">
+            <button onclick="addManualSlot()" class="btn-add" style="width:100%">إضافة للمواعيد</button>
+        </div>
+
+        <div class="card">
+            <h3>🎥 إدارة الفيديوهات</h3>
+            <input id="videoUrl" placeholder="رابط فيديو يوتيوب">
+            <input id="videoText" placeholder="وصف الفيديو">
+            <button onclick="addVideo()" style="width:100%">نشر فيديو</button>
+            <div id="adminVideosList" style="margin-top:10px; max-height:150px; overflow-y:auto"></div>
+        </div>
+
+        <div class="card">
+            <h3>📝 إدارة المقالات</h3>
+            <input id="blogTitle" placeholder="عنوان المقال">
+            <textarea id="blogText" placeholder="محتوى المقال"></textarea>
+            <button onclick="addBlog()" style="width:100%">نشر مقال</button>
+            <div id="adminBlogsList" style="margin-top:10px; max-height:150px; overflow-y:auto"></div>
         </div>
     </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="closeModal()"></div>
-<div id="patientModal">
+<div id="modal">
     <div id="modalContent"></div>
-    <button onclick="closeModal()" style="background:#eee; width:100%; margin-top:10px; border:none; padding:10px; border-radius:5px; cursor:pointer;">إغلاق</button>
+    <button onclick="closeModal()" style="width:100%; margin-top:10px">إلغاء</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="script.js"></script>
 <script>
-    function closeModal() {
-        document.getElementById("patientModal").style.display = "none";
-        document.getElementById("overlay").style.display = "none";
-    }
-
+    function closeModal() { document.getElementById('modal').style.display='none'; document.getElementById('overlay').style.display='none'; }
     function initWeekTable() {
-        const startDate = document.getElementById("slotDate").value;
+        const start = document.getElementById("slotDate").value;
         const tbody = document.getElementById("weekSetupBody");
-        if (!startDate) return;
-        
+        if (!start) return;
         tbody.innerHTML = "";
-        for (let i = 0; i < 7; i++) {
-            let d = new Date(startDate);
-            d.setDate(d.getDate() + i);
-            let dateStr = d.toISOString().split('T')[0];
-            let dayName = d.toLocaleDateString('ar-EG', {weekday: 'long'});
-            
-            tbody.innerHTML += `
-                <tr class="day-setup-row" data-date="${dateStr}">
-                    <td><b>${dayName}</b></td>
-                    <td>${dateStr}</td>
-                    <td><input type="time" class="start-t"></td>
-                    <td><input type="time" class="end-t"></td>
-                </tr>`;
+        for (let i=0; i<7; i++) {
+            let d = new Date(start); d.setDate(d.getDate()+i);
+            let ds = d.toISOString().split('T')[0];
+            tbody.innerHTML += `<tr><td>${d.toLocaleDateString('ar-EG',{weekday:'long'})}</td><td>${ds}</td>
+            <td><input type="time" class="start-t" placeholder="من"></td><td><input type="time" class="end-t" placeholder="إلى"></td></tr>`;
         }
     }
 </script>
