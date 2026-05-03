@@ -2,20 +2,56 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard</title>
+<title>CRM Admin Dashboard</title>
 
 <style>
-body{font-family:Arial;background:#f5f5f5;padding:20px;direction:rtl}
-.box{background:#fff;padding:15px;margin:15px 0;border-radius:10px}
-.card{background:#fff;padding:15px;margin:10px 0;border-radius:10px}
-input,textarea{width:100%;padding:8px;margin:5px 0}
-button{padding:8px 10px;background:#0d47a1;color:#fff;border:none;border-radius:6px;margin:5px}
+body{
+  font-family:Arial;
+  background:#f5f5f5;
+  padding:20px;
+  direction:rtl;
+}
+
+.box{
+  background:#fff;
+  padding:15px;
+  margin:15px 0;
+  border-radius:12px;
+}
+
+.card{
+  background:#fff;
+  padding:15px;
+  margin:10px 0;
+  border-radius:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+input,textarea{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  padding:8px 12px;
+  margin:5px 0;
+  border:none;
+  border-radius:8px;
+  background:#0d47a1;
+  color:white;
+  cursor:pointer;
+}
+
+h1,h2{color:#0d47a1;}
 </style>
 </head>
 
 <body>
 
-<h1>🏥 Admin Dashboard</h1>
+<h1>🏥 CRM Admin Dashboard</h1>
 
 <!-- VIDEOS -->
 <div class="box">
@@ -26,34 +62,35 @@ button{padding:8px 10px;background:#0d47a1;color:#fff;border:none;border-radius:
 <div id="videos"></div>
 </div>
 
-<!-- BLOG -->
+<!-- BLOGS -->
 <div class="box">
 <h2>📰 Articles</h2>
-<input id="blogTitle" placeholder="Title">
-<textarea id="blogText" placeholder="Text"></textarea>
-<input id="blogImage" placeholder="Image URL">
+<input id="blogTitle">
+<textarea id="blogText"></textarea>
+<input id="blogImage">
 <button onclick="addBlog()">إضافة مقال</button>
 <div id="blogs"></div>
 </div>
 
 <!-- PATIENTS -->
 <div class="box">
-<h2>👤 Patients</h2>
+<h2>🏥 Patients</h2>
 <div id="patients"></div>
 </div>
 
-<!-- SLOTS -->
+<!-- BOOKINGS -->
 <div class="box">
 <h2>📅 Bookings System</h2>
 
 <input type="date" id="slotDate">
 <input type="time" id="startTime">
 <input type="time" id="endTime">
-<input type="number" id="duration" placeholder="مدة الجلسة بالدقائق">
 
-<button onclick="generateSlots()">إنشاء مواعيد</button>
+<button onclick="setAvailability()">تحديد دوام اليوم</button>
 
+<h3>المواعيد</h3>
 <div id="slots"></div>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
