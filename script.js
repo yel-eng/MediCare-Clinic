@@ -1,4 +1,3 @@
-
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -62,29 +61,21 @@ function uploadImage(id, file) {
 
 
 /**********************
-🔥 QR FIX (SAFE DATA)
+QR GENERATION (FIXED)
 **********************/
 function generatePatientQR(id) {
 
-  db.collection("patients").doc(id).get().then(doc => {
+  let url =
+    "https://yel-eng.github.io/MediCare-Clinic/patient.html?id=" + id;
 
-    let d = doc.data();
+  let qrURL =
+    "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
+    encodeURIComponent(url);
 
-    let qrText =
-      "Name: " + (d.name || "N/A") +
-      "\nPhone: " + (d.phone || "N/A") +
-      "\nDate: " + (d.date || "N/A");
-
-    let qrURL =
-      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
-      encodeURIComponent(qrText);
-
-    db.collection("patients").doc(id).update({
-      qr: qrURL
-    }).then(() => {
-      loadPatients();
-    });
-
+  db.collection("patients").doc(id).update({
+    qr: qrURL
+  }).then(() => {
+    loadPatients();
   });
 }
 
@@ -105,7 +96,7 @@ function deletePatient(id, images) {
 
   db.collection("patients").doc(id).delete()
     .then(() => {
-      alert("تم حذف العميل");
+      alert("تم حذف العميل بالكامل");
       loadPatients();
     });
 }
@@ -161,13 +152,11 @@ function loadPatients() {
 
       let d = doc.data();
 
-      console.log("PATIENT:", d); // 🔥 Debug مهم
-
       container.innerHTML += `
         <div class="card">
 
-          <h3>${d.name || "No Name"}</h3>
-          <p>${d.phone || "No Phone"}</p>
+          <h3>${d.name || ""}</h3>
+          <p>${d.phone || ""}</p>
           <p>${d.date || ""} - ${d.time || ""}</p>
 
           ${d.qr ? `<img src="${d.qr}" width="120">` : ""}
