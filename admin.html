@@ -99,7 +99,18 @@ h1,h2{
 <div id="bookings"></div>
 <h3 id="income"></h3>
 </div>
+<h2>إنشاء مواعيد اليوم</h2>
 
+<input type="date" id="slotDate">
+
+<input type="time" id="startTime">
+<input type="time" id="endTime">
+
+<button onclick="generateSlots()">
+إنشاء المواعيد
+</button>
+
+<div id="slots"></div>
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
