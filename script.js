@@ -11,18 +11,31 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-// 1. توليد واجهة الأيام (اليوم الذي تملئيه فقط هو ما يتم توليده)
+// دالة مساعدة للحصول على التاريخ المحلي بصيغة YYYY-MM-DD بدقة
+function getLocalDateString(dateObj) {
+    let y = dateObj.getFullYear();
+    let m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    let d = String(dateObj.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+// 1. توليد واجهة الأيام (إصلاح مشكلة التواريخ المتضاربة)
 function setupWeekUI() {
     const grid = document.getElementById("weekSetupGrid");
     if (!grid) return;
     const startDateInput = document.getElementById("startDatePicker");
+    
     let start = (startDateInput && startDateInput.value) ? new Date(startDateInput.value) : new Date();
+    
     grid.innerHTML = ""; 
     for (let i = 0; i < 7; i++) {
         let current = new Date(start);
         current.setDate(start.getDate() + i);
-        let dateStr = current.toISOString().split('T')[0];
+        
+        // استخدام الدالة المساعدة لضمان ثبات التاريخ
+        let dateStr = getLocalDateString(current);
         let dayName = current.toLocaleDateString('ar-EG', { weekday: 'long' });
+        
         grid.innerHTML += `
             <div class="day-setup-row card" data-date="${dateStr}">
                 <b>${dayName}</b><br><small>${dateStr}</small>
@@ -34,7 +47,7 @@ function setupWeekUI() {
     }
 }
 
-// 2. توليد المواعيد (تم التعديل ليكون مرناً)
+// 2. توليد المواعيد (مرن: يولد فقط الأيام المدخلة)
 async function generateSmartSlots() {
     const rows = document.querySelectorAll(".day-setup-row");
     const durationEl = document.getElementById("duration");
@@ -51,7 +64,6 @@ async function generateSmartSlots() {
         const startInput = row.querySelector(".start-t");
         const endInput = row.querySelector(".end-t");
 
-        // سيقوم بتوليد المواعيد فقط للأيام التي أدخلتِ لها وقتاً
         if (startInput && endInput && startInput.value && endInput.value) {
             let current = new Date(`${dateStr}T${startInput.value}`);
             let limit = new Date(`${dateStr}T${endInput.value}`);
@@ -73,18 +85,18 @@ async function generateSmartSlots() {
         }
     });
 
-    if (count === 0) return alert("يرجى إدخال وقت (من وإلى) ليوم واحد على الأقل!");
+    if (count === 0) return alert("يرجى إدخال وقت ليوم واحد على الأقل!");
     
     await batch.commit();
     alert(`تم توليد ${count} موعد بنجاح!`);
     location.reload();
 }
 
-// 3. تحميل الجدول (إظهار اسم المريض مباشرة)
+// 3. تحميل الجدول (إظهار الأسماء وتحديث لحظي)
 function loadAdminSlots() {
     const container = document.getElementById("slotsContainer");
     if (!container) return;
-    let today = new Date().toISOString().split('T')[0];
+    let today = getLocalDateString(new Date());
 
     db.collection("slots").where("date", ">=", today).onSnapshot(snap => {
         let daysMap = {};
@@ -94,6 +106,7 @@ function loadAdminSlots() {
             let s = doc.data();
             if (!daysMap[s.date]) daysMap[s.date] = [];
             daysMap[s.date].push({id: doc.id, ...s});
+            // حساب الدخل فقط لمن "تم الكشف" عليهم اليوم
             if (s.date === today && s.status === "attended") totalRev += (Number(s.price) || 0);
         });
 
@@ -111,7 +124,7 @@ function loadAdminSlots() {
             dayDiv.innerHTML = `
                 <div class="day-header">
                     ${dayName}<br>${date}
-                    <button onclick="deleteDay('${date}')" style="background:red; color:white; border:none; font-size:10px; cursor:pointer; padding:2px 5px; margin-top:5px; border-radius:3px;">مسح</button>
+                    <button onclick="deleteDay('${date}')" style="background:red; color:white; border:none; font-size:10px; cursor:pointer; padding:2px 5px; margin-top:5px; border-radius:3px;">مسح اليوم</button>
                 </div>`;
             
             daysMap[date].sort((a,b)=>a.time.localeCompare(b.time)).forEach(slot => {
@@ -120,9 +133,9 @@ function loadAdminSlots() {
                 
                 dayDiv.innerHTML += `
                     <div class="slot-item ${isBooked ? 'booked-card' : ''}" style="${isBooked ? 'border-right:5px solid #e74c3c; background:#fff5f5;' : ''}">
-                        <div style="display:flex; flex-direction:column;">
+                        <div style="display:flex; flex-direction:column; overflow:hidden;">
                             <span><b>${slot.time}</b> ${isBooked ? '👤' : '🟢'}</span>
-                            <small style="color:#555; font-weight:bold;">${pName}</small>
+                            <small style="color:#2c3e50; font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${pName}</small>
                         </div>
                         <button onclick="viewPatientDetails('${slot.id}')" class="btn-outline" style="font-size:11px; padding:4px;">إدارة</button>
                     </div>`;
@@ -132,16 +145,15 @@ function loadAdminSlots() {
     });
 }
 
-// 4. عرض تفاصيل المريض (إضافة زر واتساب وتصليح البيانات)
+// 4. عرض التفاصيل مع ميزة الواتساب
 function viewPatientDetails(id) {
     db.collection("slots").doc(id).get().then(doc => {
         if (!doc.exists) return;
         let s = doc.data();
         let p = s.patient || {name:"", phone:"", note:""};
         
-        // زر الواتساب
-        let whatsappBtn = p.phone && p.phone !== "-" ? 
-            `<a href="https://wa.me/${p.phone}" target="_blank" style="background:#25D366; color:white; text-decoration:none; padding:8px; border-radius:5px; display:inline-block; margin-top:5px; font-size:12px;">💬 تواصل واتساب</a>` : "";
+        let whatsappBtn = (p.phone && p.phone !== "-") ? 
+            `<a href="https://wa.me/${p.phone.replace(/\s/g, '')}" target="_blank" style="background:#25D366; color:white; text-decoration:none; padding:8px; border-radius:5px; display:inline-block; margin-top:5px; font-size:12px;">💬 واتساب</a>` : "";
 
         document.getElementById("modal").style.display = "block";
         document.getElementById("overlay").style.display = "block";
@@ -150,26 +162,26 @@ function viewPatientDetails(id) {
                 <h3>📋 إدارة الحجز</h3>
                 ${whatsappBtn}
             </div>
-            <p><b>التوقيت:</b> ${s.date} | ${s.time}</p>
+            <p style="font-size:13px;"><b>التاريخ:</b> ${s.date} | <b>الوقت:</b> ${s.time}</p>
             <hr>
-            <label>اسم المريض:</label><br>
-            <input id="en" value="${p.name}" placeholder="الاسم" style="width:100%; padding:8px; margin-bottom:10px;"><br>
-            <label>الموبايل:</label><br>
-            <input id="ep" value="${p.phone}" placeholder="رقم الهاتف" style="width:100%; padding:8px; margin-bottom:10px;"><br>
-            <label>الحالة:</label><br>
+            <label>اسم المريض:</label>
+            <input id="en" value="${p.name}" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
+            <label>رقم الهاتف:</label>
+            <input id="ep" value="${p.phone}" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ddd; border-radius:4px;">
+            <label>الحالة:</label>
             <select id="es" style="width:100%; padding:8px; margin-bottom:10px;">
                 <option value="pending" ${s.status==='pending'?'selected':''}>انتظار</option>
                 <option value="attended" ${s.status==='attended'?'selected':''}>تم الكشف</option>
-            </select><br>
-            <label>ملاحظات:</label><br>
-            <textarea id="enot" style="width:100%; height:50px; padding:8px;">${p.note||""}</textarea><br>
-            <button onclick="saveAdmin('${id}')" class="btn-main" style="width:100%; margin-top:10px;">حفظ التغييرات</button>
-            <button onclick="deleteSlot('${id}')" style="background:none; color:red; border:none; width:100%; cursor:pointer; margin-top:10px;">❌ حذف الموعد نهائياً</button>
+            </select>
+            <label>ملاحظات:</label>
+            <textarea id="enot" style="width:100%; height:60px; padding:8px; border:1px solid #ddd; border-radius:4px;">${p.note||""}</textarea>
+            <button onclick="saveAdmin('${id}')" class="btn-main" style="width:100%; margin-top:10px; padding:10px;">حفظ التغييرات</button>
+            <button onclick="deleteSlot('${id}')" style="background:none; color:red; border:none; width:100%; cursor:pointer; margin-top:15px; font-size:12px;">❌ حذف هذا الموعد نهائياً</button>
         `;
     });
 }
 
-// 5. حفظ التعديلات
+// 5. حفظ وحذف
 async function saveAdmin(id) {
     const name = document.getElementById("en").value;
     const phone = document.getElementById("ep").value;
@@ -179,31 +191,13 @@ async function saveAdmin(id) {
     await db.collection("slots").doc(id).update({
         status: status,
         booked: name.trim() !== "", 
-        patient: {
-            name: name,
-            phone: phone,
-            note: note
-        }
+        patient: { name: name, phone: phone, note: note }
     });
     closeModal();
-    alert("تم التحديث");
-}
-
-async function addManualSlot() {
-    let n = prompt("اسم المريض:");
-    let ph = prompt("رقم الهاتف:");
-    let d = prompt("التاريخ (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-    let t = prompt("الوقت (مثال 10:30):");
-    if(n && d && t) {
-        await db.collection("slots").add({
-            date: d, time: t, booked: true, status: "pending", price: 200,
-            patient: { name: n, phone: ph || "-", note: "حجز يدوي" }
-        });
-    }
 }
 
 async function deleteDay(date) {
-    if(confirm(`مسح كل مواعيد ${date}؟`)) {
+    if(confirm(`سيتم مسح جميع مواعيد يوم ${date}. هل أنت متأكد؟`)) {
         const snap = await db.collection("slots").where("date", "==", date).get();
         const batch = db.batch();
         snap.forEach(d => batch.delete(d.ref));
@@ -212,7 +206,7 @@ async function deleteDay(date) {
 }
 
 async function deleteSlot(id) {
-    if(confirm("حذف هذا الموعد؟")) {
+    if(confirm("هل تريد حذف هذا الموعد من الجدول؟")) {
         await db.collection("slots").doc(id).delete();
         closeModal();
     }
