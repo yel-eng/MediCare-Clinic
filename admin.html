@@ -3,78 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الطبيب | MyDoctor CRM</title>
+    <title>لوحة تحكم الطبيب | MyDoctor</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .days-grid { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 20px; padding: 10px; min-height: 400px; }
-        .day-column { flex: 0 0 280px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px; padding: 15px; height: fit-content; }
-        .day-header { background: #0d47a1; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; }
-        #patientModal { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:white; padding:25px; z-index:2000; border-radius:15px; box-shadow:0 0 30px rgba(0,0,0,0.3); width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+        .days-grid { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 20px; padding: 15px; min-height: 400px; background: #f0f2f5; border-radius: 15px; }
+        .day-column { flex: 0 0 300px; background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .day-header { background: #1a237e; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        .setup-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .setup-table th, .setup-table td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        .setup-table th { background: #f8f9fa; color: #333; }
+        .slot-item { background: #fff; border: 1px solid #eee; margin: 8px 0; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .slot-item:hover { border-color: #1a237e; }
+        .booked-card { border-right: 5px solid #d32f2f; background: #fff5f5; }
+        input[type="time"], input[type="date"], input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        #patientModal { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:white; padding:25px; z-index:2000; border-radius:15px; box-shadow:0 0 30px rgba(0,0,0,0.3); width: 90%; max-width: 500px; }
         .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999; }
-        .revenue-box { background: #e3f2fd; border-left: 5px solid #0d47a1; padding: 20px; margin-top: 20px; border-radius: 10px; }
-        .slot-item { background: white; border: 1px solid #eee; margin: 5px 0; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-        .setup-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; background: white; border-radius: 8px; overflow: hidden; }
-        .setup-table th, .setup-table td { border: 1px solid #eee; padding: 8px; text-align: center; }
-        .setup-table th { background: #f0f4f8; color: #333; }
-        .setup-table input[type="time"] { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<header class="header">
-    <div class="logo">🏥 لوحة إدارة العيادة</div>
-    <nav class="nav"><a href="index.html">الموقع الرئيسي</a></nav>
-</header>
-
 <div class="section">
-    <div class="grid">
-        <!-- إعداد جدول العمل -->
-        <div class="box" style="grid-column: span 2;">
-            <h2>📅 إعداد جدول العمل الأسبوعي</h2>
-            <div style="margin-bottom:15px; display: flex; gap: 15px; align-items: center; background: #fdfdfd; padding: 10px; border-radius: 8px;">
-                <label>تاريخ بداية الأسبوع:</label>
-                <input type="date" id="slotDate" onchange="initWeekTable()" style="width: 200px;">
-                <label>مدة الكشف:</label>
-                <input type="number" id="duration" value="30" style="width: 80px;">
-                <button onclick="generateSmartSlots()" style="width: auto; flex-grow: 1;">توليد المواعيد للأيام المختارة ✅</button>
+    <div class="box">
+        <h2>📅 إعداد جدول العمل الأسبوعي</h2>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; background: #e8eaed; padding: 15px; border-radius: 10px;">
+            <div>
+                <label>تاريخ البداية:</label>
+                <input type="date" id="slotDate" onchange="initWeekTable()">
             </div>
-            
-            <table class="setup-table">
-                <thead>
-                    <tr>
-                        <th>اليوم</th>
-                        <th>التاريخ</th>
-                        <th>من (بداية)</th>
-                        <th>إلى (نهاية)</th>
-                    </tr>
-                </thead>
-                <tbody id="weekSetupBody">
-                    <tr><td colspan="4">اختر تاريخ البداية أولاً لتحديد ساعات العمل</td></tr>
-                </tbody>
-            </table>
+            <div>
+                <label>مدة الكشف (دقيقة):</label>
+                <input type="number" id="duration" value="30" style="width: 70px;">
+            </div>
+            <button onclick="generateSmartSlots()" style="background: #2e7d32; color: white; padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer;">حفظ وتوليد المواعيد ✅</button>
         </div>
 
-        <!-- المحتوى الطبي -->
-        <div class="box">
-            <h2>🎥 المحتوى الطبي</h2>
-            <input id="videoUrl" placeholder="رابط يوتيوب">
-            <input id="videoText" placeholder="عنوان الفيديو">
-            <button onclick="addVideo()" style="margin-bottom:10px;">إضافة فيديو</button>
-            <hr>
-            <input id="blogTitle" placeholder="عنوان المقال">
-            <textarea id="blogText" placeholder="محتوى المقال"></textarea>
-            <button onclick="addBlog()">نشر المقال</button>
-        </div>
+        <table class="setup-table">
+            <thead>
+                <tr>
+                    <th>اليوم</th>
+                    <th>التاريخ</th>
+                    <th>وقت البداية</th>
+                    <th>وقت النهاية</th>
+                </tr>
+            </thead>
+            <tbody id="weekSetupBody">
+                <tr><td colspan="4" style="color: #666;">يرجى اختيار تاريخ البداية لتحديد الساعات</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <div class="revenue-box">
-        <h2 id="dailyRevenue" style="margin:0;">💰 دخل اليوم المحصل: 0 ج.م</h2>
-    </div>
-
-    <div class="box" style="margin-top:20px;">
-        <h2>📑 جدول المواعيد (الأيام القادمة فقط)</h2>
+    <div class="box" style="margin-top: 30px;">
+        <h2 id="dailyRevenue" style="color: #1a237e; border-bottom: 2px solid #1a237e; padding-bottom: 10px;">💰 دخل اليوم: 0 ج.م</h2>
+        <h3>📑 الجدول التشغيلي الحالي</h3>
         <div id="slotsContainer" class="days-grid">
-            <!-- ستظهر هنا الأيام التي حددتيها والمستقبلية فقط -->
+            <p style="padding: 20px; color: #888;">جاري تحميل الجدول...</p>
         </div>
     </div>
 </div>
@@ -82,7 +64,7 @@
 <div class="overlay" id="overlay" onclick="closeModal()"></div>
 <div id="patientModal">
     <div id="modalContent"></div>
-    <button onclick="closeModal()" style="background:#666; width:100%; margin-top:10px; color:white;">إغلاق</button>
+    <button onclick="closeModal()" style="background:#eee; width:100%; margin-top:10px; border:none; padding:10px; border-radius:5px; cursor:pointer;">إغلاق</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -113,8 +95,7 @@
                     <td>${dateStr}</td>
                     <td><input type="time" class="start-t"></td>
                     <td><input type="time" class="end-t"></td>
-                </tr>
-            `;
+                </tr>`;
         }
     }
 </script>
