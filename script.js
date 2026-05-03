@@ -8,22 +8,19 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
-const storage = firebase.storage();
 
 /* =========================
-   CREATE SLOTS (ADMIN)
+   ADMIN: CREATE SLOTS
 ========================= */
-function generateSlots() {
+function setAvailability() {
 
   let date = document.getElementById("slotDate").value;
   let start = document.getElementById("startTime").value;
   let end = document.getElementById("endTime").value;
-  let duration = parseInt(document.getElementById("duration").value);
 
-  if (!date || !start || !end || !duration) {
-    alert("املأ كل البيانات");
+  if (!date || !start || !end) {
+    alert("املأ البيانات");
     return;
   }
 
@@ -34,38 +31,28 @@ function generateSlots() {
 
     let time = startDate.toTimeString().slice(0, 5);
 
-    let endTimeDate = new Date(startDate);
-    endTimeDate.setMinutes(endTimeDate.getMinutes() + duration);
-
-    let endTime = endTimeDate.toTimeString().slice(0, 5);
-
     db.collection("slots").add({
       date,
       time,
-      endTime,
-      duration,
       booked: false,
       patient: null
     });
 
-    startDate.setMinutes(startDate.getMinutes() + duration);
+    startDate.setMinutes(startDate.getMinutes() + 30);
   }
 
-  alert("تم إنشاء المواعيد");
   loadSlots();
-  loadAvailableSlots();
 }
 
-
 /* =========================
-   LOAD ADMIN SLOTS
+   ADMIN LOAD
 ========================= */
 function loadSlots() {
 
   let container = document.getElementById("slots");
   if (!container) return;
 
-  db.collection("slots").get().then(snap => {
+  db.collection("slots").orderBy("date").get().then(snap => {
 
     container.innerHTML = "";
 
@@ -76,8 +63,7 @@ function loadSlots() {
       container.innerHTML += `
         <div class="card">
 
-          <p>📅 ${s.date}</p>
-          <p>⏰ ${s.time} - ${s.endTime || ""}</p>
+          <p>📅 ${s.date} - ⏰ ${s.time}</p>
 
           <p>${s.booked ? "❌ محجوز" : "✅ متاح"}</p>
 
@@ -86,8 +72,6 @@ function loadSlots() {
             <p>📞 ${s.patient.phone}</p>
           ` : ""}
 
-          <button onclick="deleteSlot('${doc.id}')">🗑 حذف</button>
-
         </div>
       `;
     });
@@ -95,15 +79,12 @@ function loadSlots() {
   });
 }
 
-
 /* =========================
-   CLIENT SLOTS
+   CLIENT LOAD SLOTS
 ========================= */
 function loadAvailableSlots() {
 
   let select = document.getElementById("slotsSelect");
-  if (!select) return;
-
   select.innerHTML = "";
 
   db.collection("slots")
@@ -112,11 +93,12 @@ function loadAvailableSlots() {
     .then(snap => {
 
       snap.forEach(doc => {
+
         let s = doc.data();
 
         select.innerHTML += `
           <option value="${doc.id}">
-            ${s.date} - ${s.time} → ${s.endTime}
+            ${s.date} - ${s.time}
           </option>
         `;
       });
@@ -124,9 +106,8 @@ function loadAvailableSlots() {
     });
 }
 
-
 /* =========================
-   BOOK SLOT (CLIENT)
+   BOOK SLOT
 ========================= */
 function book() {
 
@@ -143,11 +124,8 @@ function book() {
 
   ref.get().then(doc => {
 
-    let s = doc.data();
-
-    if (s.booked) {
-      alert("الموعد محجوز ❌");
-      loadAvailableSlots();
+    if (doc.data().booked) {
+      alert("الموعد اتحجز ❌");
       return;
     }
 
@@ -156,26 +134,13 @@ function book() {
       patient: { name, phone }
     }).then(() => {
 
-      alert("تم الحجز بنجاح ✅");
-
-      loadSlots();
+      alert("تم الحجز ✅");
       loadAvailableSlots();
+
     });
 
   });
 }
-
-
-/* =========================
-   DELETE SLOT (ADMIN)
-========================= */
-function deleteSlot(id) {
-  db.collection("slots").doc(id).delete().then(() => {
-    loadSlots();
-    loadAvailableSlots();
-  });
-}
-
 
 /* =========================
    INIT
