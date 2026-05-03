@@ -10,8 +10,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
-const storage = firebase.storage();
-
 
 /**********************
 🔥 LOAD AVAILABLE SLOTS (للعميل)
@@ -23,6 +21,8 @@ function loadAvailableSlots() {
 
   db.collection("slots")
     .where("booked", "==", false)
+    .orderBy("date")
+    .orderBy("time")
     .get()
     .then(snap => {
 
@@ -43,7 +43,7 @@ function loadAvailableSlots() {
 
 
 /**********************
-🔥 BOOK (من العميل)
+🔥 BOOK (عميل)
 **********************/
 function book() {
 
@@ -56,59 +56,12 @@ function book() {
     return;
   }
 
-  let slotRef = db.collection("slots").doc(slotId);
-
-  db.runTransaction(async (t) => {
-
-    let slotDoc = await t.get(slotRef);
-
-    if (!slotDoc.exists) throw "Slot مش موجود";
-
-    if (slotDoc.data().booked) {
-      throw "الموعد اتحجز خلاص ❌";
-    }
-
-    t.update(slotRef, {
-      booked: true,
-      patient: { name, phone }
-    });
-
-    db.collection("patients").add({
-      name,
-      phone,
-      date: slotDoc.data().date,
-      time: slotDoc.data().time,
-      price: slotDoc.data().price || 0,
-      images: [],
-      qr: null,
-      done: false
-    });
-
-  })
-  .then(() => {
-    alert("تم الحجز ✅");
-    loadAvailableSlots();
-  })
-  .catch(err => alert(err));
-}
-
-
-/**********************
-🔥 ADMIN BOOK (حجز من الادمن)
-**********************/
-function adminBook(slotId) {
-
-  let name = prompt("اسم العميل");
-  let phone = prompt("رقم العميل");
-
-  if (!name || !phone) return;
-
   let ref = db.collection("slots").doc(slotId);
 
   ref.get().then(doc => {
 
     if (doc.data().booked) {
-      alert("محجوز بالفعل");
+      alert("الموعد محجوز ❌");
       return;
     }
 
@@ -123,111 +76,42 @@ function adminBook(slotId) {
       date: doc.data().date,
       time: doc.data().time,
       price: doc.data().price || 0,
-      images: [],
-      qr: null,
+      note: "",
       done: false
     });
 
-    loadSlots();
-    loadPatients();
+    alert("تم الحجز ✅");
+    loadAvailableSlots();
   });
 }
 
 
 /**********************
-🔥 GENERATE SLOTS (الأدمن)
+🔥 EDIT PATIENT
 **********************/
-function generateSlots() {
+function editPatient(id, data) {
 
-  let date = document.getElementById("slotDate").value;
-  let start = document.getElementById("startTime").value;
-  let end = document.getElementById("endTime").value;
-  let duration = document.getElementById("duration").value || 30;
+  let name = prompt("الاسم", data.name);
+  let phone = prompt("التليفون", data.phone);
+  let price = prompt("السعر", data.price || 0);
+  let note = prompt("ملاحظات", data.note || "");
 
-  let startDate = new Date(`${date}T${start}`);
-  let endDate = new Date(`${date}T${end}`);
-
-  while (startDate < endDate) {
-
-    let time = startDate.toTimeString().slice(0,5);
-
-    db.collection("slots").add({
-      date,
-      time,
-      slotKey: date + "_" + time,
-      booked: false,
-      price: 0,
-      patient: null
-    });
-
-    startDate.setMinutes(startDate.getMinutes() + Number(duration));
-  }
-
-  alert("تم إنشاء المواعيد");
-  loadSlots();
+  db.collection("patients").doc(id).update({
+    name,
+    phone,
+    price: Number(price || 0),
+    note
+  }).then(loadPatients);
 }
 
 
 /**********************
-🔥 LOAD SLOTS (الأدمن)
+🔥 DELETE PATIENT
 **********************/
-function loadSlots() {
+function deletePatient(id) {
 
-  let container = document.getElementById("slots");
-  if (!container) return;
-
-  db.collection("slots").get().then(snap => {
-
-    container.innerHTML = "";
-
-    snap.forEach(doc => {
-
-      let s = doc.data();
-
-      container.innerHTML += `
-        <div class="card">
-
-          <p>${s.date} - ${s.time}</p>
-          <p>${s.booked ? "❌ محجوز" : "✅ متاح"}</p>
-
-          <input id="price-${doc.id}" placeholder="السعر">
-
-          <button onclick="updatePrice('${doc.id}')">💰 حفظ</button>
-
-          ${!s.booked ? `
-            <button onclick="adminBook('${doc.id}')">
-            ➕ حجز للعميل
-            </button>
-          ` : ""}
-
-          <button onclick="deleteSlot('${doc.id}')">🗑 حذف</button>
-
-        </div>
-      `;
-    });
-
-  });
-}
-
-
-/**********************
-🔥 UPDATE PRICE
-**********************/
-function updatePrice(id) {
-
-  let price = document.getElementById("price-" + id).value;
-
-  db.collection("slots").doc(id).update({
-    price: Number(price || 0)
-  }).then(loadSlots);
-}
-
-
-/**********************
-🔥 DELETE SLOT
-**********************/
-function deleteSlot(id) {
-  db.collection("slots").doc(id).delete().then(loadSlots);
+  db.collection("patients").doc(id).delete()
+    .then(loadPatients);
 }
 
 
@@ -253,6 +137,12 @@ function loadPatients() {
           <h3>${d.name}</h3>
           <p>${d.phone}</p>
           <p>${d.date} - ${d.time}</p>
+          <p>💰 ${d.price || 0}</p>
+          <p>📝 ${d.note || ""}</p>
+
+          <button onclick="editPatient('${doc.id}', ${JSON.stringify(d)})">
+          ✏️ تعديل
+          </button>
 
           <button onclick="deletePatient('${doc.id}')">
           🗑 حذف
@@ -267,10 +157,102 @@ function loadPatients() {
 
 
 /**********************
-🔥 DELETE PATIENT
+🔥 GENERATE SLOTS
 **********************/
-function deletePatient(id) {
-  db.collection("patients").doc(id).delete().then(loadPatients);
+function generateSlots() {
+
+  let date = document.getElementById("slotDate").value;
+  let start = document.getElementById("startTime").value;
+  let end = document.getElementById("endTime").value;
+  let duration = document.getElementById("duration").value || 30;
+
+  let startDate = new Date(`${date}T${start}`);
+  let endDate = new Date(`${date}T${end}`);
+
+  while (startDate < endDate) {
+
+    let time = startDate.toTimeString().slice(0,5);
+
+    db.collection("slots").add({
+      date,
+      time,
+      booked: false,
+      price: 0,
+      patient: null
+    });
+
+    startDate.setMinutes(startDate.getMinutes() + Number(duration));
+  }
+
+  alert("تم إنشاء المواعيد");
+  loadSlots();
+}
+
+
+/**********************
+🔥 LOAD SLOTS (ADMIN)
+**********************/
+function loadSlots() {
+
+  let container = document.getElementById("slots");
+  if (!container) return;
+
+  db.collection("slots")
+    .orderBy("date")
+    .orderBy("time")
+    .get()
+    .then(snap => {
+
+      container.innerHTML = "";
+
+      snap.forEach(doc => {
+
+        let s = doc.data();
+
+        container.innerHTML += `
+          <div class="card">
+
+            <p>📅 ${s.date} - ${s.time}</p>
+            <p>${s.booked ? "❌ محجوز" : "✅ متاح"}</p>
+
+            <input id="price-${doc.id}" placeholder="السعر">
+
+            <button onclick="updatePrice('${doc.id}')">
+              💰 حفظ
+            </button>
+
+            <button onclick="deleteSlot('${doc.id}')">
+              🗑 حذف
+            </button>
+
+          </div>
+        `;
+      });
+
+    });
+}
+
+
+/**********************
+🔥 UPDATE PRICE
+**********************/
+function updatePrice(id) {
+
+  let price = document.getElementById("price-" + id).value;
+
+  db.collection("slots").doc(id).update({
+    price: Number(price || 0)
+  }).then(loadSlots);
+}
+
+
+/**********************
+🔥 DELETE SLOT
+**********************/
+function deleteSlot(id) {
+
+  db.collection("slots").doc(id).delete()
+    .then(loadSlots);
 }
 
 
