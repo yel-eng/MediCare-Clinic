@@ -1,24 +1,106 @@
-<div class="box">
-    <h2>📅 إعداد جدول المواعيد الذكي</h2>
-    <input type="date" id="slotDate">
-    <div style="display:flex; gap:10px;">
-        <input type="time" id="startTime" title="بداية العمل">
-        <input type="time" id="endTime" title="نهاية العمل">
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة تحكم الطبيب | MyDoctor CRM</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ستايل إضافي للمربع المنبثق (Modal) */
+        #patientModal {
+            display:none; 
+            position:fixed; 
+            top:50%; 
+            left:50%; 
+            transform: translate(-50%, -50%);
+            background:white; 
+            padding:30px; 
+            z-index:2000; 
+            border-radius:15px; 
+            box-shadow:0 0 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+        }
+        .overlay {
+            display:none;
+            position:fixed;
+            top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.5);
+            z-index:1999;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">🏥 لوحة إدارة العيادة</div>
+    <nav class="nav">
+        <a href="index.html">الموقع الرئيسي</a>
+    </nav>
+</header>
+
+<div class="section">
+    <div class="grid">
+        <!-- قسم توليد المواعيد الذكي -->
+        <div class="box">
+            <h2>📅 توليد مواعيد اليوم</h2>
+            <label>التاريخ:</label>
+            <input type="date" id="slotDate">
+            
+            <div style="display:flex; gap:10px;">
+                <div><label>من:</label><input type="time" id="startTime"></div>
+                <div><label>إلى:</label><input type="time" id="endTime"></div>
+            </div>
+            
+            <label>مدة الكشف (بالدقائق):</label>
+            <input type="number" id="duration" placeholder="مثلاً: 30" value="30">
+            
+            <button onclick="generateSmartSlots()">توليد المواعيد آلياً ✅</button>
+        </div>
+
+        <!-- قسم إضافة الفيديوهات والمقالات -->
+        <div class="box">
+            <h2>🎥 إضافة محتوى جديد</h2>
+            <input id="videoUrl" placeholder="رابط فيديو اليوتيوب">
+            <input id="videoText" placeholder="عنوان الفيديو">
+            <button onclick="addVideo()">إضافة الفيديو</button>
+            <hr>
+            <input id="blogTitle" placeholder="عنوان المقال">
+            <textarea id="blogText" placeholder="محتوى المقال"></textarea>
+            <button onclick="addBlog()">نشر المقال</button>
+        </div>
     </div>
-    <input type="number" id="duration" placeholder="مدة الجلسة (بالدقائق) مثلاً 30">
-    <button onclick="generateSmartSlots()">توليد مواعيد الأسبوع</button>
+
+    <!-- عرض المواعيد والحجوزات -->
+    <div class="box">
+        <h2>📑 جدول المواعيد والحجوزات</h2>
+        <div id="slots" class="grid">
+            <!-- المواعيد هتظهر هنا برمجياً -->
+        </div>
+    </div>
 </div>
 
-<div class="box">
-    <h2>👥 إدارة المرضى والملفات الطبية</h2>
-    <div id="patientsList" class="grid"></div>
-</div>
-
-<!-- Modal بسيط لعرض بيانات المريض وتعديلها -->
-<div id="patientModal" style="display:none; position:fixed; top:10%; left:10%; right:10%; background:white; padding:20px; z-index:2000; border-radius:15px; box-shadow:0 0 20px rgba(0,0,0,0.5);">
+<!-- المربع المنبثق للملف الطبي والـ QR -->
+<div class="overlay" id="overlay" onclick="closeModal()"></div>
+<div id="patientModal">
     <div id="modalContent"></div>
-    <button onclick="closeModal()" style="background:red;">إغلاق</button>
+    <button onclick="closeModal()" style="background:#666; margin-top:10px;">إغلاق</button>
 </div>
 
-<!-- مكتبة الـ QR Code -->
+<!-- المكتبات اللازمة -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<!-- ربط ملف الجافاسكريبت الموحد -->
+<script src="script.js"></script>
+
+<script>
+    // دالة إضافية لإغلاق المربع المنبثق
+    function closeModal() {
+        document.getElementById("patientModal").style.display = "none";
+        document.getElementById("overlay").style.display = "none";
+    }
+</script>
+
+</body>
+</html>
