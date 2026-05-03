@@ -3,106 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الاحترافية | MyDoctor</title>
+    <title>نظام إدارة العيادة المتكامل</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        :root { --primary: #1a237e; --secondary: #c62828; --bg: #f4f7f9; }
-        body { background: var(--bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .admin-grid { display: grid; grid-template-columns: 1fr 350px; gap: 20px; padding: 20px; }
-        .main-panel, .side-panel { display: flex; flex-direction: column; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .days-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; }
-        .day-col { min-width: 280px; background: #fff; border: 1px solid #ddd; border-radius: 10px; flex-shrink: 0; }
-        .day-head { background: var(--primary); color: white; padding: 10px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
-        .slot-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; align-items: center; font-size: 14px; }
-        .slot-row:hover { background: #f9f9f9; }
-        .btn-add { background: #2e7d32; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-        .btn-del { background: var(--secondary); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-        .setup-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .setup-table th, .setup-table td { padding: 10px; border: 1px solid #eee; text-align: center; }
-        input, textarea, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        #modal { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%,-50%); background:white; padding:25px; border-radius:15px; box-shadow:0 0 50px rgba(0,0,0,0.5); z-index:2001; width:400px; }
-        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; }
+        :root { --main: #1a237e; --accent: #00bcd4; --bg: #f0f2f5; }
+        body { background: var(--bg); font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .dashboard { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+        .sidebar { background: white; padding: 20px; border-left: 2px solid #ddd; }
+        .content { padding: 25px; overflow-y: auto; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        /* جدول الأيام السبعة */
+        .week-config { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
+        .day-box { border: 1px solid #ddd; padding: 10px; border-radius: 10px; text-align: center; background: #fafafa; }
+        .day-box.active { border-color: var(--main); background: #e8eaf6; }
+
+        /* الجدول التشغيلي */
+        .slots-grid { display: flex; overflow-x: auto; gap: 20px; padding-bottom: 20px; }
+        .day-column { min-width: 320px; background: white; border-radius: 12px; border: 1px solid #e0e0e0; }
+        .day-header { background: var(--main); color: white; padding: 15px; border-radius: 12px 12px 0 0; position: sticky; top: 0; }
+        .slot-item { border-bottom: 1px solid #eee; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .slot-item.booked { border-right: 5px solid var(--accent); background: #f1f8e9; }
+
+        .btn { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-main { background: var(--main); color: white; }
+        .btn-outline { border: 1px solid var(--main); color: var(--main); background: none; }
+        
+        #qrcode-container { text-align: center; margin-top: 15px; padding: 10px; background: #eee; border-radius: 10px; }
+        canvas { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
 
-<div class="admin-grid">
-    <!-- اللوحة الرئيسية: إدارة المواعيد -->
-    <div class="main-panel">
+<div class="dashboard">
+    <!-- الجانب الأيمن: أدوات الإدارة -->
+    <div class="sidebar">
+        <h2 style="color: var(--main);">Clinic Admin</h2>
+        <hr>
+        <h3>🛠️ أدوات التحكم</h3>
+        <button class="btn btn-main" style="width: 100%; margin-bottom: 10px;" onclick="generateSmartSlots()">توليد مواعيد الأسبوع 🚀</button>
+        
         <div class="card">
-            <h2>📅 إعداد جدول الأسبوع</h2>
-            <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
-                <input type="date" id="slotDate" onchange="initWeekTable()" style="width:200px">
-                <input type="number" id="duration" placeholder="المدة (دقيقة)" value="30" style="width:120px">
-                <button onclick="generateSmartSlots()" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer">توليد المواعيد</button>
-            </div>
-            <table class="setup-table">
-                <tbody id="weekSetupBody"></tbody>
-            </table>
+            <h4>📍 تحديد البداية</h4>
+            <input type="date" id="startDatePicker" onchange="refreshWeekUI()">
+            <small>تلقائياً يبدأ من اليوم</small>
         </div>
 
         <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center">
-                <h2>📑 جدول المواعيد التشغيلي</h2>
-                <h3 id="dailyRevenue" style="margin:0; color:var(--primary)">دخل اليوم: 0 ج.م</h3>
-            </div>
-            <div class="days-container" id="slotsContainer"></div>
+            <h4>📝 إضافة يدوية / تعديل</h4>
+            <input type="text" id="mName" placeholder="اسم المريض">
+            <input type="time" id="mTime">
+            <input type="date" id="mDate">
+            <button class="btn btn-outline" style="width: 100%;" onclick="addManualSlot()">إضافة مريض للجدول</button>
+        </div>
+
+        <div class="card">
+            <h4>🎥 المحتوى</h4>
+            <input id="vUrl" placeholder="رابط فيديو">
+            <button class="btn btn-outline" onclick="addVideo()" style="width: 100%;">نشر فيديو</button>
         </div>
     </div>
 
-    <!-- اللوحة الجانبية: المحتوى الطبي + إضافة موعد سريع -->
-    <div class="side-panel">
+    <!-- الجانب الأيسر: عرض البيانات -->
+    <div class="content">
         <div class="card">
-            <h3>🆕 حجز موعد يدوي (للطبيب)</h3>
-            <p style="font-size:12px; color:#666">أضف مريض مباشرة للجدول</p>
-            <input type="date" id="manualDate">
-            <input type="time" id="manualTime">
-            <input type="text" id="manualName" placeholder="اسم المريض">
-            <button onclick="addManualSlot()" class="btn-add" style="width:100%">إضافة للمواعيد</button>
+            <h3>📅 إعدادات مواعيد الأسبوع (اختر ساعات العمل)</h3>
+            <div id="weekSetupGrid" class="week-config"></div>
         </div>
 
-        <div class="card">
-            <h3>🎥 إدارة الفيديوهات</h3>
-            <input id="videoUrl" placeholder="رابط فيديو يوتيوب">
-            <input id="videoText" placeholder="وصف الفيديو">
-            <button onclick="addVideo()" style="width:100%">نشر فيديو</button>
-            <div id="adminVideosList" style="margin-top:10px; max-height:150px; overflow-y:auto"></div>
-        </div>
-
-        <div class="card">
-            <h3>📝 إدارة المقالات</h3>
-            <input id="blogTitle" placeholder="عنوان المقال">
-            <textarea id="blogText" placeholder="محتوى المقال"></textarea>
-            <button onclick="addBlog()" style="width:100%">نشر مقال</button>
-            <div id="adminBlogsList" style="margin-top:10px; max-height:150px; overflow-y:auto"></div>
+        <div id="slotsContainer" class="slots-grid">
+            <!-- سيتم تحميل الأعمدة هنا -->
         </div>
     </div>
 </div>
 
-<div class="overlay" id="overlay" onclick="closeModal()"></div>
-<div id="modal">
-    <div id="modalContent"></div>
-    <button onclick="closeModal()" style="width:100%; margin-top:10px">إلغاء</button>
+<!-- Modal التعديل المتطور -->
+<div id="editModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; z-index:1000; border-radius:20px; width:500px; box-shadow:0 0 100px rgba(0,0,0,0.5);">
+    <div id="modalBody"></div>
+    <div id="qrcode-container">
+        <p>QR الحجز:</p>
+        <div id="qrcode"></div>
+    </div>
+    <button class="btn btn-main" style="width:100%; margin-top:15px;" onclick="closeEditModal()">إغلاق</button>
 </div>
+<div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:999;" onclick="closeEditModal()"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="script.js"></script>
-<script>
-    function closeModal() { document.getElementById('modal').style.display='none'; document.getElementById('overlay').style.display='none'; }
-    function initWeekTable() {
-        const start = document.getElementById("slotDate").value;
-        const tbody = document.getElementById("weekSetupBody");
-        if (!start) return;
-        tbody.innerHTML = "";
-        for (let i=0; i<7; i++) {
-            let d = new Date(start); d.setDate(d.getDate()+i);
-            let ds = d.toISOString().split('T')[0];
-            tbody.innerHTML += `<tr><td>${d.toLocaleDateString('ar-EG',{weekday:'long'})}</td><td>${ds}</td>
-            <td><input type="time" class="start-t" placeholder="من"></td><td><input type="time" class="end-t" placeholder="إلى"></td></tr>`;
-        }
-    }
-</script>
 </body>
 </html>
