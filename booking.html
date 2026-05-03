@@ -18,7 +18,7 @@
 <div class="section">
     <div class="box" style="max-width: 600px; margin: 0 auto;">
         <h2>🗓️ احجز موعدك الآن</h2>
-        <p>برجاء إدخال بياناتك واختيار الموعد المناسب من جدول الأسبوع:</p>
+        <p>برجاء إدخال بياناتك واختيار الموعد المناسب:</p>
         
         <div class="form-group">
             <label>الاسم بالكامل:</label>
@@ -30,11 +30,19 @@
             <input type="tel" id="phone" placeholder="01xxxxxxxxx">
         </div>
 
+        <!-- الخطوة الأولى: اختيار اليوم -->
         <div class="form-group">
-            <label>اختر من المواعيد المتاحة (7 أيام):</label>
-            <!-- هذا هو العنصر السحري اللي الجافاسكريبت بيملاه -->
+            <label>اختر اليوم:</label>
+            <select id="daySelect" onchange="updateAvailableTimes()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px;">
+                <option value="">جاري تحميل الأيام المتاحة...</option>
+            </select>
+        </div>
+
+        <!-- الخطوة الثانية: اختيار الوقت (يظهر بعد اختيار اليوم) -->
+        <div class="form-group" id="timeSlotGroup" style="display: none; margin-top: 15px;">
+            <label>اختر الوقت المتاح:</label>
             <select id="slotsSelect" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px;">
-                <option value="">جاري تحميل المواعيد الأسبوعية...</option>
+                <option value="">اختر الوقت...</option>
             </select>
         </div>
 
@@ -44,10 +52,8 @@
     </div>
 </div>
 
-<!-- المكتبات الأساسية (لازم تكون موجودة في كل الصفحات) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<!-- ربط ملف الـ JS اللي فيه الفانكشنز اللي بعتها لك -->
 <script src="script.js"></script>
 
 </body>
