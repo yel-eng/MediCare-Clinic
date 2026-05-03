@@ -242,3 +242,81 @@ function generateSlots() {
 
   alert("تم إنشاء المواعيد");
 }
+
+function loadSlots() {
+
+  let container = document.getElementById("slots");
+  if (!container) return;
+
+  db.collection("slots").get().then(snap => {
+
+    container.innerHTML = "";
+
+    snap.forEach(doc => {
+
+      let s = doc.data();
+
+      container.innerHTML += `
+        <div class="card">
+
+          <p>📅 ${s.date}</p>
+          <p>⏰ ${s.time}</p>
+          <p>💰 ${s.price || 0}</p>
+
+          <p>${s.booked ? "محجوز" : "متاح"}</p>
+
+          <input placeholder="سعر" id="price-${doc.id}">
+
+          <button onclick="updatePrice('${doc.id}')">
+          حفظ السعر
+          </button>
+
+          <button style="background:red"
+            onclick="deleteSlot('${doc.id}')">
+          حذف
+          </button>
+
+        </div>
+      `;
+    });
+
+  });
+}
+function updatePrice(id) {
+
+  let price = document.getElementById("price-" + id).value;
+
+  db.collection("slots").doc(id).update({
+    price: Number(price)
+  }).then(() => {
+    loadSlots();
+  });
+}
+
+function bookSlot(slotId, patientData) {
+
+  db.collection("slots").doc(slotId).get().then(doc => {
+
+    let s = doc.data();
+
+    if (s.booked) {
+      alert("الموعد محجوز ❌ اختاري ميعاد تاني");
+      return;
+    }
+
+    db.collection("slots").doc(slotId).update({
+      booked: true,
+      patient: patientData
+    }).then(() => {
+
+      alert("تم الحجز");
+
+    });
+
+  });
+}
+
+function deleteSlot(id) {
+  db.collection("slots").doc(id).delete();
+  loadSlots();
+}
