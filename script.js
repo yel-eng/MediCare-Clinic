@@ -10,10 +10,11 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 
 /**********************
-BOOK PATIENT
+BOOK (FIXED + SLOT SAFE)
 **********************/
 function book() {
 
@@ -27,41 +28,96 @@ function book() {
     return;
   }
 
-  // نجيب slot المطابق
+  let slotKey = date + "_" + time;
+
   db.collection("slots")
-    .where("date", "==", date)
-    .where("time", "==", time)
+    .where("slotKey", "==", slotKey)
     .get()
     .then(snap => {
 
       if (snap.empty) {
-        alert("الميعاد ده مش موجود ❌");
+        alert("الميعاد غير موجود ❌");
         return;
       }
 
-      let slotDoc = snap.docs[0];
+      let slot = snap.docs[0];
 
-      let slot = slotDoc.data();
-
-      if (slot.booked) {
-        alert("الموعد محجوز ❌ اختار وقت تاني");
+      if (slot.data().booked) {
+        alert("الموعد محجوز ❌");
         return;
       }
 
-      // نحجز فعليًا
-      slotDoc.ref.update({
+      slot.ref.update({
         booked: true,
         patient: { name, phone }
-      }).then(() => {
-
-        alert("تم الحجز بنجاح ✅");
-
-        loadSlots();
-
       });
 
+      db.collection("patients").add({
+        name,
+        phone,
+        date,
+        time,
+        price: slot.data().price || 0,
+        images: [],
+        qr: null,
+        done: false
+      });
+
+      alert("تم الحجز بنجاح ✅");
+      loadSlots();
+      loadPatients();
     });
 }
+
+
+/**********************
+EDIT PATIENT
+**********************/
+function editPatient(id, data) {
+
+  let name = prompt("الاسم", data.name || "");
+  let phone = prompt("التليفون", data.phone || "");
+  let date = prompt("التاريخ", data.date || "");
+  let time = prompt("الوقت", data.time || "");
+  let price = prompt("السعر", data.price || 0);
+
+  db.collection("patients").doc(id).update({
+    name,
+    phone,
+    date,
+    time,
+    price: Number(price || 0)
+  }).then(() => {
+    loadPatients();
+  });
+}
+
+
+/**********************
+ADD PATIENT BY ADMIN
+**********************/
+function addPatientByAdmin() {
+
+  let name = prompt("الاسم");
+  let phone = prompt("التليفون");
+  let date = prompt("التاريخ");
+  let time = prompt("الوقت");
+  let price = prompt("السعر");
+
+  db.collection("patients").add({
+    name,
+    phone,
+    date,
+    time,
+    price: Number(price || 0),
+    images: [],
+    qr: null,
+    done: false
+  }).then(() => {
+    loadPatients();
+  });
+}
+
 
 /**********************
 UPLOAD IMAGE
@@ -70,16 +126,13 @@ function uploadImage(id, file) {
 
   if (!file) return;
 
-  const storageRef =
-    firebase.storage().ref("patients/" + id + "/" + file.name);
+  let ref = storage.ref("patients/" + id + "/" + file.name);
 
-  storageRef.put(file).then(snapshot => {
-    snapshot.ref.getDownloadURL().then(url => {
+  ref.put(file).then(snap => {
+    snap.ref.getDownloadURL().then(url => {
 
       db.collection("patients").doc(id).update({
         images: firebase.firestore.FieldValue.arrayUnion(url)
-      }).then(() => {
-        loadPatients();
       });
 
     });
@@ -88,78 +141,55 @@ function uploadImage(id, file) {
 
 
 /**********************
-QR GENERATION
+QR
 **********************/
 function generatePatientQR(id) {
 
   let url =
     "https://yel-eng.github.io/MediCare-Clinic/patient.html?id=" + id;
 
-  let qrURL =
+  let qr =
     "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
     encodeURIComponent(url);
 
   db.collection("patients").doc(id).update({
-    qr: qrURL
-  }).then(() => {
-    loadPatients();
+    qr
   });
+
 }
 
 
 /**********************
-DELETE PATIENT
+DELETE
 **********************/
 function deletePatient(id, images = []) {
 
   images.forEach(url => {
     try {
-      let ref = firebase.storage().refFromURL(url);
-      ref.delete();
-    } catch (e) {}
+      storage.refFromURL(url).delete();
+    } catch {}
   });
 
   db.collection("patients").doc(id).delete()
-    .then(() => {
-      alert("تم الحذف");
-      loadPatients();
-    });
+    .then(() => loadPatients());
 }
 
 
 /**********************
-FINISH PATIENT
+FINISH
 **********************/
 function finishPatient(id, images = []) {
 
   images.forEach(url => {
     try {
-      let ref = firebase.storage().refFromURL(url);
-      ref.delete();
-    } catch (e) {}
+      storage.refFromURL(url).delete();
+    } catch {}
   });
 
   db.collection("patients").doc(id).update({
     images: [],
     done: true
-  }).then(() => {
-    alert("تم الانتهاء");
-    loadPatients();
   });
-}
-
-
-/**********************
-WHATSAPP
-**********************/
-function sendWhatsApp(phone, text) {
-
-  if (!phone) return;
-
-  window.open(
-    "https://wa.me/" + phone +
-    "?text=" + encodeURIComponent(text)
-  );
 }
 
 
@@ -188,34 +218,25 @@ function loadPatients() {
 
           ${d.qr ? `<img src="${d.qr}" width="120">` : ""}
 
+          <button onclick="editPatient('${doc.id}', ${JSON.stringify(d)})">
+            ✏️ تعديل
+          </button>
+
           <button onclick="generatePatientQR('${doc.id}')">
-            📱 Generate QR
+            QR
           </button>
 
           <input type="file"
             onchange="uploadImage('${doc.id}', this.files[0])">
 
-          <button onclick="
-            sendWhatsApp('${d.phone || ""}',
-            'بياناتك جاهزة 👇\\n${d.name || ""}')
-          ">
-          📩 واتساب
-          </button>
-
-          <button onclick="finishPatient('${doc.id}', ${JSON.stringify(d.images || [])})">
-          ✅ تم الانتهاء
+          <button onclick="addPatientByAdmin()">
+            ➕ إضافة عميل
           </button>
 
           <button style="background:red"
             onclick="deletePatient('${doc.id}', ${JSON.stringify(d.images || [])})">
-            🗑 حذف
+            حذف
           </button>
-
-          <div>
-            ${(d.images || []).map(img => `
-              <img src="${img}" width="80">
-            `).join("")}
-          </div>
 
         </div>
       `;
@@ -226,7 +247,39 @@ function loadPatients() {
 
 
 /**********************
-SLOTS
+SLOTS FIXED
+**********************/
+function generateSlots() {
+
+  let date = document.getElementById("slotDate").value;
+  let start = document.getElementById("startTime").value;
+  let end = document.getElementById("endTime").value;
+
+  let startDate = new Date(`${date}T${start}`);
+  let endDate = new Date(`${date}T${end}`);
+
+  while (startDate < endDate) {
+
+    let time = startDate.toTimeString().slice(0,5);
+
+    db.collection("slots").add({
+      date,
+      time,
+      slotKey: date + "_" + time,
+      booked: false,
+      price: 0,
+      patient: null
+    });
+
+    startDate.setMinutes(startDate.getMinutes() + 30);
+  }
+
+  loadSlots();
+}
+
+
+/**********************
+LOAD SLOTS
 **********************/
 function loadSlots() {
 
@@ -244,21 +297,14 @@ function loadSlots() {
       container.innerHTML += `
         <div class="card">
 
-          <p>📅 ${s.date}</p>
-          <p>⏰ ${s.time}</p>
-          <p>💰 ${s.price || 0}</p>
+          <p>${s.date} - ${s.time}</p>
           <p>${s.booked ? "محجوز" : "متاح"}</p>
 
-          <input placeholder="سعر" id="price-${doc.id}">
+          <input id="price-${doc.id}" placeholder="السعر">
 
-          <button onclick="updatePrice('${doc.id}')">
-            حفظ
-          </button>
+          <button onclick="updatePrice('${doc.id}')">حفظ</button>
 
-          <button style="background:red"
-            onclick="deleteSlot('${doc.id}')">
-            حذف
-          </button>
+          <button onclick="deleteSlot('${doc.id}')">حذف</button>
 
         </div>
       `;
@@ -269,54 +315,15 @@ function loadSlots() {
 
 
 /**********************
-GENERATE SLOTS
-**********************/
-function generateSlots() {
-
-  let date = document.getElementById("slotDate")?.value;
-  let start = document.getElementById("startTime")?.value;
-  let end = document.getElementById("endTime")?.value;
-
-  if (!date || !start || !end) {
-    alert("املأ البيانات");
-    return;
-  }
-
-  let startDate = new Date(`${date}T${start}`);
-  let endDate = new Date(`${date}T${end}`);
-
-  while (startDate < endDate) {
-
-    let time = startDate.toTimeString().slice(0, 5);
-
-    db.collection("slots").add({
-      date,
-      time,
-      booked: false,
-      patient: null,
-      price: 0
-    });
-
-    startDate.setMinutes(startDate.getMinutes() + 30);
-  }
-
-  alert("تم إنشاء المواعيد");
-  loadSlots();
-}
-
-
-/**********************
 UPDATE PRICE
 **********************/
 function updatePrice(id) {
 
-  let price = document.getElementById("price-" + id)?.value;
+  let price = document.getElementById("price-" + id).value;
 
   db.collection("slots").doc(id).update({
     price: Number(price || 0)
-  }).then(() => {
-    loadSlots();
-  });
+  }).then(loadSlots);
 }
 
 
@@ -326,14 +333,12 @@ DELETE SLOT
 function deleteSlot(id) {
 
   db.collection("slots").doc(id).delete()
-    .then(() => {
-      loadSlots();
-    });
+    .then(loadSlots);
 }
 
 
 /**********************
-ON LOAD FIXED
+INIT
 **********************/
 window.onload = function () {
   loadPatients();
