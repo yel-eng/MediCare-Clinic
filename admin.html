@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Admin Dashboard</title>
+
 <style>
 body{font-family:Arial;background:#f5f5f5;padding:20px}
 .box{background:#fff;padding:15px;margin:10px 0;border-radius:10px}
@@ -10,6 +11,7 @@ button{padding:8px 12px;margin:5px}
 input,textarea{width:100%;padding:8px;margin:5px 0}
 h2{color:#333}
 </style>
+
 </head>
 
 <body>
@@ -19,10 +21,10 @@ h2{color:#333}
 <!-- VIDEOS -->
 <div class="box">
 <h2>Videos</h2>
-<input id="videoTitle" placeholder="Title">
 <input id="videoUrl" placeholder="Video URL">
+<input id="videoText" placeholder="Description">
 <button onclick="addVideo()">Add Video</button>
-<div id="videosList"></div>
+<div id="videos"></div>
 </div>
 
 <!-- BLOGS -->
@@ -32,184 +34,23 @@ h2{color:#333}
 <textarea id="blogText" placeholder="Text"></textarea>
 <input id="blogImage" placeholder="Image URL">
 <button onclick="addBlog()">Add Article</button>
-<div id="blogsList"></div>
+<div id="blogs"></div>
 </div>
 
 <!-- BOOKINGS -->
 <div class="box">
 <h2>Bookings</h2>
-<div id="bookingsList"></div>
+<div id="bookings"></div>
 <h3 id="income"></h3>
 </div>
 
-<!-- SCHEDULE -->
-<div class="box">
-<h2>Schedule (30 min slots)</h2>
-<input id="day" placeholder="Day">
-<input id="from" placeholder="From (ex 10:00)">
-<input id="to" placeholder="To (ex 14:00)">
-<button onclick="addSchedule()">Generate Slots</button>
-<div id="scheduleList"></div>
-</div>
-
+<!-- Firebase (compat فقط) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
+<!-- JS بتاعك -->
 <script src="script.js"></script>
-  
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-getFirestore,
-collection,
-addDoc,
-getDocs,
-deleteDoc,
-doc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-apiKey: "YOUR_KEY",
-authDomain: "mydoctor-clinic.firebaseapp.com",
-projectId: "mydoctor-clinic"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-////////////////////
-// VIDEOS
-////////////////////
-window.addVideo = async function(){
-
-await addDoc(collection(db,"videos"),{
-title: videoTitle.value,
-url: videoUrl.value
-});
-
-loadVideos();
-}
-
-async function loadVideos(){
-let snap = await getDocs(collection(db,"videos"));
-let html="";
-
-snap.forEach(d=>{
-html += `
-<div>
-<p>${d.data().title}</p>
-<button onclick="deleteVideo('${d.id}')">Delete</button>
-</div>`;
-});
-
-videosList.innerHTML = html;
-}
-
-window.deleteVideo = async function(id){
-await deleteDoc(doc(db,"videos",id));
-loadVideos();
-}
-
-////////////////////
-// BLOGS
-////////////////////
-window.addBlog = async function(){
-
-await addDoc(collection(db,"blogs"),{
-title: blogTitle.value,
-text: blogText.value,
-image: blogImage.value
-});
-
-loadBlogs();
-}
-
-async function loadBlogs(){
-let snap = await getDocs(collection(db,"blogs"));
-let html="";
-
-snap.forEach(d=>{
-html += `
-<div>
-<h4>${d.data().title}</h4>
-<button onclick="deleteBlog('${d.id}')">Delete</button>
-</div>`;
-});
-
-blogsList.innerHTML = html;
-}
-
-window.deleteBlog = async function(id){
-await deleteDoc(doc(db,"blogs",id));
-loadBlogs();
-}
-
-////////////////////
-// BOOKINGS + INCOME
-////////////////////
-async function loadBookings(){
-let snap = await getDocs(collection(db,"bookings"));
-let total = 0;
-let html="";
-
-snap.forEach(d=>{
-let data = d.data();
-total += 200;
-
-html += `
-<p>${data.name} - ${data.date} - ${data.time}</p>`;
-});
-
-bookingsList.innerHTML = html;
-income.innerText = "Total Today: " + total + " EGP";
-}
-
-////////////////////
-// SCHEDULE (30 MIN)
-////////////////////
-window.addSchedule = async function(){
-
-let start = from.value.split(":")[0]*60 + +from.value.split(":")[1];
-let end = to.value.split(":")[0]*60 + +to.value.split(":")[1];
-
-for(let t=start; t<end; t+=30){
-
-let h = Math.floor(t/60);
-let m = t%60;
-
-await addDoc(collection(db,"schedules"),{
-day: day.value,
-time: `${h}:${m===0?"00":m}`,
-available:true
-});
-}
-
-loadSchedule();
-}
-
-async function loadSchedule(){
-let snap = await getDocs(collection(db,"schedules"));
-let html="";
-
-snap.forEach(d=>{
-let data = d.data();
-
-html += `<p>${data.day} - ${data.time}</p>`;
-});
-
-scheduleList.innerHTML = html;
-}
-
-////////////////////
-// INIT
-////////////////////
-loadVideos();
-loadBlogs();
-loadBookings();
-loadSchedule();
-
-</script>
 
 </body>
 </html>
