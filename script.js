@@ -1,5 +1,5 @@
 /**********************
-🔥 FIREBASE SETUP (مرة واحدة بس)
+🔥 FIREBASE SETUP
 **********************/
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
@@ -37,7 +37,7 @@ function login() {
 
 
 /**********************
-🔥 BOOKING SYSTEM (تم إصلاحه)
+🔥 BOOKING SYSTEM
 **********************/
 function book() {
   let name = document.getElementById("name").value;
@@ -55,7 +55,7 @@ function book() {
     phone: phone,
     date: date,
     time: time,
-    price: 200,
+    price: null,
     createdAt: new Date()
   })
   .then(() => {
@@ -79,7 +79,19 @@ function book() {
 
 
 /**********************
-🔥 LOAD BOOKINGS + INCOME (ADMIN)
+🔥 SET PRICE (ADMIN)
+**********************/
+function setPrice(id, price) {
+  db.collection("bookings").doc(id).update({
+    price: Number(price)
+  }).then(() => {
+    loadBookings();
+  });
+}
+
+
+/**********************
+🔥 LOAD BOOKINGS + INCOME
 **********************/
 function loadBookings() {
   let container = document.getElementById("bookings");
@@ -93,13 +105,21 @@ function loadBookings() {
     snap.forEach(doc => {
       let data = doc.data();
 
-      total += data.price || 0;
+      if (data.price) {
+        total += Number(data.price);
+      }
 
       container.innerHTML += `
         <div class="card">
           <p>👤 ${data.name}</p>
           <p>📞 ${data.phone}</p>
           <p>📅 ${data.date} - ⏰ ${data.time}</p>
+
+          <input type="number" placeholder="ادخل المبلغ"
+            value="${data.price ?? ''}"
+            onchange="setPrice('${doc.id}', this.value)">
+
+          <p>💰 ${data.price ? data.price + ' جنيه' : 'لم يتم تحديد المبلغ'}</p>
         </div>
       `;
     });
@@ -208,7 +228,7 @@ function loadBlogs() {
 
 
 /**********************
-🔥 AUTO LOAD (مهم جدًا)
+🔥 AUTO LOAD
 **********************/
 window.onload = function () {
   loadBookings();
