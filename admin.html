@@ -6,82 +6,68 @@
     <title>لوحة تحكم الطبيب | MyDoctor CRM</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        #patientModal {
-            display:none; position:fixed; top:50%; left:50%; 
-            transform: translate(-50%, -50%); background:white; 
-            padding:25px; z-index:2000; border-radius:15px; 
-            box-shadow:0 0 30px rgba(0,0,0,0.3); width: 90%; max-width: 500px;
-            max-height: 85vh; overflow-y: auto;
-        }
-        .overlay {
-            display:none; position:fixed; top:0; left:0; 
-            width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999;
-        }
-        .revenue-box {
-            background: #e3f2fd; border-left: 5px solid #0d47a1;
-            padding: 20px; margin-top: 20px; border-radius: 10px;
-        }
+        .days-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 100%)); gap: 20px; margin-top: 20px; }
+        .day-column { background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px; padding: 15px; }
+        .day-header { background: #0d47a1; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; }
+        #patientModal { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:white; padding:25px; z-index:2000; border-radius:15px; box-shadow:0 0 30px rgba(0,0,0,0.3); width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+        .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999; }
+        .revenue-box { background: #e3f2fd; border-left: 5px solid #0d47a1; padding: 20px; margin-top: 20px; border-radius: 10px; }
+        .slot-item { background: white; border: 1px solid #eee; margin: 5px 0; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
 <header class="header">
     <div class="logo">🏥 لوحة إدارة العيادة</div>
-    <nav class="nav">
-        <a href="index.html">الموقع الرئيسي</a>
-    </nav>
+    <nav class="nav"><a href="index.html">الموقع الرئيسي</a></nav>
 </header>
 
 <div class="section">
     <div class="grid">
-        <!-- قسم توليد المواعيد (7 أيام) -->
+        <!-- قسم توليد المواعيد -->
         <div class="box">
-            <h2>📅 توليد جدول الأسبوع (7 أيام)</h2>
-            <label>تاريخ البداية:</label>
+            <h2>📅 إعداد جدول العمل الأسبوعي</h2>
+            <label>تاريخ بداية الأسبوع:</label>
             <input type="date" id="slotDate">
-            <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:10px; margin-top:10px;">
                 <div style="flex:1;"><label>من:</label><input type="time" id="startTime"></div>
                 <div style="flex:1;"><label>إلى:</label><input type="time" id="endTime"></div>
             </div>
             <label>مدة الكشف (دقائق):</label>
             <input type="number" id="duration" value="30">
-            <button onclick="generateSmartSlots()">توليد مواعيد الأسبوع آلياً ✅</button>
+            <button onclick="generateSmartSlots()">توليد جدول 7 أيام ✅</button>
         </div>
 
-        <!-- قسم الفيديوهات والمقالات (اللي كان ممسوح) -->
+        <!-- قسم المحتوى الطبي (الفيديوهات والمقالات) -->
         <div class="box">
-            <h2>🎥 إضافة محتوى طبي</h2>
-            <input id="videoUrl" placeholder="رابط فيديو اليوتيوب">
+            <h2>🎥 المحتوى الطبي</h2>
+            <input id="videoUrl" placeholder="رابط يوتيوب">
             <input id="videoText" placeholder="عنوان الفيديو">
-            <button onclick="addVideo()" style="margin-bottom:10px;">إضافة الفيديو</button>
+            <button onclick="addVideo()" style="margin-bottom:10px;">إضافة فيديو</button>
             <hr>
             <input id="blogTitle" placeholder="عنوان المقال">
-            <textarea id="blogText" placeholder="محتوى المقال" style="height:100px;"></textarea>
+            <textarea id="blogText" placeholder="محتوى المقال"></textarea>
             <button onclick="addBlog()">نشر المقال</button>
         </div>
     </div>
 
-    <!-- إجمالي الأرباح -->
     <div class="revenue-box">
-        <h2 id="dailyRevenue" style="margin:0; text-align:right;">💰 جاري حساب أرباح اليوم...</h2>
+        <h2 id="dailyRevenue" style="margin:0;">💰 دخل اليوم المحصل: 0 ج.م</h2>
     </div>
 
-    <!-- عرض الجدول الأسبوعي -->
+    <!-- عرض المواعيد منظمة بالأيام -->
     <div class="box" style="margin-top:20px;">
-        <h2>📑 جدول المواعيد والحجوزات</h2>
-        <div id="slots" class="grid">
-            <!-- المواعيد هتظهر هنا -->
+        <h2>📑 جدول المواعيد المنظم</h2>
+        <div id="slotsContainer" class="days-grid">
+            <!-- سيتم توليد أعمدة الأيام هنا -->
         </div>
     </div>
 </div>
 
-<!-- المودال والـ QR -->
 <div class="overlay" id="overlay" onclick="closeModal()"></div>
 <div id="patientModal">
     <div id="modalContent"></div>
-    <div id="extraActions" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
-        <button onclick="closeModal()" style="background:#666;">إغلاق النافذة</button>
-    </div>
+    <button onclick="closeModal()" style="background:#666; width:100%; margin-top:10px;">إغلاق</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
