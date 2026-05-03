@@ -6,17 +6,17 @@
     <title>لوحة تحكم الطبيب | MyDoctor CRM</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .days-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
-        .day-column { background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px; padding: 15px; }
+        .days-grid { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 20px; padding: 10px; min-height: 400px; }
+        .day-column { flex: 0 0 280px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px; padding: 15px; height: fit-content; }
         .day-header { background: #0d47a1; color: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; }
         #patientModal { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:white; padding:25px; z-index:2000; border-radius:15px; box-shadow:0 0 30px rgba(0,0,0,0.3); width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999; }
         .revenue-box { background: #e3f2fd; border-left: 5px solid #0d47a1; padding: 20px; margin-top: 20px; border-radius: 10px; }
         .slot-item { background: white; border: 1px solid #eee; margin: 5px 0; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-        /* ستايل جدول المواعيد الجديد */
-        .setup-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        .setup-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; background: white; border-radius: 8px; overflow: hidden; }
         .setup-table th, .setup-table td { border: 1px solid #eee; padding: 8px; text-align: center; }
-        .setup-table input[type="time"] { padding: 5px; width: 80px; }
+        .setup-table th { background: #f0f4f8; color: #333; }
+        .setup-table input[type="time"] { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -28,35 +28,33 @@
 
 <div class="section">
     <div class="grid">
-        <!-- قسم توليد المواعيد المطور -->
+        <!-- إعداد جدول العمل -->
         <div class="box" style="grid-column: span 2;">
-            <h2>📅 إعداد جدول العمل الأسبوعي (مخصص)</h2>
-            <p style="font-size: 0.9em; color: #666;">حددي أيام العمل وساعات كل يوم (اتركي اليوم فارغاً إذا كان عطلة):</p>
+            <h2>📅 إعداد جدول العمل الأسبوعي</h2>
+            <div style="margin-bottom:15px; display: flex; gap: 15px; align-items: center; background: #fdfdfd; padding: 10px; border-radius: 8px;">
+                <label>تاريخ بداية الأسبوع:</label>
+                <input type="date" id="slotDate" onchange="initWeekTable()" style="width: 200px;">
+                <label>مدة الكشف:</label>
+                <input type="number" id="duration" value="30" style="width: 80px;">
+                <button onclick="generateSmartSlots()" style="width: auto; flex-grow: 1;">توليد المواعيد للأيام المختارة ✅</button>
+            </div>
             
             <table class="setup-table">
                 <thead>
                     <tr>
                         <th>اليوم</th>
-                        <th>تاريخ اليوم</th>
+                        <th>التاريخ</th>
                         <th>من (بداية)</th>
                         <th>إلى (نهاية)</th>
                     </tr>
                 </thead>
                 <tbody id="weekSetupBody">
-                    <!-- سيتم توليد الـ 7 أيام هنا تلقائياً عند اختيار تاريخ البداية -->
+                    <tr><td colspan="4">اختر تاريخ البداية أولاً لتحديد ساعات العمل</td></tr>
                 </tbody>
             </table>
-
-            <div style="margin-top:15px; display: flex; gap: 15px; align-items: center;">
-                <label>تاريخ بداية الأسبوع:</label>
-                <input type="date" id="slotDate" onchange="initWeekTable()" style="width: 200px;">
-                <label>مدة الكشف:</label>
-                <input type="number" id="duration" value="30" style="width: 80px;">
-                <button onclick="generateSmartSlots()" style="width: auto; flex-grow: 1;">توليد الجدول المخصص ✅</button>
-            </div>
         </div>
 
-        <!-- قسم المحتوى الطبي (كما هو) -->
+        <!-- المحتوى الطبي -->
         <div class="box">
             <h2>🎥 المحتوى الطبي</h2>
             <input id="videoUrl" placeholder="رابط يوتيوب">
@@ -74,8 +72,10 @@
     </div>
 
     <div class="box" style="margin-top:20px;">
-        <h2>📑 جدول المواعيد المنظم</h2>
-        <div id="slotsContainer" class="days-grid"></div>
+        <h2>📑 جدول المواعيد (الأيام القادمة فقط)</h2>
+        <div id="slotsContainer" class="days-grid">
+            <!-- ستظهر هنا الأيام التي حددتيها والمستقبلية فقط -->
+        </div>
     </div>
 </div>
 
@@ -95,7 +95,6 @@
         document.getElementById("overlay").style.display = "none";
     }
 
-    // دالة لتوليد صفوف الجدول فور اختيار التاريخ
     function initWeekTable() {
         const startDate = document.getElementById("slotDate").value;
         const tbody = document.getElementById("weekSetupBody");
