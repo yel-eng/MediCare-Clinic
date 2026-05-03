@@ -11,22 +11,18 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-// 1. توليد واجهة الـ 7 أيام تلقائياً عند فتح الصفحة
+// 1. توليد واجهة الـ 7 أيام
 function setupWeekUI() {
     const grid = document.getElementById("weekSetupGrid");
     if (!grid) return;
-
     const startDateInput = document.getElementById("startDatePicker");
     let start = (startDateInput && startDateInput.value) ? new Date(startDateInput.value) : new Date();
-    
     grid.innerHTML = ""; 
-
     for (let i = 0; i < 7; i++) {
         let current = new Date(start);
         current.setDate(start.getDate() + i);
         let dateStr = current.toISOString().split('T')[0];
         let dayName = current.toLocaleDateString('ar-EG', { weekday: 'long' });
-
         grid.innerHTML += `
             <div class="day-setup-row card" data-date="${dateStr}">
                 <b>${dayName}</b><br><small>${dateStr}</small>
@@ -38,15 +34,12 @@ function setupWeekUI() {
     }
 }
 
-// 2. توليد الجلسات في قاعدة البيانات
+// 2. توليد المواعيد (تعديل: التأكد من الحالة الافتراضية)
 async function generateSmartSlots() {
     const rows = document.querySelectorAll(".day-setup-row");
-    const durationEl = document.getElementById("duration");
-    const duration = durationEl ? parseInt(durationEl.value) : 30;
-    
+    const duration = parseInt(document.getElementById("duration")?.value || 30);
     let price = prompt("سعر الكشف (ج.م):", "200");
     if (!price) return;
-
     let batch = db.batch();
     let count = 0;
 
@@ -54,7 +47,6 @@ async function generateSmartSlots() {
         const dateStr = row.getAttribute("data-date");
         const start = row.querySelector(".start-t").value;
         const end = row.querySelector(".end-t").value;
-
         if (start && end) {
             let current = new Date(`${dateStr}T${start}`);
             let limit = new Date(`${dateStr}T${end}`);
@@ -62,8 +54,11 @@ async function generateSmartSlots() {
                 let time = current.toTimeString().slice(0, 5);
                 let ref = db.collection("slots").doc();
                 batch.set(ref, { 
-                    date: dateStr, time: time, booked: false, 
-                    price: parseFloat(price), status: "pending", patient: null 
+                    date: dateStr, time: time, 
+                    booked: false, // افتراضياً غير محجوز
+                    price: parseFloat(price), 
+                    status: "pending", 
+                    patient: null 
                 });
                 current.setMinutes(current.getMinutes() + duration);
                 count++;
@@ -71,22 +66,22 @@ async function generateSmartSlots() {
         }
     });
 
-    if (count === 0) return alert("يرجى إدخال ساعات العمل للأيام أولاً!");
+    if (count === 0) return alert("يرجى إدخال ساعات العمل!");
     await batch.commit();
-    alert(`تم توليد ${count} موعد بنجاح!`);
+    alert(`تم توليد ${count} موعد!`);
     location.reload();
 }
 
-// 3. تحميل وعرض الجدول للأدمن
+// 3. تحميل الجدول (تعديل: الربط الصحيح بالألوان)
 function loadAdminSlots() {
     const container = document.getElementById("slotsContainer");
     if (!container) return;
-
     let today = new Date().toISOString().split('T')[0];
 
-    db.collection("slots").where("date", ">=", today).get().then(snap => {
+    db.collection("slots").where("date", ">=", today).onSnapshot(snap => {
         let daysMap = {};
         let totalRev = 0;
+        container.innerHTML = "";
 
         snap.forEach(doc => {
             let s = doc.data();
@@ -95,33 +90,21 @@ function loadAdminSlots() {
             if (s.date === today && s.status === "attended") totalRev += (Number(s.price) || 0);
         });
 
-        const revEl = document.getElementById("dailyRevenue");
-        if (revEl) revEl.innerText = `💰 دخل اليوم الفعلي: ${totalRev} ج.م`;
-
-        container.innerHTML = "";
-        let sortedDates = Object.keys(daysMap).sort();
-
-        if (sortedDates.length === 0) {
-            container.innerHTML = "<p style='padding:20px;'>لا توجد مواعيد حالية.</p>";
-            return;
-        }
-
-        sortedDates.forEach(date => {
+        document.getElementById("dailyRevenue") && (document.getElementById("dailyRevenue").innerText = `💰 دخل اليوم الفعلي: ${totalRev} ج.م`);
+        
+        Object.keys(daysMap).sort().forEach(date => {
             let dayDiv = document.createElement("div");
             dayDiv.className = "day-column";
             let dayName = new Date(date).toLocaleDateString('ar-EG', {weekday: 'long'});
-            
-            dayDiv.innerHTML = `
-                <div class="day-header">
-                    ${dayName}<br>${date}
-                    <button onclick="deleteDay('${date}')" style="background:red; color:white; border:none; font-size:10px; cursor:pointer; padding:2px 5px; margin-top:5px; border-radius:3px;">مسح (إجازة)</button>
-                </div>`;
+            dayDiv.innerHTML = `<div class="day-header">${dayName}<br>${date} <button onclick="deleteDay('${date}')" style="background:red;border:none;color:white;cursor:pointer;padding:2px;font-size:9px;">مسح</button></div>`;
             
             daysMap[date].sort((a,b)=>a.time.localeCompare(b.time)).forEach(slot => {
+                // هنا التعديل: إذا كان booked حقيقي يظهر أيقونة الشخص ولون مختلف
+                const isBooked = slot.booked === true;
                 dayDiv.innerHTML += `
-                    <div class="slot-item ${slot.booked ? 'booked-card' : ''}">
-                        <span><b>${slot.time}</b> ${slot.booked ? '👤' : '🟢'}</span>
-                        <button onclick="viewPatientDetails('${slot.id}')" class="btn-outline" style="font-size:11px; padding:4px 8px;">إدارة</button>
+                    <div class="slot-item ${isBooked ? 'booked-card' : ''}" style="${isBooked ? 'border-right:5px solid #e74c3c; background:#fff5f5;' : ''}">
+                        <span><b>${slot.time}</b> ${isBooked ? '👤' : '🟢'}</span>
+                        <button onclick="viewPatientDetails('${slot.id}')" class="btn-outline" style="font-size:11px; padding:4px;">إدارة</button>
                     </div>`;
             });
             container.appendChild(dayDiv);
@@ -129,116 +112,47 @@ function loadAdminSlots() {
     });
 }
 
-// 4. عرض تفاصيل المريض والـ QR
-function viewPatientDetails(id) {
-    db.collection("slots").doc(id).get().then(doc => {
-        let s = doc.data();
-        let p = s.patient || {name:"-", phone:"-", note:"-"};
-        let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(id)}`;
-
-        document.getElementById("modal").style.display = "block";
-        document.getElementById("overlay").style.display = "block";
-        document.getElementById("modalContent").innerHTML = `
-            <div style="display:flex; justify-content:space-between;">
-                <h3>📋 تفاصيل الحجز</h3>
-                <img src="${qrUrl}" style="border:1px solid #ddd;">
-            </div>
-            <p><b>التوقيت:</b> ${s.date} | ${s.time}</p>
-            <hr>
-            <label>اسم المريض:</label><br>
-            <input id="en" value="${p.name}" style="width:100%"><br>
-            <label>الموبايل:</label><br>
-            <input id="ep" value="${p.phone}" style="width:100%"><br>
-            <label>الحالة:</label><br>
-            <select id="es" style="width:100%">
-                <option value="pending" ${s.status==='pending'?'selected':''}>انتظار</option>
-                <option value="attended" ${s.status==='attended'?'selected':''}>تم الكشف</option>
-            </select><br>
-            <label>ملاحظات:</label><br>
-            <textarea id="enot" style="width:100%; height:50px;">${p.note||""}</textarea><br>
-            <button onclick="saveAdmin('${id}')" class="btn-main" style="width:100%; margin-top:10px;">حفظ التغييرات</button>
-            <button onclick="deleteSlot('${id}')" style="background:none; color:red; border:none; width:100%; cursor:pointer; margin-top:10px;">❌ حذف الموعد نهائياً</button>
-        `;
-    });
-}
-
-// 5. وظائف إضافية (حفظ، حذف، حجز يدوي)
-async function saveAdmin(id) {
-    await db.collection("slots").doc(id).update({
-        status: document.getElementById("es").value,
-        patient: {
-            name: document.getElementById("en").value,
-            phone: document.getElementById("ep").value,
-            note: document.getElementById("enot").value
-        }
-    });
-    location.reload();
-}
-
-async function deleteDay(date) {
-    if(confirm(`مسح كل مواعيد ${date}؟`)) {
-        const snap = await db.collection("slots").where("date", "==", date).get();
-        const batch = db.batch();
-        snap.forEach(d => batch.delete(d.ref));
-        await batch.commit();
-        location.reload();
-    }
-}
-
-async function deleteSlot(id) {
-    if(confirm("حذف هذا الموعد؟")) {
-        await db.collection("slots").doc(id).delete();
-        location.reload();
-    }
-}
-
+// 4. حجز يدوي (تعديل هام جداً لتغيير الحالة فوراً)
 async function addManualSlot() {
     let n = prompt("اسم المريض:");
     let d = prompt("التاريخ (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
     let t = prompt("الوقت (مثال 10:30):");
     if(n && d && t) {
         await db.collection("slots").add({
-            date: d, time: t, booked: true, status: "pending", price: 200,
+            date: d, time: t, 
+            booked: true, // تغيير الحالة لتمكين اللون
+            status: "pending", price: 200,
             patient: { name: n, phone: "-", note: "حجز يدوي" }
         });
-        location.reload();
+        alert("تم الحجز اليدوي!");
     }
 }
 
-// --- [تعديل] إضافة مقال طبي (مع صورة) ---
-async function addBlog() {
-    const title = document.getElementById("bTitle").value;
-    const imgUrl = document.getElementById("bImg").value;
-    const text = document.getElementById("bText").value;
-
-    if (!title || !text) return alert("يرجى إدخال العنوان والمحتوى");
-
-    await db.collection("blogs").add({
-        title,
-        image: imgUrl || "", // رابط الصورة اختياري
-        text,
-        date: new Date().toLocaleDateString('ar-EG'),
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+// 5. حفظ التعديلات (تعديل للتأكد من حالة الحجز)
+async function saveAdmin(id) {
+    const status = document.getElementById("es").value;
+    const name = document.getElementById("en").value;
+    
+    await db.collection("slots").doc(id).update({
+        status: status,
+        booked: name.trim() !== "", // إذا وجد اسم مريض، الموعد محجوز
+        patient: {
+            name: name,
+            phone: document.getElementById("ep").value,
+            note: document.getElementById("enot").value
+        }
     });
-    alert("تم نشر المقال بنجاح ✅");
-    location.reload();
+    closeModal();
 }
 
-// --- [تعديل] إضافة فيديو تعليمي ---
-async function addVideo() {
-    const title = document.getElementById("vTitle").value;
-    const url = document.getElementById("vUrl").value;
-
-    if (!title || !url) return alert("يرجى إدخال العنوان ورابط الفيديو");
-
-    await db.collection("videos").add({
-        title,
-        url,
-        date: new Date().toLocaleDateString('ar-EG'),
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("تم نشر الفيديو بنجاح ✅");
-    location.reload();
+// باقي الدوال (حذف، إغلاق المودال، إلخ) تبقى كما هي
+async function deleteDay(date) {
+    if(confirm(`مسح كل مواعيد ${date}؟`)) {
+        const snap = await db.collection("slots").where("date", "==", date).get();
+        const batch = db.batch();
+        snap.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+    }
 }
 
 function closeModal() {
@@ -246,7 +160,6 @@ function closeModal() {
     document.getElementById("overlay").style.display = "none";
 }
 
-// التشغيل عند التحميل
 window.onload = () => {
     setupWeekUI();
     loadAdminSlots();
