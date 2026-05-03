@@ -2,141 +2,46 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Admin</title>
+<title>Admin Dashboard</title>
 
 <style>
-body{font-family:Arial;direction:rtl;padding:20px;background:#f5f5f5}
-.card{background:#fff;padding:15px;margin:10px;border-radius:10px}
-input{width:100%;margin:5px;padding:8px}
-button{padding:8px;margin:5px;background:#0d47a1;color:#fff;border:none}
+body{font-family:Arial;direction:rtl;background:#f5f5f5;padding:20px}
+.box{background:#fff;padding:15px;margin:15px 0;border-radius:10px}
+.card{background:#fff;padding:15px;margin:10px 0;border-radius:10px}
+input,button{width:100%;padding:8px;margin:5px}
+button{background:#0d47a1;color:#fff;border:none;border-radius:6px}
 </style>
 </head>
 
 <body>
 
-<h2>إنشاء مواعيد</h2>
+<h1>🏥 Admin Dashboard</h1>
 
-<input type="date" id="date">
-<input type="time" id="start">
-<input type="time" id="end">
+<!-- SLOTS -->
+<div class="box">
+<h2>إنشاء المواعيد</h2>
+
+<input type="date" id="slotDate">
+<input type="time" id="startTime">
+<input type="time" id="endTime">
 <input type="number" id="duration" placeholder="مدة الجلسة">
 
-<button onclick="generateSlots()">إنشاء</button>
+<button onclick="generateSlots()">إنشاء مواعيد</button>
 
-<h2>كل المواعيد</h2>
 <div id="slots"></div>
+</div>
+
+<!-- PATIENTS -->
+<div class="box">
+<h2>المرضى / الحجوزات</h2>
+<div id="patients"></div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "mydoctor-clinic.firebaseapp.com",
-  projectId: "mydoctor-clinic"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-/******** CREATE ********/
-function generateSlots(){
-  let date = document.getElementById("date").value;
-  let start = document.getElementById("start").value;
-  let end = document.getElementById("end").value;
-  let duration = parseInt(document.getElementById("duration").value);
-
-  let startDate = new Date(`${date}T${start}`);
-  let endDate = new Date(`${date}T${end}`);
-
-  while(startDate < endDate){
-    let time = startDate.toTimeString().slice(0,5);
-
-    db.collection("slots").add({
-      date,
-      time,
-      booked:false,
-      patient:null,
-      price:0
-    });
-
-    startDate.setMinutes(startDate.getMinutes()+duration);
-  }
-
-  loadSlots();
-}
-
-/******** LOAD ********/
-function loadSlots(){
-  db.collection("slots").get().then(snap=>{
-    let container = document.getElementById("slots");
-    container.innerHTML="";
-
-    snap.forEach(doc=>{
-      let s = doc.data();
-
-      container.innerHTML += `
-      <div class="card">
-
-        <b>${s.date} - ${s.time}</b><br>
-        ${s.booked ? "❌ محجوز: "+(s.patient?.name||"") : "✅ متاح"}
-
-        <br>
-
-        <input id="price-${doc.id}" placeholder="السعر">
-
-        <button onclick="updatePrice('${doc.id}')">💰</button>
-        <button onclick="bookByAdmin('${doc.id}')">➕</button>
-        <button onclick="editSlot('${doc.id}', ${JSON.stringify(s)})">✏️</button>
-        <button onclick="deleteSlot('${doc.id}')">🗑</button>
-
-      </div>
-      `;
-    });
-  });
-}
-
-/******** ADMIN BOOK ********/
-function bookByAdmin(id){
-  let name = prompt("اسم العميل");
-  let phone = prompt("التليفون");
-
-  db.collection("slots").doc(id).get().then(doc=>{
-    if(doc.data().booked){
-      alert("محجوز");
-      return;
-    }
-
-    doc.ref.update({
-      booked:true,
-      patient:{name,phone}
-    });
-
-    loadSlots();
-  });
-}
-
-/******** EDIT ********/
-function editSlot(id,data){
-  let time = prompt("وقت جديد", data.time);
-  let date = prompt("تاريخ جديد", data.date);
-
-  db.collection("slots").doc(id).update({time,date}).then(loadSlots);
-}
-
-/******** PRICE ********/
-function updatePrice(id){
-  let price = document.getElementById("price-"+id).value;
-  db.collection("slots").doc(id).update({price:Number(price)});
-}
-
-/******** DELETE ********/
-function deleteSlot(id){
-  db.collection("slots").doc(id).delete().then(loadSlots);
-}
-
-window.onload = loadSlots;
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
