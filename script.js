@@ -102,3 +102,19 @@ function loadHome(){
 }
 
 window.onload=loadHome;
+
+import { db } from "./script.js";
+import { collection, getDocs } from "firebase/firestore";
+
+export async function getDailyIncome() {
+  const snap = await getDocs(collection(db, "bookings"));
+
+  let total = 0;
+
+  snap.forEach(doc => {
+    total += doc.data().price || 0;
+  });
+
+  document.getElementById("income").innerText =
+    "إجمالي اليوم: " + total + " جنيه";
+}
