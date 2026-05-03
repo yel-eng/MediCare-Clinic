@@ -1,25 +1,32 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>Booking</title>
+    <meta charset="UTF-8">
+    <title>احجز موعدك</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<h2>حجز موعد</h2>
+<div class="section" style="max-width: 500px;">
+    <div class="card">
+        <h2 style="text-align:right;">📋 بيانات الحجز</h2>
+        <label>اسم المريض:</label>
+        <input id="name" placeholder="الاسم الكامل">
+        
+        <label>رقم الهاتف:</label>
+        <input id="phone" placeholder="01xxxxxxxxx">
 
-<input id="name" placeholder="الاسم">
-<input id="phone" placeholder="الهاتف">
+        <label>اختر الموعد المتاح:</label>
+        <select id="slotsSelect">
+            <option>جاري تحميل المواعيد...</option>
+        </select>
 
-<select id="slotsSelect"></select>
-
-<button onclick="book()">احجز</button>
+        <button onclick="book()" style="margin-top:20px;">تأكيد الحجز الآن</button>
+    </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
 <script src="script.js"></script>
-
 </body>
 </html>
