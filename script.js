@@ -1,3 +1,21 @@
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic",
+  storageBucket: "mydoctor-clinic.appspot.com",
+  messagingSenderId: "996532645974",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+
 /******** BOOK ********/
 function book(){
   let name=document.getElementById("name").value;
