@@ -5,11 +5,11 @@
 <title>Admin Dashboard</title>
 
 <style>
-body{font-family:Arial;direction:rtl;background:#f5f5f5;padding:20px}
+body{font-family:Arial;background:#f5f5f5;padding:20px;direction:rtl}
 .box{background:#fff;padding:15px;margin:15px 0;border-radius:10px}
 .card{background:#fff;padding:15px;margin:10px 0;border-radius:10px}
-input,button{width:100%;padding:8px;margin:5px}
-button{background:#0d47a1;color:#fff;border:none;border-radius:6px}
+input,textarea{width:100%;padding:8px;margin:5px 0}
+button{padding:8px 10px;background:#0d47a1;color:#fff;border:none;border-radius:6px;margin:5px}
 </style>
 </head>
 
@@ -17,24 +17,43 @@ button{background:#0d47a1;color:#fff;border:none;border-radius:6px}
 
 <h1>🏥 Admin Dashboard</h1>
 
-<!-- SLOTS -->
+<!-- VIDEOS -->
 <div class="box">
-<h2>إنشاء المواعيد</h2>
+<h2>🎥 Videos</h2>
+<input id="videoUrl" placeholder="Video URL">
+<input id="videoText" placeholder="Description">
+<button onclick="addVideo()">إضافة فيديو</button>
+<div id="videos"></div>
+</div>
 
-<input type="date" id="slotDate">
-<input type="time" id="startTime">
-<input type="time" id="endTime">
-<input type="number" id="duration" placeholder="مدة الجلسة">
-
-<button onclick="generateSlots()">إنشاء مواعيد</button>
-
-<div id="slots"></div>
+<!-- BLOG -->
+<div class="box">
+<h2>📰 Articles</h2>
+<input id="blogTitle" placeholder="Title">
+<textarea id="blogText" placeholder="Text"></textarea>
+<input id="blogImage" placeholder="Image URL">
+<button onclick="addBlog()">إضافة مقال</button>
+<div id="blogs"></div>
 </div>
 
 <!-- PATIENTS -->
 <div class="box">
-<h2>المرضى / الحجوزات</h2>
+<h2>👤 Patients</h2>
 <div id="patients"></div>
+</div>
+
+<!-- SLOTS -->
+<div class="box">
+<h2>📅 Bookings System</h2>
+
+<input type="date" id="slotDate">
+<input type="time" id="startTime">
+<input type="time" id="endTime">
+<input type="number" id="duration" placeholder="مدة الجلسة بالدقائق">
+
+<button onclick="generateSlots()">إنشاء مواعيد</button>
+
+<div id="slots"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
