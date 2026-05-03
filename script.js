@@ -11,8 +11,9 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 
+
 /**********************
-BOOK PATIENT
+BOOK PATIENT (بدون QR)
 **********************/
 function book() {
   let name = document.getElementById("name").value;
@@ -28,9 +29,11 @@ function book() {
     price: null,
     note: "",
     images: [],
+    qr: null,
     done: false
   }).then(() => {
     alert("تم الحجز");
+    loadPatients();
   });
 }
 
@@ -46,6 +49,8 @@ function uploadImage(id, file) {
 
       db.collection("patients").doc(id).update({
         images: firebase.firestore.FieldValue.arrayUnion(url)
+      }).then(() => {
+        loadPatients();
       });
 
     });
@@ -54,11 +59,32 @@ function uploadImage(id, file) {
 
 
 /**********************
-GENERATE QR
+GENERATE QR AFTER UPLOAD
 **********************/
-function generateQR(data) {
-  return "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" 
-  + encodeURIComponent(data);
+function generatePatientQR(id) {
+
+  db.collection("patients").doc(id).get().then(doc => {
+
+    let d = doc.data();
+
+    let qrText =
+      "Name: " + d.name +
+      "\nPhone: " + d.phone +
+      "\nDate: " + d.date +
+      "\nImages: " + (d.images ? d.images.length : 0);
+
+    let qrURL =
+      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
+      encodeURIComponent(qrText);
+
+    db.collection("patients").doc(id).update({
+      qr: qrURL
+    }).then(() => {
+      loadPatients();
+    });
+
+  });
+
 }
 
 
@@ -66,25 +92,30 @@ function generateQR(data) {
 SEND WHATSAPP
 **********************/
 function sendWhatsApp(phone, text) {
-  window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(text));
+  window.open(
+    "https://wa.me/" + phone + "?text=" + encodeURIComponent(text)
+  );
 }
 
 
 /**********************
-MARK DONE + DELETE IMAGES
+FINISH + DELETE IMAGES
 **********************/
 function finishPatient(id, images) {
 
-  images.forEach(url => {
-    let ref = firebase.storage().refFromURL(url);
-    ref.delete();
-  });
+  if (images && images.length) {
+    images.forEach(url => {
+      let ref = firebase.storage().refFromURL(url);
+      ref.delete();
+    });
+  }
 
   db.collection("patients").doc(id).update({
     images: [],
     done: true
   }).then(() => {
     alert("تم الانتهاء وحذف الصور");
+    loadPatients();
   });
 }
 
@@ -103,10 +134,6 @@ function loadPatients() {
     snap.forEach(doc => {
       let d = doc.data();
 
-      let qrData = generateQR(
-        d.name + " " + d.phone + " " + d.date
-      );
-
       container.innerHTML += `
         <div class="card">
 
@@ -114,10 +141,18 @@ function loadPatients() {
           <p>${d.phone}</p>
           <p>${d.date} - ${d.time}</p>
 
-          <img src="${qrData}" width="100">
+          <!-- QR يظهر فقط لو اتعمل -->
+          ${d.qr ? `<img src="${d.qr}" width="120">` : ""}
 
+          <!-- زرار إنشاء QR بعد رفع الصور -->
+          <button onclick="generatePatientQR('${doc.id}')">
+            📱 Generate QR
+          </button>
+
+          <!-- رفع صور الروشتة -->
           <input type="file" onchange="uploadImage('${doc.id}', this.files[0])">
 
+          <!-- واتساب -->
           <button onclick="
             sendWhatsApp('${d.phone}',
             'بياناتك جاهزة 👇\\n${d.name}\\n${d.date}')
@@ -125,12 +160,16 @@ function loadPatients() {
           📩 واتساب
           </button>
 
-          <button onclick="finishPatient('${doc.id}', ${JSON.stringify(d.images)})">
+          <!-- إنهاء الحالة -->
+          <button onclick="finishPatient('${doc.id}', ${JSON.stringify(d.images || [])})">
           ✅ تم الانتهاء
           </button>
 
+          <!-- عرض الصور -->
           <div>
-            ${d.images.map(img => `<img src="${img}" width="80">`).join("")}
+            ${(d.images || []).map(img => `
+              <img src="${img}" width="80">
+            `).join("")}
           </div>
 
         </div>
