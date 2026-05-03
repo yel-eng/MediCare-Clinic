@@ -8,7 +8,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 /**********************
-CREATE SLOTS (BY ADMIN)
+CREATE SLOTS (ADMIN)
 **********************/
 function generateSlots(){
 
@@ -18,7 +18,7 @@ function generateSlots(){
   let duration = parseInt(document.getElementById("duration").value);
 
   if(!date || !start || !end || !duration){
-    alert("املأ كل البيانات");
+    alert("املأ البيانات");
     return;
   }
 
@@ -52,7 +52,11 @@ function loadSlots(){
   let container = document.getElementById("slots");
   if(!container) return;
 
-  db.collection("slots").get().then(snap=>{
+  db.collection("slots")
+  .orderBy("date")
+  .orderBy("time")
+  .get()
+  .then(snap=>{
 
     container.innerHTML="";
 
@@ -66,9 +70,9 @@ function loadSlots(){
         <p>📅 ${s.date} - ${s.time}</p>
 
         <p>
-        ${s.booked ? 
-          "❌ محجوز - " + (s.patient?.name || "") :
-          "✅ متاح"}
+        ${s.booked 
+          ? "❌ محجوز - " + (s.patient?.name || "")
+          : "✅ متاح"}
         </p>
 
         <input id="price-${doc.id}" placeholder="السعر">
@@ -76,8 +80,6 @@ function loadSlots(){
         <button onclick="updatePrice('${doc.id}')">💰 حفظ</button>
 
         <button onclick="bookByAdmin('${doc.id}')">➕ حجز</button>
-
-        <button onclick="editSlot('${doc.id}', ${JSON.stringify(s)})">✏️ تعديل</button>
 
         <button onclick="deleteSlot('${doc.id}')">🗑 حذف</button>
 
@@ -100,7 +102,9 @@ function bookByAdmin(id){
 
   db.collection("slots").doc(id).get().then(doc=>{
 
-    if(doc.data().booked){
+    let s = doc.data();
+
+    if(s.booked){
       alert("محجوز بالفعل");
       return;
     }
@@ -108,24 +112,11 @@ function bookByAdmin(id){
     doc.ref.update({
       booked:true,
       patient:{name,phone}
+    }).then(()=>{
+      loadSlots();
     });
 
-    loadSlots();
   });
-}
-
-/**********************
-EDIT SLOT
-**********************/
-function editSlot(id, data){
-
-  let newTime = prompt("تعديل الوقت", data.time);
-  let newDate = prompt("تعديل التاريخ", data.date);
-
-  db.collection("slots").doc(id).update({
-    time:newTime,
-    date:newDate
-  }).then(loadSlots);
 }
 
 /**********************
@@ -148,7 +139,7 @@ function deleteSlot(id){
 }
 
 /**********************
-LOAD AVAILABLE SLOTS (CLIENT)
+LOAD AVAILABLE (CLIENT)
 **********************/
 function loadAvailableSlots(){
 
@@ -206,7 +197,9 @@ function book(){
     }).then(()=>{
 
       alert("تم الحجز ✅");
+
       loadAvailableSlots();
+      loadSlots(); // 🔥 يحدث الادمن
 
     });
 
