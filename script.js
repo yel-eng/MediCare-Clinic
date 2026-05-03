@@ -10,22 +10,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
-const auth = firebase.auth();
 
 /**********************
-LOGIN
-**********************/
-function login() {
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
-
-  auth.signInWithEmailAndPassword(email, password)
-    .then(() => window.location.href = "admin.html")
-    .catch(err => alert(err.message));
-}
-
-/**********************
-BOOKING
+BOOK PATIENT
 **********************/
 function book() {
   let name = document.getElementById("name").value;
@@ -33,94 +20,130 @@ function book() {
   let date = document.getElementById("date").value;
   let time = document.getElementById("time").value;
 
-  db.collection("bookings").add({
+  db.collection("patients").add({
     name,
     phone,
     date,
     time,
     price: null,
-    note: ""
-  })
-  .then(() => {
-    window.location.href = "confirm.html";
+    note: "",
+    images: [],
+    done: false
+  }).then(() => {
+    alert("تم الحجز");
   });
 }
 
-/**********************
-UPDATE FIELD (price / note / etc)
-**********************/
-function updateField(id, field, value) {
-  db.collection("bookings").doc(id).update({
-    [field]: value
-  }).then(() => loadBookings());
-}
 
 /**********************
-DELETE BOOKING
+UPLOAD IMAGE (ROSHETA)
 **********************/
-function deleteBooking(id) {
-  db.collection("bookings").doc(id).delete()
-    .then(() => loadBookings());
+function uploadImage(id, file) {
+  const storageRef = firebase.storage().ref("patients/" + id + "/" + file.name);
+
+  storageRef.put(file).then(snapshot => {
+    snapshot.ref.getDownloadURL().then(url => {
+
+      db.collection("patients").doc(id).update({
+        images: firebase.firestore.FieldValue.arrayUnion(url)
+      });
+
+    });
+  });
 }
 
+
 /**********************
-LOAD BOOKINGS (ADMIN)
+GENERATE QR
 **********************/
-function loadBookings() {
-  let container = document.getElementById("bookings");
+function generateQR(data) {
+  return "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" 
+  + encodeURIComponent(data);
+}
+
+
+/**********************
+SEND WHATSAPP
+**********************/
+function sendWhatsApp(phone, text) {
+  window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(text));
+}
+
+
+/**********************
+MARK DONE + DELETE IMAGES
+**********************/
+function finishPatient(id, images) {
+
+  images.forEach(url => {
+    let ref = firebase.storage().refFromURL(url);
+    ref.delete();
+  });
+
+  db.collection("patients").doc(id).update({
+    images: [],
+    done: true
+  }).then(() => {
+    alert("تم الانتهاء وحذف الصور");
+  });
+}
+
+
+/**********************
+LOAD PATIENTS (CRM VIEW)
+**********************/
+function loadPatients() {
+  let container = document.getElementById("patients");
   if (!container) return;
 
-  db.collection("bookings").get().then(snap => {
-    let total = 0;
+  db.collection("patients").get().then(snap => {
+
     container.innerHTML = "";
 
     snap.forEach(doc => {
       let d = doc.data();
 
-      if (d.price) total += Number(d.price);
+      let qrData = generateQR(
+        d.name + " " + d.phone + " " + d.date
+      );
 
       container.innerHTML += `
         <div class="card">
 
-          <input value="${d.name}" 
-            onchange="updateField('${doc.id}','name',this.value)">
+          <h3>${d.name}</h3>
+          <p>${d.phone}</p>
+          <p>${d.date} - ${d.time}</p>
 
-          <input value="${d.phone}" 
-            onchange="updateField('${doc.id}','phone',this.value)">
+          <img src="${qrData}" width="100">
 
-          <input type="date" value="${d.date}" 
-            onchange="updateField('${doc.id}','date',this.value)">
+          <input type="file" onchange="uploadImage('${doc.id}', this.files[0])">
 
-          <input type="time" value="${d.time}" 
-            onchange="updateField('${doc.id}','time',this.value)">
+          <button onclick="
+            sendWhatsApp('${d.phone}',
+            'بياناتك جاهزة 👇\\n${d.name}\\n${d.date}')
+          ">
+          📩 واتساب
+          </button>
 
-          <input type="number" placeholder="المبلغ"
-            value="${d.price ?? ''}"
-            onchange="updateField('${doc.id}','price',this.value)">
+          <button onclick="finishPatient('${doc.id}', ${JSON.stringify(d.images)})">
+          ✅ تم الانتهاء
+          </button>
 
-          <textarea placeholder="ملاحظات"
-            onchange="updateField('${doc.id}','note',this.value)">${d.note || ""}</textarea>
-
-          <p>💰 ${d.price ? d.price + " جنيه" : "بدون مبلغ"}</p>
-
-          <p>📝 ${d.note ? d.note : "لا توجد ملاحظات"}</p>
-
-          <button onclick="deleteBooking('${doc.id}')">🗑 حذف</button>
+          <div>
+            ${d.images.map(img => `<img src="${img}" width="80">`).join("")}
+          </div>
 
         </div>
       `;
     });
 
-    let income = document.getElementById("income");
-    if (income) {
-      income.innerText = "إجمالي الإيراد: " + total + " جنيه";
-    }
   });
 }
+
 
 /**********************
 AUTO LOAD
 **********************/
 window.onload = function () {
-  loadBookings();
+  loadPatients();
 };
