@@ -21,7 +21,7 @@ function addBlog() {
     db.collection("blogs").add({ title, text, date: new Date().toLocaleDateString() }).then(() => location.reload());
 }
 
-// --- توليد المواعيد المخصص ---
+// --- توليد المواعيد المخصص (لو سبتي الخانة فاضية يبقى اليوم إجازة) ---
 async function generateSmartSlots() {
     const rows = document.querySelectorAll(".day-setup-row");
     const duration = parseInt(document.getElementById("duration").value);
@@ -36,6 +36,7 @@ async function generateSmartSlots() {
         const start = row.querySelector(".start-t").value;
         const end = row.querySelector(".end-t").value;
 
+        // لو الخانات فيها وقت، يبقى اليوم ده "شغل". لو فاضية، يبقى "إجازة"
         if (start && end) {
             let current = new Date(`${dateStr}T${start}`);
             let limit = new Date(`${dateStr}T${end}`);
@@ -57,49 +58,58 @@ async function generateSmartSlots() {
         }
     });
 
-    if (count === 0) return alert("لم يتم إدخال ساعات عمل لأي يوم");
+    if (count === 0) return alert("لم يتم تحديد أي ساعات عمل. (كل الأيام إجازة؟)");
     
     await batch.commit();
-    alert(`تم توليد ${count} موعد بنجاح ✅`);
+    alert(`تم توليد جدول العمل بنجاح لـ ${count} موعد ✅`);
     location.reload();
 }
 
-// --- عرض للأدمن (مع فلترة الأيام القديمة) ---
+// --- عرض للأدمن: يعرض فقط الأيام اللي "فيها مواعيد" وتم إنشاؤها ---
 function loadAdminSlots() {
     let container = document.getElementById("slotsContainer");
     if (!container) return;
 
     let today = new Date().toISOString().split('T')[0];
 
-    // فلترة: جلب المواعيد التي تاريخها يساوي اليوم أو أكبر (المستقبل)
+    // هنجيب كل المواعيد اللي تاريخها النهاردة أو بعدين
     db.collection("slots").where("date", ">=", today).get().then(snap => {
         let daysMap = {};
         let totalRev = 0;
 
         snap.forEach(doc => {
             let s = doc.data();
+            // تجميع المواعيد حسب التاريخ
             if (!daysMap[s.date]) daysMap[s.date] = [];
             daysMap[s.date].push({id: doc.id, ...s});
             
-            // حساب الأرباح لليوم الحالي فقط
             if (s.date === today && s.status === "attended") {
                 totalRev += (Number(s.price) || 0);
             }
         });
 
         container.innerHTML = "";
-        // ترتيب الأيام وتوليد الأعمدة
-        Object.keys(daysMap).sort().forEach(date => {
+        
+        // تحويل الماب لجدول مرتب
+        let sortedDates = Object.keys(daysMap).sort();
+        
+        if (sortedDates.length === 0) {
+            container.innerHTML = "<p style='text-align:center; width:100%; padding:20px;'>لا يوجد جدول عمل حالي. استخدم النموذج أعلاه لتوليد المواعيد.</p>";
+            return;
+        }
+
+        sortedDates.forEach(date => {
             let dayDiv = document.createElement("div");
             dayDiv.className = "day-column";
             let dayName = new Date(date).toLocaleDateString('ar-EG', {weekday: 'long'});
+            
             dayDiv.innerHTML = `<div class="day-header">${dayName}<br><small>${date}</small></div>`;
             
             let slotsList = "";
             daysMap[date].sort((a,b)=>a.time.localeCompare(b.time)).forEach(slot => {
                 slotsList += `
-                    <div class="slot-item">
-                        <span>${slot.time} - ${slot.booked ? slot.patient.name : '🟢'}</span>
+                    <div class="slot-item ${slot.booked ? 'booked-card' : ''}">
+                        <span><b>${slot.time}</b> - ${slot.booked ? slot.patient.name : '🟢 متاح'}</span>
                         <button onclick="viewPatientDetails('${slot.id}')" style="width:auto; padding:2px 8px;">إدارة</button>
                     </div>`;
             });
@@ -113,7 +123,7 @@ function loadAdminSlots() {
     });
 }
 
-// --- وظائف المريض والحجز (بدون تغيير) ---
+// --- وظائف المريض والحجز ---
 let allAvailableSlots = [];
 function loadPatientData() {
     let daySelect = document.getElementById("daySelect");
@@ -157,9 +167,14 @@ function book() {
     let name = document.getElementById("name").value;
     let phone = document.getElementById("phone").value;
     let id = document.getElementById("slotsSelect").value;
-    if(!name || !id) return alert("اكمل البيانات");
-    db.collection("slots").doc(id).update({ booked: true, patient: { name, phone, note: "", photo: "" }})
-      .then(() => { alert("تم الحجز بنجاح"); location.reload(); });
+    if(!name || !id) return alert("برجاء إدخال الاسم واختيار موعد");
+    db.collection("slots").doc(id).update({ 
+        booked: true, 
+        patient: { name, phone, note: "", photo: "" }
+    }).then(() => { 
+        alert("تم الحجز بنجاح! ننتظرك في الموعد."); 
+        location.reload(); 
+    });
 }
 
 function viewPatientDetails(id) {
@@ -169,7 +184,7 @@ function viewPatientDetails(id) {
         document.getElementById("patientModal").style.display = "block";
         document.getElementById("overlay").style.display = "block";
         document.getElementById("modalContent").innerHTML = `
-            <h3>${s.date} | ${s.time}</h3>
+            <h3>تعديل موعد: ${s.date} | ${s.time}</h3>
             <label>اسم المريض:</label>
             <input id="en" value="${p.name}" placeholder="الاسم">
             <label>رقم الهاتف:</label>
@@ -180,9 +195,10 @@ function viewPatientDetails(id) {
                 <option value="attended" ${s.status==='attended'?'selected':''}>تم الكشف</option>
             </select>
             <label>ملاحظات طبية:</label>
-            <textarea id="enot" placeholder="ملاحظات">${p.note||""}</textarea>
-            <button onclick="saveAdmin('${id}')">حفظ التعديلات</button>
-            <div id="qr" style="margin-top:10px; display:flex; justify-content:center;"></div>`;
+            <textarea id="enot" placeholder="اكتب هنا التشخيص أو الملاحظات">${p.note||""}</textarea>
+            <button onclick="saveAdmin('${id}')" style="background:#2e7d32;">حفظ التعديلات</button>
+            <button onclick="deleteSlot('${id}')" style="background:#c62828; margin-top:5px;">حذف هذا الموعد نهائياً 🗑️</button>
+            <div id="qr" style="margin-top:15px; display:flex; justify-content:center;"></div>`;
         new QRCode(document.getElementById("qr"), {text: p.name || "No Name", width:80, height:80});
     });
 }
@@ -195,7 +211,17 @@ function saveAdmin(id) {
     db.collection("slots").doc(id).update({
         status: status,
         patient: { name, phone, note }
-    }).then(() => { alert("تم الحفظ"); location.reload(); });
+    }).then(() => { alert("تم تحديث بيانات المريض"); location.reload(); });
+}
+
+// دالة إضافية لحذف موعد لو حبيتي تلغيه يدوياً
+function deleteSlot(id) {
+    if(confirm("هل أنتِ متأكدة من حذف هذا الموعد؟")) {
+        db.collection("slots").doc(id).delete().then(() => {
+            alert("تم حذف الموعد");
+            location.reload();
+        });
+    }
 }
 
 window.onload = () => {
