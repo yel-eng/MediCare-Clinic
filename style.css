@@ -1,123 +1,55 @@
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f4f7fb;
-  direction:rtl;
+:root {
+    --primary: #0d47a1;
+    --secondary: #1976d2;
+    --bg: #f4f7fb;
+    --white: #ffffff;
+    --text: #333;
 }
 
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:#0d47a1;
-  padding:15px 30px;
-  color:white;
-  position:sticky;
-  top:0;
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    direction: rtl;
+    color: var(--text);
 }
 
-.logo{
-  font-size:20px;
-  font-weight:bold;
+/* Header */
+.header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--primary); padding: 15px 5%; color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000;
 }
 
-.nav a{
-  color:white;
-  margin:0 10px;
-  text-decoration:none;
-  font-weight:bold;
+.nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: 500; transition: 0.3s; }
+.nav a:hover { opacity: 0.8; }
+
+/* Sections */
+.section { padding: 50px 5%; max-width: 1200px; margin: auto; }
+h2 { color: var(--primary); text-align: center; margin-bottom: 30px; }
+
+/* Grid & Cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+
+.card {
+    background: var(--white); padding: 20px; border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s;
+    border-top: 4px solid var(--primary);
+}
+.card:hover { transform: translateY(-5px); }
+
+/* Buttons & Inputs */
+input, textarea, select {
+    width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px;
+    border: 1px solid #ddd; box-sizing: border-box; font-size: 16px;
 }
 
-/* HERO */
-.hero{
-  background:linear-gradient(135deg,#1976d2,#64b5f6);
-  color:white;
-  text-align:center;
-  padding:80px 20px;
+button {
+    background: var(--primary); color: white; border: none;
+    padding: 12px 25px; border-radius: 8px; cursor: pointer;
+    font-weight: bold; width: 100%; transition: 0.3s;
 }
+button:hover { background: var(--secondary); }
 
-/* SECTIONS */
-.section{
-  padding:40px;
-  text-align:center;
-}
-
-/* GRID */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:20px;
-}
-
-/* CARD (مهم جداً للتعديلات الجديدة) */
-.card{
-  background:white;
-  padding:20px;
-  border-radius:15px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.1);
-  transition:0.3s;
-  margin:10px 0;
-}
-
-.card:hover{
-  transform:translateY(-5px);
-}
-
-/* INPUT + TEXTAREA (مُحسن للأدمن) */
-input,textarea{
-  display:block;
-  margin:8px auto;
-  padding:10px;
-  width:100%;
-  max-width:400px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  outline:none;
-  font-size:14px;
-}
-
-textarea{
-  min-height:80px;
-  resize:vertical;
-}
-
-/* BUTTON */
-button{
-  padding:10px 20px;
-  background:#0d47a1;
-  color:white;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-  margin-top:8px;
-  transition:0.3s;
-}
-
-button:hover{
-  background:#08306b;
-}
-
-/* DELETE BUTTON (لأزرار الحذف) */
-button.delete{
-  background:red;
-}
-
-button.delete:hover{
-  background:darkred;
-}
-
-/* FOOTER */
-.footer{
-  background:#0d47a1;
-  color:white;
-  text-align:center;
-  padding:20px;
-  margin-top:50px;
-}
-
-.social a{
-  color:white;
-  margin:0 5px;
-  font-size:18px;
-}
+/* Admin Specials */
+.box { background: white; padding: 25px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
