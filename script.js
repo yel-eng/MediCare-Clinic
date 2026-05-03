@@ -17,24 +17,26 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 /******** BOOK ********/
-function book(){
-  let name=document.getElementById("name").value;
-  let phone=document.getElementById("phone").value;
-  let date=document.getElementById("date").value;
-  let time=document.getElementById("time").value;
+import { db } from "./script.js";
+import { collection, addDoc } from "firebase/firestore";
 
-  localStorage.setItem("name",name);
-  localStorage.setItem("phone",phone);
-  localStorage.setItem("date",date);
-  localStorage.setItem("time",time);
+export function book() {
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+  let date = document.getElementById("date").value;
+  let time = document.getElementById("time").value;
 
-  let msg=`حجز جديد:\n${name}\n${phone}\n${date}\n${time}`;
-
-  window.open("https://wa.me/201227630041?text="+encodeURIComponent(msg));
-
-  window.location.href="confirm.html";
+  addDoc(collection(db, "bookings"), {
+    name,
+    phone,
+    date,
+    time,
+    price: 200,
+    createdAt: new Date()
+  }).then(() => {
+    window.location.href = "confirm.html";
+  });
 }
-
 /******** ADD VIDEO ********/
 function addVideo(){
   let url=document.getElementById("videoUrl").value;
