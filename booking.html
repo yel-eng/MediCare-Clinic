@@ -1,32 +1,54 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>احجز موعدك</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجز موعد | عيادتي</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="section" style="max-width: 500px;">
-    <div class="card">
-        <h2 style="text-align:right;">📋 بيانات الحجز</h2>
-        <label>اسم المريض:</label>
-        <input id="name" placeholder="الاسم الكامل">
+<header class="header">
+    <div class="logo">🏥 عيادة د. (اسم الطبيب)</div>
+    <nav class="nav">
+        <a href="admin.html">لوحة التحكم (تجريبي)</a>
+    </nav>
+</header>
+
+<div class="section">
+    <div class="box" style="max-width: 600px; margin: 0 auto;">
+        <h2>🗓️ احجز موعدك الآن</h2>
+        <p>برجاء إدخال بياناتك واختيار الموعد المناسب من جدول الأسبوع:</p>
         
-        <label>رقم الهاتف:</label>
-        <input id="phone" placeholder="01xxxxxxxxx">
+        <div class="form-group">
+            <label>الاسم بالكامل:</label>
+            <input type="text" id="name" placeholder="أدخل اسمك الثلاثي">
+        </div>
 
-        <label>اختر الموعد المتاح:</label>
-        <select id="slotsSelect">
-            <option>جاري تحميل المواعيد...</option>
-        </select>
+        <div class="form-group">
+            <label>رقم الهاتف (واتساب):</label>
+            <input type="tel" id="phone" placeholder="01xxxxxxxxx">
+        </div>
 
-        <button onclick="book()" style="margin-top:20px;">تأكيد الحجز الآن</button>
+        <div class="form-group">
+            <label>اختر من المواعيد المتاحة (7 أيام):</label>
+            <!-- هذا هو العنصر السحري اللي الجافاسكريبت بيملاه -->
+            <select id="slotsSelect" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px;">
+                <option value="">جاري تحميل المواعيد الأسبوعية...</option>
+            </select>
+        </div>
+
+        <button onclick="book()" style="width: 100%; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 20px;">
+            تأكيد الحجز المسبق ⚡
+        </button>
     </div>
 </div>
 
+<!-- المكتبات الأساسية (لازم تكون موجودة في كل الصفحات) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<!-- ربط ملف الـ JS اللي فيه الفانكشنز اللي بعتها لك -->
 <script src="script.js"></script>
+
 </body>
 </html>
