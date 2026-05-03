@@ -9,7 +9,7 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-// توليد المواعيد
+// --- [أساسي] توليد المواعيد ---
 async function generateSmartSlots() {
     const rows = document.querySelectorAll(".day-setup-row");
     const duration = parseInt(document.getElementById("duration").value);
@@ -47,7 +47,7 @@ async function generateSmartSlots() {
     location.reload();
 }
 
-// تحميل الجدول للأدمن
+// --- [أساسي] تحميل الجدول للأدمن ---
 function loadAdminSlots() {
     let container = document.getElementById("slotsContainer");
     if (!container) return;
@@ -69,14 +69,20 @@ function loadAdminSlots() {
         let sortedDates = Object.keys(daysMap).sort();
         
         if (sortedDates.length === 0) {
-            container.innerHTML = "<p style='padding:20px;'>لا يوجد مواعيد مسجلة للأيام القادمة.</p>";
+            container.innerHTML = "<p style='padding:20px;'>لا يوجد مواعيد مسجلة.</p>";
         }
 
         sortedDates.forEach(date => {
             let dayDiv = document.createElement("div");
             dayDiv.className = "day-column";
             let dayName = new Date(date).toLocaleDateString('ar-EG', {weekday: 'long'});
-            dayDiv.innerHTML = `<div class="day-header">${dayName}<br>${date}</div>`;
+            
+            // إضافة زرار مسح اليوم بالكامل لجعل اليوم إجازة
+            dayDiv.innerHTML = `
+                <div class="day-header">
+                    ${dayName}<br>${date}
+                    <button onclick="deleteDay('${date}')" style="background:red; color:white; border:none; font-size:10px; cursor:pointer; padding:2px 5px; margin-top:5px; border-radius:3px;">مسح اليوم (إجازة)</button>
+                </div>`;
             
             daysMap[date].sort((a,b)=>a.time.localeCompare(b.time)).forEach(slot => {
                 dayDiv.innerHTML += `
@@ -91,7 +97,53 @@ function loadAdminSlots() {
     });
 }
 
-// عرض تفاصيل المريض
+// --- [تعديل] مسح يوم كامل ---
+async function deleteDay(date) {
+    if(confirm(`هل تريد مسح كل مواعيد يوم ${date}؟ سيختفي اليوم من الحجز تماماً.`)) {
+        const snap = await db.collection("slots").where("date", "==", date).get();
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        alert("تم مسح اليوم بنجاح");
+        location.reload();
+    }
+}
+
+// --- [تعديل] إضافة حجز يدوي من الأدمن ---
+async function addManualSlot() {
+    const date = document.getElementById("manualDate").value;
+    const time = document.getElementById("manualTime").value;
+    const name = document.getElementById("manualName").value;
+    if(!date || !time || !name) return alert("يرجى إكمال التاريخ والوقت واسم المريض");
+    
+    await db.collection("slots").add({
+        date, time, booked: true, status: "pending", price: 200,
+        patient: { name, phone: "حجز يدوي", note: "" }
+    });
+    alert("تم إضافة الحجز بنجاح");
+    location.reload();
+}
+
+// --- [إرجاع] إدارة الفيديوهات والمقالات ---
+function addVideo() {
+    const url = document.getElementById("videoUrl").value;
+    const text = document.getElementById("videoText").value;
+    if(!url) return alert("أدخل رابط الفيديو");
+    db.collection("videos").add({ url, text, date: new Date().toLocaleDateString() }).then(() => {
+        alert("تم إضافة الفيديو"); location.reload();
+    });
+}
+
+function addBlog() {
+    const title = document.getElementById("blogTitle").value;
+    const text = document.getElementById("blogText").value;
+    if(!title) return alert("أدخل عنوان المقال");
+    db.collection("blogs").add({ title, text, date: new Date().toLocaleDateString() }).then(() => {
+        alert("تم إضافة المقال"); location.reload();
+    });
+}
+
+// --- [أساسي] عرض وتعديل المريض ---
 function viewPatientDetails(id) {
     db.collection("slots").doc(id).get().then(doc => {
         let s = doc.data();
@@ -136,7 +188,7 @@ function deleteSlot(id) {
     }
 }
 
-// دالة تحميل بيانات المرضى (للموقع الرئيسي)
+// --- [أساسي] وظائف المريض والحجز ---
 let allAvailableSlots = [];
 function loadPatientData() {
     let daySelect = document.getElementById("daySelect");
