@@ -1,47 +1,24 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <title>لوحة التحكم | Admin</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<header class="header">
-    <div class="logo">🏥 لوحة إدارة العيادة</div>
-    <a href="index.html" style="color:white; text-decoration:none;">خروج</a>
-</header>
-
-<div class="section">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <!-- إدارة المواعيد -->
-        <div class="box">
-            <h2>📅 تنظيم جدول اليوم</h2>
-            <label>تاريخ اليوم:</label>
-            <input type="date" id="slotDate">
-            <div style="display:flex; gap:10px;">
-                <input type="time" id="startTime"> إلى <input type="time" id="endTime">
-            </div>
-            <button onclick="setAvailability()">توليد المواعيد تلقائياً</button>
-        </div>
-
-        <!-- إضافة محتوى -->
-        <div class="box">
-            <h2>🎥 إضافة فيديو تعليمي</h2>
-            <input id="videoUrl" placeholder="رابط فيديو YouTube">
-            <input id="videoText" placeholder="وصف الفيديو">
-            <button onclick="addVideo()">نشر الفيديو</button>
-        </div>
+<div class="box">
+    <h2>📅 إعداد جدول المواعيد الذكي</h2>
+    <input type="date" id="slotDate">
+    <div style="display:flex; gap:10px;">
+        <input type="time" id="startTime" title="بداية العمل">
+        <input type="time" id="endTime" title="نهاية العمل">
     </div>
-
-    <div class="box">
-        <h2>📑 الحجوزات الحالية</h2>
-        <div id="slots" class="grid"></div>
-    </div>
+    <input type="number" id="duration" placeholder="مدة الجلسة (بالدقائق) مثلاً 30">
+    <button onclick="generateSmartSlots()">توليد مواعيد الأسبوع</button>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="script.js"></script>
-</body>
-</html>
+<div class="box">
+    <h2>👥 إدارة المرضى والملفات الطبية</h2>
+    <div id="patientsList" class="grid"></div>
+</div>
+
+<!-- Modal بسيط لعرض بيانات المريض وتعديلها -->
+<div id="patientModal" style="display:none; position:fixed; top:10%; left:10%; right:10%; background:white; padding:20px; z-index:2000; border-radius:15px; box-shadow:0 0 20px rgba(0,0,0,0.5);">
+    <div id="modalContent"></div>
+    <button onclick="closeModal()" style="background:red;">إغلاق</button>
+</div>
+
+<!-- مكتبة الـ QR Code -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
