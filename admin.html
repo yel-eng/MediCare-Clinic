@@ -1,103 +1,47 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>CRM Admin Dashboard</title>
-
-<style>
-body{
-  font-family:Arial;
-  background:#f5f5f5;
-  padding:20px;
-  direction:rtl;
-}
-
-.box{
-  background:#fff;
-  padding:15px;
-  margin:15px 0;
-  border-radius:12px;
-}
-
-.card{
-  background:#fff;
-  padding:15px;
-  margin:10px 0;
-  border-radius:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.1);
-}
-
-input,textarea{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-button{
-  padding:8px 12px;
-  margin:5px 0;
-  border:none;
-  border-radius:8px;
-  background:#0d47a1;
-  color:white;
-  cursor:pointer;
-}
-
-h1,h2{color:#0d47a1;}
-</style>
+    <meta charset="UTF-8">
+    <title>لوحة التحكم | Admin</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<h1>🏥 CRM Admin Dashboard</h1>
+<header class="header">
+    <div class="logo">🏥 لوحة إدارة العيادة</div>
+    <a href="index.html" style="color:white; text-decoration:none;">خروج</a>
+</header>
 
-<!-- VIDEOS -->
-<div class="box">
-<h2>🎥 Videos</h2>
-<input id="videoUrl" placeholder="Video URL">
-<input id="videoText" placeholder="Description">
-<button onclick="addVideo()">إضافة فيديو</button>
-<div id="videos"></div>
-</div>
+<div class="section">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- إدارة المواعيد -->
+        <div class="box">
+            <h2>📅 تنظيم جدول اليوم</h2>
+            <label>تاريخ اليوم:</label>
+            <input type="date" id="slotDate">
+            <div style="display:flex; gap:10px;">
+                <input type="time" id="startTime"> إلى <input type="time" id="endTime">
+            </div>
+            <button onclick="setAvailability()">توليد المواعيد تلقائياً</button>
+        </div>
 
-<!-- BLOGS -->
-<div class="box">
-<h2>📰 Articles</h2>
-<input id="blogTitle" placeholder="Title">
-<textarea id="blogText"></textarea>
-<input id="blogImage">
-<button onclick="addBlog()">إضافة مقال</button>
-<div id="blogs"></div>
-</div>
+        <!-- إضافة محتوى -->
+        <div class="box">
+            <h2>🎥 إضافة فيديو تعليمي</h2>
+            <input id="videoUrl" placeholder="رابط فيديو YouTube">
+            <input id="videoText" placeholder="وصف الفيديو">
+            <button onclick="addVideo()">نشر الفيديو</button>
+        </div>
+    </div>
 
-<!-- PATIENTS -->
-<div class="box">
-<h2>🏥 Patients</h2>
-<div id="patients"></div>
-</div>
-
-<!-- BOOKINGS -->
-<div class="box">
-<h2>📅 Bookings System</h2>
-
-<input type="date" id="slotDate">
-<input type="time" id="startTime">
-<input type="time" id="endTime">
-
-<button onclick="setAvailability()">تحديد مواعيد اليوم</button>
-
-<h3>المواعيد</h3>
-<div id="slots"></div>
-
+    <div class="box">
+        <h2>📑 الحجوزات الحالية</h2>
+        <div id="slots" class="grid"></div>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-
 <script src="script.js"></script>
-
 </body>
 </html>
