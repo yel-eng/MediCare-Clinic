@@ -9,7 +9,7 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-// --- وظائف المحتوى ---
+// --- وظائف المحتوى (بدون تغيير) ---
 function addVideo() {
     const url = document.getElementById("videoUrl").value;
     const text = document.getElementById("videoText").value;
@@ -21,38 +21,50 @@ function addBlog() {
     db.collection("blogs").add({ title, text, date: new Date().toLocaleDateString() }).then(() => location.reload());
 }
 
-// --- توليد المواعيد أسبوعياً ---
+// --- توليد المواعيد المطور (التعديل المطلوب) ---
 async function generateSmartSlots() {
-    let startDateInput = document.getElementById("slotDate").value;
-    let start = document.getElementById("startTime").value;
-    let end = document.getElementById("endTime").value;
-    let duration = parseInt(document.getElementById("duration").value);
-    let price = prompt("سعر الكشف:", "200");
-
-    if (!startDateInput || !start || !end) return alert("اكمل البيانات");
+    const rows = document.querySelectorAll(".day-setup-row");
+    const duration = parseInt(document.getElementById("duration").value);
+    if (!rows.length) return alert("اختر تاريخ البداية أولاً");
     
+    let price = prompt("سعر الكشف الموحد:", "200");
     let batch = db.batch();
-    for (let i = 0; i < 7; i++) {
-        let dateObj = new Date(startDateInput);
-        dateObj.setDate(dateObj.getDate() + i);
-        let dateStr = dateObj.toISOString().split('T')[0];
+    let count = 0;
 
-        let current = new Date(`${dateStr}T${start}`);
-        let limit = new Date(`${dateStr}T${end}`);
+    rows.forEach(row => {
+        const dateStr = row.getAttribute("data-date");
+        const start = row.querySelector(".start-t").value;
+        const end = row.querySelector(".end-t").value;
 
-        while (current < limit) {
-            let time = current.toTimeString().slice(0, 5);
-            let ref = db.collection("slots").doc();
-            batch.set(ref, { date: dateStr, time: time, booked: false, price: parseFloat(price), status: "pending", patient: null });
-            current.setMinutes(current.getMinutes() + duration);
+        if (start && end) {
+            let current = new Date(`${dateStr}T${start}`);
+            let limit = new Date(`${dateStr}T${end}`);
+
+            while (current < limit) {
+                let time = current.toTimeString().slice(0, 5);
+                let ref = db.collection("slots").doc();
+                batch.set(ref, { 
+                    date: dateStr, 
+                    time: time, 
+                    booked: false, 
+                    price: parseFloat(price), 
+                    status: "pending", 
+                    patient: null 
+                });
+                current.setMinutes(current.getMinutes() + duration);
+                count++;
+            }
         }
-    }
+    });
+
+    if (count === 0) return alert("لم يتم تحديد ساعات عمل لأي يوم!");
+    
     await batch.commit();
-    alert("تم توليد الأسبوع ✅");
+    alert(`تم توليد ${count} موعد بنجاح ✅`);
     location.reload();
 }
 
-// --- عرض للأدمن بتنسيق الأيام ---
+// --- عرض للأدمن (كما هو مع تحسين العرض) ---
 function loadAdminSlots() {
     let container = document.getElementById("slotsContainer");
     if (!container) return;
@@ -66,7 +78,7 @@ function loadAdminSlots() {
             let s = doc.data();
             if (!daysMap[s.date]) daysMap[s.date] = [];
             daysMap[s.date].push({id: doc.id, ...s});
-            if (s.date === today && s.status === "attended") totalRev += s.price;
+            if (s.date === today && s.status === "attended") totalRev += (Number(s.price) || 0);
         });
 
         container.innerHTML = "";
@@ -79,7 +91,7 @@ function loadAdminSlots() {
                 dayDiv.innerHTML += `
                     <div class="slot-item">
                         <span>${slot.time} - ${slot.booked ? slot.patient.name : '🟢'}</span>
-                        <button onclick="viewPatientDetails('${slot.id}')">إدارة</button>
+                        <button onclick="viewPatientDetails('${slot.id}')" style="width:auto; padding:2px 8px;">إدارة</button>
                     </div>`;
             });
             container.appendChild(dayDiv);
@@ -88,7 +100,7 @@ function loadAdminSlots() {
     });
 }
 
-// --- عرض للمريض (فلترة الأيام) ---
+// --- وظائف المريض والحجز (بدون تغيير) ---
 let allAvailableSlots = [];
 function loadPatientData() {
     let daySelect = document.getElementById("daySelect");
@@ -102,7 +114,8 @@ function loadPatientData() {
             allAvailableSlots.push({id: doc.id, ...s});
             days.add(s.date);
         });
-
+        
+        daySelect.innerHTML = '<option value="">-- اختر اليوم --</option>';
         Array.from(days).sort().forEach(d => {
             daySelect.innerHTML += `<option value="${d}">${d}</option>`;
         });
@@ -112,8 +125,8 @@ function loadPatientData() {
 function filterTimesByDay() {
     let day = document.getElementById("daySelect").value;
     let timeSelect = document.getElementById("slotsSelect");
+    if (!timeSelect) return;
     timeSelect.innerHTML = '<option value="">-- اختر الوقت --</option>';
-    
     allAvailableSlots.filter(s => s.date === day)
         .sort((a,b)=>a.time.localeCompare(b.time))
         .forEach(s => {
@@ -121,14 +134,13 @@ function filterTimesByDay() {
         });
 }
 
-// --- الحجز والتفاصيل ---
 function book() {
     let name = document.getElementById("name").value;
     let phone = document.getElementById("phone").value;
     let id = document.getElementById("slotsSelect").value;
     if(!name || !id) return alert("اكمل البيانات");
     db.collection("slots").doc(id).update({ booked: true, patient: { name, phone, note: "", photo: "" }})
-      .then(() => alert("تم الحجز بنجاح"));
+      .then(() => { alert("تم الحجز بنجاح"); location.reload(); });
 }
 
 function viewPatientDetails(id) {
@@ -141,12 +153,29 @@ function viewPatientDetails(id) {
             <h3>${s.date} | ${s.time}</h3>
             <input id="en" value="${p.name}" placeholder="الاسم">
             <input id="ep" value="${p.phone}" placeholder="الهاتف">
-            <select id="es"><option value="pending">انتظار</option><option value="attended">تم الكشف</option></select>
-            <textarea id="enot">${p.note||""}</textarea>
-            <button onclick="saveAdmin('${id}')">حفظ</button>
-            <div id="qr" style="margin-top:10px;"></div>`;
-        new QRCode(document.getElementById("qr"), {text: p.name, width:80, height:80});
+            <select id="es">
+                <option value="pending" ${s.status==='pending'?'selected':''}>انتظار</option>
+                <option value="attended" ${s.status==='attended'?'selected':''}>تم الكشف</option>
+            </select>
+            <textarea id="enot" placeholder="ملاحظات">${p.note||""}</textarea>
+            <button onclick="saveAdmin('${id}')">حفظ التعديلات</button>
+            <div id="qr" style="margin-top:10px; display:flex; justify-content:center;"></div>`;
+        new QRCode(document.getElementById("qr"), {text: p.name || "No Name", width:80, height:80});
     });
 }
 
-window.onload = () => { loadAdminSlots(); loadPatientData(); };
+function saveAdmin(id) {
+    const name = document.getElementById("en").value;
+    const phone = document.getElementById("ep").value;
+    const status = document.getElementById("es").value;
+    const note = document.getElementById("enot").value;
+    db.collection("slots").doc(id).update({
+        status: status,
+        patient: { name, phone, note }
+    }).then(() => { alert("تم الحفظ"); location.reload(); });
+}
+
+window.onload = () => {
+    if (document.getElementById("slotsContainer")) loadAdminSlots();
+    if (document.getElementById("daySelect")) loadPatientData();
+};
