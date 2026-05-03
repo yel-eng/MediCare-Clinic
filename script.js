@@ -1,3 +1,4 @@
+
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -22,10 +23,10 @@ function book() {
   let time = document.getElementById("time").value;
 
   db.collection("patients").add({
-    name,
-    phone,
-    date,
-    time,
+    name: name || "",
+    phone: phone || "",
+    date: date || "",
+    time: time || "",
     price: null,
     note: "",
     images: [],
@@ -39,7 +40,7 @@ function book() {
 
 
 /**********************
-UPLOAD IMAGE (ROSHETA)
+UPLOAD IMAGE
 **********************/
 function uploadImage(id, file) {
 
@@ -61,23 +62,30 @@ function uploadImage(id, file) {
 
 
 /**********************
-🔥 QR (FIXED - PROFESSIONAL)
+🔥 QR FIX (SAFE DATA)
 **********************/
 function generatePatientQR(id) {
 
-  let url =
-    "https://yel-eng.github.io/MediCare-Clinic/patient.html?id=" + id;
+  db.collection("patients").doc(id).get().then(doc => {
 
-  let qrImage =
-    "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
-    encodeURIComponent(url);
+    let d = doc.data();
 
-  db.collection("patients").doc(id).update({
-    qr: qrImage
-  }).then(() => {
-    loadPatients();
+    let qrText =
+      "Name: " + (d.name || "N/A") +
+      "\nPhone: " + (d.phone || "N/A") +
+      "\nDate: " + (d.date || "N/A");
+
+    let qrURL =
+      "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
+      encodeURIComponent(qrText);
+
+    db.collection("patients").doc(id).update({
+      qr: qrURL
+    }).then(() => {
+      loadPatients();
+    });
+
   });
-
 }
 
 
@@ -91,9 +99,7 @@ function deletePatient(id, images) {
       try {
         let ref = firebase.storage().refFromURL(url);
         ref.delete();
-      } catch (e) {
-        console.log(e);
-      }
+      } catch (e) {}
     });
   }
 
@@ -143,6 +149,7 @@ function sendWhatsApp(phone, text) {
 LOAD PATIENTS
 **********************/
 function loadPatients() {
+
   let container = document.getElementById("patients");
   if (!container) return;
 
@@ -151,14 +158,17 @@ function loadPatients() {
     container.innerHTML = "";
 
     snap.forEach(doc => {
+
       let d = doc.data();
+
+      console.log("PATIENT:", d); // 🔥 Debug مهم
 
       container.innerHTML += `
         <div class="card">
 
-          <h3>${d.name}</h3>
-          <p>${d.phone}</p>
-          <p>${d.date} - ${d.time}</p>
+          <h3>${d.name || "No Name"}</h3>
+          <p>${d.phone || "No Phone"}</p>
+          <p>${d.date || ""} - ${d.time || ""}</p>
 
           ${d.qr ? `<img src="${d.qr}" width="120">` : ""}
 
@@ -170,8 +180,8 @@ function loadPatients() {
             onchange="uploadImage('${doc.id}', this.files[0])">
 
           <button onclick="
-            sendWhatsApp('${d.phone}',
-            'بياناتك جاهزة 👇\\n${d.name}\\n${d.date}')
+            sendWhatsApp('${d.phone || ""}',
+            'بياناتك جاهزة 👇\\n${d.name || ""}')
           ">
           📩 واتساب
           </button>
