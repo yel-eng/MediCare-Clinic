@@ -205,6 +205,42 @@ async function addManualSlot() {
     }
 }
 
+// --- [تعديل] إضافة مقال طبي (مع صورة) ---
+async function addBlog() {
+    const title = document.getElementById("bTitle").value;
+    const imgUrl = document.getElementById("bImg").value;
+    const text = document.getElementById("bText").value;
+
+    if (!title || !text) return alert("يرجى إدخال العنوان والمحتوى");
+
+    await db.collection("blogs").add({
+        title,
+        image: imgUrl || "", // رابط الصورة اختياري
+        text,
+        date: new Date().toLocaleDateString('ar-EG'),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("تم نشر المقال بنجاح ✅");
+    location.reload();
+}
+
+// --- [تعديل] إضافة فيديو تعليمي ---
+async function addVideo() {
+    const title = document.getElementById("vTitle").value;
+    const url = document.getElementById("vUrl").value;
+
+    if (!title || !url) return alert("يرجى إدخال العنوان ورابط الفيديو");
+
+    await db.collection("videos").add({
+        title,
+        url,
+        date: new Date().toLocaleDateString('ar-EG'),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("تم نشر الفيديو بنجاح ✅");
+    location.reload();
+}
+
 function closeModal() {
     document.getElementById("modal").style.display = "none";
     document.getElementById("overlay").style.display = "none";
