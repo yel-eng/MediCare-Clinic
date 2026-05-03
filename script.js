@@ -17,32 +17,51 @@ BOOK PATIENT
 **********************/
 function book() {
 
-  let name = document.getElementById("name")?.value;
-  let phone = document.getElementById("phone")?.value;
-  let date = document.getElementById("date")?.value;
-  let time = document.getElementById("time")?.value;
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+  let date = document.getElementById("date").value;
+  let time = document.getElementById("time").value;
 
   if (!name || !phone || !date || !time) {
-    alert("من فضلك املي البيانات");
+    alert("املأ البيانات");
     return;
   }
 
-  db.collection("patients").add({
-    name,
-    phone,
-    date,
-    time,
-    price: null,
-    note: "",
-    images: [],
-    qr: null,
-    done: false
-  }).then(() => {
-    alert("تم الحجز");
-    loadPatients();
-  });
-}
+  // نجيب slot المطابق
+  db.collection("slots")
+    .where("date", "==", date)
+    .where("time", "==", time)
+    .get()
+    .then(snap => {
 
+      if (snap.empty) {
+        alert("الميعاد ده مش موجود ❌");
+        return;
+      }
+
+      let slotDoc = snap.docs[0];
+
+      let slot = slotDoc.data();
+
+      if (slot.booked) {
+        alert("الموعد محجوز ❌ اختار وقت تاني");
+        return;
+      }
+
+      // نحجز فعليًا
+      slotDoc.ref.update({
+        booked: true,
+        patient: { name, phone }
+      }).then(() => {
+
+        alert("تم الحجز بنجاح ✅");
+
+        loadSlots();
+
+      });
+
+    });
+}
 
 /**********************
 UPLOAD IMAGE
