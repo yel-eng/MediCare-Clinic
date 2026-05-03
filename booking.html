@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>حجز موعد</title>
+<title>Booking</title>
 </head>
 
 <body>
@@ -16,11 +16,78 @@
 
 <button onclick="book()">احجز</button>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-<script src="script.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/***************
+LOAD AVAILABLE SLOTS
+***************/
+function loadAvailableSlots(){
+
+  let select = document.getElementById("slotsSelect");
+  select.innerHTML="";
+
+  db.collection("slots")
+    .where("booked","==",false)
+    .get()
+    .then(snap=>{
+
+      snap.forEach(doc=>{
+
+        let s = doc.data();
+
+        select.innerHTML += `
+          <option value="${doc.id}">
+            ${s.date} - ${s.time}
+          </option>
+        `;
+      });
+
+    });
+}
+
+/***************
+BOOK
+***************/
+function book(){
+
+  let name = nameInput.value;
+  let phone = phoneInput.value;
+  let slotId = document.getElementById("slotsSelect").value;
+
+  db.collection("slots").doc(slotId).get().then(doc=>{
+
+    let s = doc.data();
+
+    if(s.booked){
+      alert("الموعد اتحجز ❌");
+      return;
+    }
+
+    doc.ref.update({
+      booked:true,
+      patient:{name,phone}
+    });
+
+    alert("تم الحجز ✅");
+    loadAvailableSlots();
+
+  });
+
+}
+
+window.onload = loadAvailableSlots;
+</script>
 
 </body>
 </html>
