@@ -177,6 +177,99 @@
             position: relative;
         }
 
+        .hero-pro{
+  background: linear-gradient(135deg,#2563eb,#1e40af);
+  color:white;
+  padding:40px 8%;
+  border-radius:0 0 30px 30px;
+}
+
+.hero-pro h1{
+  font-size:1.6rem;
+  margin-bottom:10px;
+}
+
+.hero-stats{
+  display:flex;
+  gap:10px;
+  margin:15px 0;
+  flex-wrap:wrap;
+}
+
+.hero-stats div{
+  background:rgba(255,255,255,0.2);
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:0.8rem;
+}
+
+.hero-pro button{
+  background:#10b981;
+  border:none;
+  padding:12px;
+  border-radius:10px;
+  color:white;
+  font-size:1rem;
+  cursor:pointer;
+}
+
+.doctor-box{
+  display:flex;
+  gap:20px;
+  padding:30px 8%;
+  align-items:center;
+}
+
+.doctor-img{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.rating{
+  color:#f59e0b;
+  margin:5px 0;
+}
+
+.exp{
+  font-size:0.9rem;
+  color:#555;
+}
+
+.features{
+  padding:30px 8%;
+}
+
+.features .grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:15px;
+}
+
+.features .grid div{
+  background:white;
+  padding:15px;
+  border-radius:15px;
+}
+
+.video-section,
+.article,
+.gallery{
+  padding:30px 8%;
+}
+
+.gallery .images{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+}
+
+.gallery img{
+  width:200px;
+  border-radius:10px;
+}
+
         /* Responsive التعديلات */
         @media (max-width: 768px) {
             .nav-desktop { display: none; }
@@ -200,19 +293,53 @@
 </header>
 
 <!-- قسم الهيرو (نمط التطبيق) -->
-<section class="app-hero">
-    <div class="user-welcome">
-        <div>
-            <p style="opacity: 0.8; font-size: 0.9rem;">مرحباً بك،</p>
-            <h1>كيف حالك اليوم؟</h1>
-        </div>
-        <img src="https://ui-avatars.com/api/?name=User&background=fff&color=2563eb" style="width: 45px; border-radius: 50%; border: 2px solid white;">
+<section class="hero-pro">
+
+  <div class="hero-text">
+    <h1>نظام ذكي لإدارة العيادات بدون زحمة أو أخطاء</h1>
+    
+    <p>
+      قلل الانتظار بنسبة 70%  
+      وزود عدد الحجوزات  
+      وخلّي إدارة عيادتك تتم تلقائيًا
+    </p>
+
+    <div class="hero-stats">
+      <div>⭐ 500+ مريض راضي</div>
+      <div>📅 3000+ حجز</div>
+      <div>⏱️ تقليل الانتظار 70%</div>
     </div>
-    <div class="search-bar">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="ابحث عن طبيب أو خدمة..." style="background:none; border:none; color:white; outline:none; width:100%; font-family:inherit;">
+ <section class="features">
+
+  <h2>لماذا هذا النظام؟</h2>
+
+  <div class="grid">
+
+    <div>
+      <h3>🚫 بدون زحمة</h3>
+      <p>تنظيم المواعيد يقلل التكدس داخل العيادة</p>
     </div>
+
+    <div>
+      <h3>📈 زيادة الحجوزات</h3>
+      <p>الحجز أونلاين 24 ساعة بدون توقف</p>
+    </div>
+
+    <div>
+      <h3>⚡ إدارة سهلة</h3>
+      <p>كل المرضى والمواعيد في مكان واحد</p>
+    </div>
+
+  </div>
+
 </section>
+    <button onclick="location.href='booking.html'">
+      احجز كشفك الآن
+    </button>
+  </div>
+
+</section>
+    
 
 <!-- الخدمات (كروت تطبيق) -->
 <div class="section-title">
