@@ -3,55 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم عيادتي الذكية</title>
-    <link rel="stylesheet" href="style.css">
+    <title>لوحة تحكم عيادتي الشاملة</title>
     <style>
         :root { --main: #1a237e; --accent: #00bcd4; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        .grid-7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .day-setup-row { border: 1px solid #eee; padding: 15px; border-radius: 10px; background: #fff; text-align: center; }
-        .slots-grid { display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; min-height: 400px; }
-        .day-column { min-width: 250px; background: #fff; border-radius: 10px; border: 1px solid #ddd; height: fit-content; }
-        .day-header { background: var(--main); color: white; padding: 12px; border-radius: 10px 10px 0 0; text-align: center; }
-        .slot-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-        .booked-card { background: #e0f2f1; border-right: 4px solid var(--accent); }
-        .btn-main { background: var(--main); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-        .btn-danger { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        input[type="time"] { width: 90%; padding: 5px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
         
-        /* إضافة الحصالة بشكل أنيق */
-        .wallet-zone { background: #1a237e; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .wallet-amount { font-size: 24px; font-weight: bold; color: #00bcd4; }
+        /* تنسيق الحصالة */
+        .wallet-zone { background: var(--main); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .wallet-amount { font-size: 22px; font-weight: bold; color: var(--accent); }
+
+        /* تنسيق المواعيد */
+        .grid-7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .day-setup-row { border: 1px solid #eee; padding: 10px; border-radius: 10px; text-align: center; }
+        .slots-grid { display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; }
+        .day-column { min-width: 250px; background: #fff; border-radius: 10px; border: 1px solid #ddd; height: fit-content; }
+        .day-header { background: var(--main); color: white; padding: 10px; border-radius: 10px 10px 0 0; text-align: center; }
+        
+        .slot-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; }
+        .booked-card { background: #e0f2f1; border-right: 4px solid var(--accent); }
+        
+        /* تنسيق المقال والفيديو */
+        .content-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        textarea, input[type="text"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        
+        .btn-main { background: var(--main); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        .btn-danger { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="wallet-zone">
-        <span>🏥 إدارة العيادة - الحصالة المالية اليومية:</span>
-        <div><span id="dayTotal" class="wallet-amount">0</span> ج.م</div>
+        <span>💰 إجمالي دخل العيادة اليوم:</span>
+        <div><span id="dayTotal">0</span> ج.م</div>
     </div>
 
+    <!-- الجزء الخاص بالمواعيد -->
     <div class="card">
-        <h3>🗓️ إعداد مواعيد العمل (الأيام السبعة القادمة)</h3>
-        <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
-            <div>
-                <label>تاريخ البداية:</label>
-                <input type="date" id="startDatePicker" onchange="setupWeekUI()">
-            </div>
-            <div>
-                <label>مدة الكشف (دقيقة):</label>
-                <input type="number" id="duration" value="30" style="width: 60px;">
-            </div>
-            <button class="btn-main" onclick="generateSmartSlots()">توليد المواعيد الآن 🚀</button>
+        <h3>🗓️ إعداد جدول المواعيد</h3>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center;">
+            <input type="date" id="startDatePicker" onchange="setupWeekUI()">
+            <input type="number" id="duration" value="30" style="width: 60px;">
+            <button class="btn-main" onclick="generateSmartSlots()">توليد الجدول 🚀</button>
         </div>
         <div id="weekSetupGrid" class="grid-7"></div>
     </div>
 
     <div class="card">
-        <h3>📊 المواعيد الحالية في القاعدة</h3>
-        <div id="slotsContainer" class="slots-grid">
-            <p style="padding: 20px;">جاري تحميل الجدول...</p>
+        <div id="slotsContainer" class="slots-grid"></div>
+    </div>
+
+    <!-- الجزء الخاص بالمقال والفيديو -->
+    <div class="card">
+        <h3>📝 إدارة المحتوى (فيديو ومقال)</h3>
+        <div class="content-editor">
+            <div>
+                <label>رابط فيديو اليوتيوب:</label>
+                <input type="text" id="videoUrl" placeholder="ضع الرابط هنا...">
+                <button class="btn-main" onclick="updateVideo()">تحديث الفيديو 🎬</button>
+            </div>
+            <div>
+                <label>نص المقال الطبي:</label>
+                <textarea id="articleText" rows="5" placeholder="اكتب المقال هنا..."></textarea>
+                <button class="btn-main" onclick="updateArticle()">تحديث المقال ✍️</button>
+            </div>
         </div>
     </div>
 
