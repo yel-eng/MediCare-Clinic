@@ -11,8 +11,6 @@ const firebaseConfig = {
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-let allAvailableSlots = [];
-
 function getLocalDateString(dateObj) {
     let y = dateObj.getFullYear();
     let m = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -21,114 +19,7 @@ function getLocalDateString(dateObj) {
 }
 
 // ==========================================
-// وظائف صفحة الحجز (المحسنة)
-// ==========================================
-
-function loadBookingDays() {
-    const daySelect = document.getElementById("daySelect");
-    if (!daySelect) return;
-
-    let today = getLocalDateString(new Date());
-
-    // الاستماع للمواعيد غير المحجوزة فقط ومن تاريخ اليوم وصاعداً
-    db.collection("slots")
-      .where("date", ">=", today)
-      .where("booked", "==", false)
-      .onSnapshot(snap => {
-        allAvailableSlots = [];
-        let daysMap = new Map(); // استخدام Map لترتيب الأيام بشكل أفضل
-        
-        if (snap.empty) {
-            daySelect.innerHTML = '<option value="">لا توجد مواعيد متاحة حالياً</option>';
-            return;
-        }
-
-        snap.forEach(doc => {
-            let s = doc.data();
-            allAvailableSlots.push({id: doc.id, ...s});
-            daysMap.set(s.date, s.date);
-        });
-
-        daySelect.innerHTML = '<option value="">اختر اليوم المناسب...</option>';
-        
-        // ترتيب الأيام زمنياً
-        let sortedDates = Array.from(daysMap.keys()).sort();
-        
-        sortedDates.forEach(date => {
-            let dayName = new Date(date).toLocaleDateString('ar-EG', { weekday: 'long' });
-            daySelect.innerHTML += `<option value="${date}">${dayName} (${date})</option>`;
-        });
-    }, error => {
-        console.error("Error fetching slots:", error);
-        daySelect.innerHTML = '<option value="">خطأ في تحميل البيانات</option>';
-    });
-}
-
-function updateAvailableTimes() {
-    const selectedDate = document.getElementById("daySelect").value;
-    const slotsSelect = document.getElementById("slotsSelect");
-    const timeGroup = document.getElementById("timeSlotGroup");
-
-    if (!selectedDate) {
-        timeGroup.style.display = "none";
-        return;
-    }
-
-    // فلترة المواعيد بناءً على اليوم المختار وترتيبها بالساعة
-    let filtered = allAvailableSlots
-        .filter(s => s.date === selectedDate)
-        .sort((a, b) => a.time.localeCompare(b.time));
-
-    slotsSelect.innerHTML = '<option value="">اختر الساعة...</option>';
-    
-    if (filtered.length === 0) {
-        slotsSelect.innerHTML = '<option value="">عفواً، اكتملت حجوزات هذا اليوم</option>';
-    } else {
-        filtered.forEach(slot => {
-            slotsSelect.innerHTML += `<option value="${slot.id}">${slot.time}</option>`;
-        });
-    }
-
-    timeGroup.style.display = "block";
-}
-
-async function book() {
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const slotId = document.getElementById("slotsSelect").value;
-
-    if (!name || !phone || !slotId) {
-        return alert("يرجى التأكد من كتابة الاسم ورقم الهاتف واختيار الموعد");
-    }
-
-    // تعطيل الزر لمنع الضغط المتكرر
-    const btn = event.target;
-    btn.disabled = true;
-    btn.innerText = "جاري التأكيد...";
-
-    try {
-        await db.collection("slots").doc(slotId).update({
-            booked: true,
-            status: "pending",
-            patient: {
-                name: name,
-                phone: phone,
-                note: "حجز عبر الموقع"
-            }
-        });
-        
-        alert(`تم الحجز بنجاح يا ${name}!\nسنقوم بالتواصل معك عبر رقم: ${phone}`);
-        location.reload();
-    } catch (e) {
-        console.error("Booking error:", e);
-        alert("حدث خطأ، ربما سبقك شخص آخر لحجز هذا الموعد. حاول اختيار وقت آخر.");
-        btn.disabled = false;
-        btn.innerText = "تأكيد الحجز المسبق ⚡";
-    }
-}
-
-// ==========================================
-// وظائف لوحة التحكم (تأكدي من وجودها)
+// وظائف الأدمين (Admin Functions)
 // ==========================================
 
 function setupWeekUI() {
@@ -147,23 +38,121 @@ function setupWeekUI() {
         grid.innerHTML += `
             <div class="day-setup-row card" data-date="${dateStr}">
                 <b>${dayName}</b><br><small>${dateStr}</small>
-                <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
-                    <input type="time" class="start-t" title="من">
-                    <input type="time" class="end-t" title="إلى">
+                <div style="margin-top:10px;">
+                    <input type="time" class="start-t" value="17:00">
+                    <input type="time" class="end-t" value="21:00">
                 </div>
             </div>`;
     }
 }
 
+async function generateSmartSlots() {
+    const duration = parseInt(document.getElementById("duration").value) || 30;
+    const dayRows = document.querySelectorAll(".day-setup-row");
+    const batch = db.batch();
+
+    dayRows.forEach(row => {
+        const date = row.dataset.date;
+        const startT = row.querySelector(".start-t").value;
+        const endT = row.querySelector(".end-t").value;
+
+        if (startT && endT) {
+            let current = new Date(`${date}T${startT}`);
+            let end = new Date(`${date}T${endT}`);
+
+            while (current < end) {
+                let timeStr = current.toTimeString().substring(0, 5);
+                let ref = db.collection("slots").doc();
+                batch.set(ref, {
+                    date: date,
+                    time: timeStr,
+                    booked: false,
+                    timestamp: firebase.firestore.Timestamp.fromDate(new Date(current))
+                });
+                current.setMinutes(current.getMinutes() + duration);
+            }
+        }
+    });
+
+    try {
+        await batch.commit();
+        alert("تم توليد المواعيد بنجاح!");
+    } catch (e) {
+        alert("حدث خطأ أثناء الحفظ");
+    }
+}
+
+function loadAdminSlots() {
+    const container = document.getElementById("slotsContainer");
+    if (!container) return;
+
+    db.collection("slots").orderBy("timestamp", "asc").onSnapshot(snap => {
+        container.innerHTML = "";
+        let daysMap = {};
+
+        snap.forEach(doc => {
+            let s = doc.data();
+            if (!daysMap[s.date]) daysMap[s.date] = [];
+            daysMap[s.date].push({id: doc.id, ...s});
+        });
+
+        for (let date in daysMap) {
+            let dayDiv = document.createElement("div");
+            dayDiv.className = "day-column";
+            let dayName = new Date(date).toLocaleDateString('ar-EG', { weekday: 'long' });
+            
+            let html = `<div class="day-header">${dayName} <br> ${date}</div>`;
+            daysMap[date].forEach(slot => {
+                html += `
+                    <div class="slot-item ${slot.booked ? 'booked-card' : ''}">
+                        <span>${slot.time} ${slot.booked ? '✅ ('+(slot.patient?.name || 'محجوز')+')' : '⏳'}</span>
+                        <button class="btn-danger" onclick="deleteSlot('${slot.id}')">حذف</button>
+                    </div>`;
+            });
+            dayDiv.innerHTML = html;
+            container.appendChild(dayDiv);
+        }
+    });
+}
+
+async function deleteSlot(id) {
+    if(confirm("هل تريد حذف الموعد؟")) await db.collection("slots").doc(id).delete();
+}
+
+// ==========================================
+// وظائف الحجز (Booking Functions)
+// ==========================================
+let allAvailableSlots = [];
+
+function loadBookingDays() {
+    const daySelect = document.getElementById("daySelect");
+    if (!daySelect) return;
+
+    db.collection("slots")
+      .where("date", ">=", getLocalDateString(new Date()))
+      .where("booked", "==", false)
+      .onSnapshot(snap => {
+        allAvailableSlots = [];
+        let daysSet = new Set();
+        snap.forEach(doc => {
+            let s = doc.data();
+            allAvailableSlots.push({id: doc.id, ...s});
+            daysSet.add(s.date);
+        });
+
+        daySelect.innerHTML = '<option value="">اختر اليوم...</option>';
+        Array.from(daysSet).sort().forEach(date => {
+            let dayName = new Date(date).toLocaleDateString('ar-EG', { weekday: 'long' });
+            daySelect.innerHTML += `<option value="${date}">${dayName} (${date})</option>`;
+        });
+    });
+}
+
 // استدعاء الوظائف عند التحميل
 window.onload = () => {
-    if (document.getElementById("daySelect")) {
-        loadBookingDays();
-    } 
+    if (document.getElementById("daySelect")) loadBookingDays();
     if (document.getElementById("slotsContainer")) {
         setupWeekUI();
-        loadAdminSlots(); // تأكدي أن دالة loadAdminSlots موجودة تحت في ملفك
+        loadAdminSlots();
     }
 };
-
-// ... (باقي دوال الإدارة loadAdminSlots و deleteDay وغيرها كما هي في كودك الأصلي)
