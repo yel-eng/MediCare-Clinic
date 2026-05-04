@@ -9,34 +9,23 @@
         :root { --main: #1a237e; --accent: #00bcd4; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        .grid-7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .day-setup-row { border: 1px solid #eee; padding: 15px; border-radius: 10px; background: #fff; }
+        .grid-7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .day-setup-row { border: 1px solid #eee; padding: 15px; border-radius: 10px; background: #fff; text-align: center; }
         .slots-grid { display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; min-height: 400px; }
-        .day-column { min-width: 280px; background: #fff; border-radius: 10px; border: 1px solid #ddd; height: fit-content; }
+        .day-column { min-width: 250px; background: #fff; border-radius: 10px; border: 1px solid #ddd; height: fit-content; }
         .day-header { background: var(--main); color: white; padding: 12px; border-radius: 10px 10px 0 0; text-align: center; }
-        .slot-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        .slot-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
         .booked-card { background: #e0f2f1; border-right: 4px solid var(--accent); }
         .btn-main { background: var(--main); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
         .btn-outline { border: 1px solid var(--main); color: var(--main); background: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
-        #modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; z-index: 1000; padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 0 50px rgba(0,0,0,0.3); }
-        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 5px; margin: 5px 0; 
-          .day-setup-row input[type="time"] {
-    width: 100%;
-    padding: 10px;
-    margin: 5px 0;
-    border: 1px solid #1a237e;
-    border-radius: 5px;
-    display: block; /* عشان يظهروا تحت بعض بوضوح */
-    background-color: #f0f4ff;
-}
+        .btn-danger { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        input[type="time"] { width: 90%; padding: 5px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <h2 style="color: var(--main);">🏥 لوحة تحكم العيادة</h2>
 
-    <!-- قسم الإعدادات (توليد الـ 7 أيام) -->
     <div class="card">
         <h3>🗓️ إعداد مواعيد العمل (الأيام السبعة القادمة)</h3>
         <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
@@ -45,57 +34,21 @@
                 <input type="date" id="startDatePicker" onchange="setupWeekUI()">
             </div>
             <div>
-                <label>مدة الجلسة (دقائق):</label>
+                <label>مدة الكشف (دقيقة):</label>
                 <input type="number" id="duration" value="30" style="width: 60px;">
             </div>
             <button class="btn-main" onclick="generateSmartSlots()">توليد المواعيد الآن 🚀</button>
-            <button class="btn-outline" onclick="addManualSlot()">حجز يدوي سريع ➕</button>
         </div>
         <div id="weekSetupGrid" class="grid-7"></div>
     </div>
 
-    <!-- قسم الإيرادات والجدول التشغيلي -->
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>📊 الجدول التشغيلي والمواعيد</h3>
-            <div id="dailyRevenue" style="font-weight: bold; color: #2e7d32; font-size: 18px;"></div>
-        </div>
+        <h3>📊 المواعيد الحالية في القاعدة</h3>
         <div id="slotsContainer" class="slots-grid">
             <p style="padding: 20px;">جاري تحميل الجدول...</p>
         </div>
     </div>
 
-    <!-- نافذة تعديل بيانات المريض والـ QR -->
-    <div id="overlay" onclick="closeModal()"></div>
-    <div id="modal">
-        <div id="modalContent"></div>
-    </div>
-
-    <!-- قسم إدارة المحتوى (فيديوهات ومقالات) -->
-    <div class="card">
-        <h3>🎥 إدارة المحتوى التعليمي</h3>
-        <div class="grid-7">
-            <!-- إضافة فيديو -->
-            <div class="day-setup-row" style="background: #fff3e0;">
-                <h4>📺 إضافة فيديو جديد</h4>
-                <input type="text" id="vTitle" placeholder="عنوان الفيديو" style="width:90%">
-                <input type="text" id="vUrl" placeholder="رابط اليوتيوب (URL)" style="width:90%">
-                <button class="btn-main" onclick="addVideo()" style="width:100%; background:#f57c00;">نشر الفيديو</button>
-            </div>
-
-            <!-- إضافة مقال -->
-            <!-- إضافة مقال مع صورة -->
-<div class="day-setup-row" style="background: #e1f5fe;">
-    <h4>📝 إضافة مقال طبي مصور</h4>
-    <input type="text" id="bTitle" placeholder="عنوان المقال" style="width:90%">
-    <input type="text" id="bImg" placeholder="رابط صورة المقال (URL)" style="width:90%">
-    <textarea id="bText" placeholder="اكتبي نص المقال هنا..." style="width:90%; height:80px; margin-top:5px; padding:8px; border-radius:5px; border:1px solid #ccc;"></textarea>
-    <button class="btn-main" onclick="addBlog()" style="width:100%; background:#0288d1;">نشر المقال بالصورة</button>
-</div>
-        </div>
-    </div>
-
-    
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
