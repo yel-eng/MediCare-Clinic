@@ -140,7 +140,6 @@ const db = firebase.firestore();
 let activeId=null;
 let cache=[];
 
-// realtime
 db.collection("slots").onSnapshot(snap=>{
 cache=[];
 snap.forEach(doc=>{
@@ -209,9 +208,33 @@ function deleteSlot(id){
 db.collection("slots").doc(id).delete();
 }
 
-// =======================
-// renderSlots (WITH WHATSAPP RESTORED)
-// =======================
+/* ✔️ NEW FUNCTION (DELETE DAY) */
+function deleteDay(date){
+
+  if(!confirm("هل تريد حذف كل مواعيد هذا اليوم؟")) return;
+
+  db.collection("slots")
+    .where("date","==",date)
+    .get()
+    .then(snap=>{
+
+      let batch = db.batch();
+
+      snap.forEach(doc=>{
+        batch.delete(doc.ref);
+      });
+
+      return batch.commit();
+    })
+    .then(()=>{
+      alert("تم حذف اليوم بالكامل");
+    })
+    .catch(err=>{
+      console.error(err);
+      alert("حصل خطأ أثناء الحذف");
+    });
+}
+
 function renderSlots(){
 
 let days={};
@@ -254,7 +277,7 @@ col.className="day-col";
 col.innerHTML=`
 <div class="day-head">
 ${d}
-<span class="del-btn" onclick="deleteSlot('${d}')">×</span>
+<span class="del-btn" onclick="deleteDay('${d}')">×</span>
 </div>
 
 <div class="day-money">💰 ${total} جنيه</div>
