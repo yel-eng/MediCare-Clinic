@@ -202,7 +202,21 @@ footer{
 <body>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" style="
+  position:relative;
+  background:url('https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+  min-height:90vh;
+  display:flex;
+  align-items:center;
+  padding:70px 8%;
+">
+
+  <!-- overlay فاتح جدًا -->
+  <div style="
+    position:absolute;
+    inset:0;
+    background:rgba(255,255,255,0.78);
+  "></div>
 
   <!-- NAV -->
   <div class="navbar">
@@ -212,7 +226,7 @@ footer{
     <a href="#contact">تواصل</a>
   </div>
 
-  <div class="hero-content">
+  <div class="hero-content" style="position:relative; z-index:2;">
 
     <div class="hero-text">
       <h1>العيادة المصرية</h1>
