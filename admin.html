@@ -2,163 +2,72 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>نظام العيادة المستقر</title>
+<title>CRM Admin Full</title>
 
 <style>
-:root { --main: #1a237e; --bg: #f4f7f6; }
-
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background: var(--bg);
-    margin: 0;
-    padding: 20px;
-}
-
-.admin-grid {
-    display: grid;
-    grid-template-columns: 350px 1fr;
-    gap: 20px;
-}
-
-.card {
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-}
-
-.days-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    padding-bottom: 20px;
-}
-
-.day-col {
-    min-width: 280px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    flex-shrink: 0;
-}
-
-.day-head {
-    background: var(--main);
-    color: white;
-    padding: 12px;
-    text-align: center;
-    border-radius: 12px 12px 0 0;
-    position: relative;
-}
-
-.day-safe {
-    background: #e8f5e9;
-    color: #2e7d32;
-    padding: 8px;
-    text-align: center;
-    font-weight: bold;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-}
-
-.slot-item {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-}
-
-.slot-item:hover {
-    background: #f0f7ff;
-}
-
-.slot-item.booked {
-    border-right: 5px solid #2e7d32;
-    background: #f9fdf9;
-}
-
-/* ⭐ الإضافة الجديدة فقط */
-.slot-item.followup {
-    background: #fff3cd !important;
-    border-right: 5px solid #ff9800;
-}
-
-.del-btn {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    cursor: pointer;
-    color: #ff5252;
-    background: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    line-height: 18px;
-    font-weight: bold;
-}
-
-input, textarea, select {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-sizing: border-box;
-}
-
-.btn {
-    background: var(--main);
-    color: white;
-    border: none;
-    padding: 12px;
-    width: 100%;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-    /* تابلت */
-@media (max-width: 992px) {
-    .days-row {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* موبايل */
-@media (max-width: 600px) {
-    .days-row {
-        grid-template-columns: 1fr;
-    }
-}
+body{font-family:Arial;background:#f4f4f4;padding:20px}
+.box{background:#fff;padding:15px;margin:10px 0;border-radius:10px}
+input,textarea,select{width:100%;padding:10px;margin:5px 0}
+button{padding:10px;background:#1a237e;color:#fff;border:0;border-radius:8px;cursor:pointer}
+.card{padding:10px;border-bottom:1px solid #eee}
+.slot{padding:10px;border:1px solid #ddd;margin:5px 0;border-radius:8px;cursor:pointer}
+.booked{background:#e8f5e9}
+.follow{background:#fff3cd}
 </style>
 </head>
 
 <body>
 
-<div class="admin-grid">
+<h2>🏥 Admin Dashboard</h2>
 
-    <div class="side-panel">
-        <div class="card">
-            <h3>👤 بيانات الحجز</h3>
+<!-- ============ CREATE SLOTS ============ -->
+<div class="box">
+<h3>📅 إنشاء مواعيد</h3>
 
-            <input type="text" id="pName" placeholder="اسم المريض">
-            <input type="text" id="pPhone" placeholder="رقم الهاتف">
-            <input type="number" id="pPaid" placeholder="المبلغ">
-            <input type="text" id="pNotes" placeholder="ملاحظات">
+<input type="date" id="slotDate">
+<input type="time" id="startTime">
+<input type="time" id="endTime">
+<input type="number" id="duration" placeholder="مدة الجلسة بالدقائق">
 
-            <select id="pStatus">
-                <option value="حجز">حجز</option>
-                <option value="كشف">كشف</option>
-                <option value="ملغي">ملغي</option>
-            </select>
+<button onclick="generateSlots()">إنشاء المواعيد</button>
+</div>
 
-            <button class="btn" onclick="updateSlot()">حفظ</button>
-        </div>
-    </div>
+<!-- ============ CONTENT ============ -->
+<div class="box">
+<h3>🎥 فيديو + 📰 مقال</h3>
 
-    <div class="main-panel">
-        <div id="daysGrid" class="days-row"></div>
-    </div>
+<input id="videoUrl" placeholder="رابط الفيديو">
+<input id="videoDesc" placeholder="وصف الفيديو">
 
+<input id="articleTitle" placeholder="عنوان المقال">
+<textarea id="articleText" placeholder="المقال"></textarea>
+<input id="articleImage" placeholder="رابط صورة">
+
+<button onclick="saveContent()">حفظ المحتوى</button>
+</div>
+
+<!-- ============ SLOTS ============ -->
+<div class="box">
+<h3>📋 المواعيد</h3>
+<div id="slots"></div>
+</div>
+
+<!-- ============ PATIENT EDIT ============ -->
+<div class="box">
+<h3>👤 بيانات العميل</h3>
+
+<input id="pName" placeholder="اسم">
+<input id="pPhone" placeholder="هاتف">
+<input id="pPaid" placeholder="مدفوع">
+<input id="pNotes" placeholder="ملاحظة">
+
+<select id="pStatus">
+<option value="حجز">حجز</option>
+<option value="كشف">كشف</option>
+<option value="ملغي">ملغي</option>
+</select>
+
+<button onclick="save()">حفظ التعديل</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -166,9 +75,8 @@ input, textarea, select {
 
 <script>
 const firebaseConfig = {
-    apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
-    authDomain: "mydoctor-clinic.firebaseapp.com",
-    projectId: "mydoctor-clinic",
+  apiKey:"xxx",
+  projectId:"mydoctor-clinic"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -176,77 +84,112 @@ const db = firebase.firestore();
 
 let activeId = null;
 
-function loadSlots() {
-    db.collection("slots").orderBy("timestamp", "asc").get().then(snap => {
+---
 
-        const grid = document.getElementById("daysGrid");
-        grid.innerHTML = "";
+## 📅 إنشاء مواعيد
+function generateSlots(){
+let d = slotDate.value;
+let s = startTime.value;
+let e = endTime.value;
+let dur = parseInt(duration.value);
 
-        let days = {};
+let start = new Date(`${d}T${s}`);
+let end = new Date(`${d}T${e}`);
 
-        snap.forEach(doc => {
-            let s = doc.data();
+while(start < end){
 
-            if (!days[s.date]) days[s.date] = [];
-            days[s.date].push({ id: doc.id, ...s });
-        });
+db.collection("slots").add({
+date:d,
+time:start.toTimeString().slice(0,5),
+booked:false,
+status:"حجز",
+patient:{},
+notes:"",
+timestamp:firebase.firestore.Timestamp.fromDate(start)
+});
 
-        for (let d in days) {
-
-            let col = document.createElement("div");
-            col.className = "day-col";
-
-            let html = "";
-
-            days[d].forEach(item => {
-
-                // ⭐ شرط التلوين الجديد فقط
-                let extraClass = "";
-                if (item.patient?.notes?.includes("تواصل")) {
-                    extraClass = "followup";
-                }
-
-                html += `
-                <div class="slot-item ${item.booked ? 'booked' : ''} ${extraClass}"
-                    onclick="select('${item.id}', '${item.patient?.name || ''}', '${item.patient?.phone || ''}', '${item.paid || 0}', '${item.status || ''}')">
-
-                    <b>${item.time}</b><br>
-                    ${item.patient?.name || 'متاح'}
-                </div>`;
-            });
-
-            col.innerHTML = `<div class="day-head">${d}</div>${html}`;
-            grid.appendChild(col);
-        }
-    });
+start.setMinutes(start.getMinutes()+dur);
 }
 
-function select(id, name, phone, paid, status) {
-    activeId = id;
-    document.getElementById("pName").value = name;
-    document.getElementById("pPhone").value = phone;
-    document.getElementById("pPaid").value = paid;
-    document.getElementById("pStatus").value = status;
+loadSlots();
 }
 
-function updateSlot() {
-    if (!activeId) return;
+---
 
-    db.collection("slots").doc(activeId).update({
-        booked: true,
-        status: document.getElementById("pStatus").value,
-        paid: Number(document.getElementById("pPaid").value),
-        patient: {
-            name: document.getElementById("pName").value,
-            phone: document.getElementById("pPhone").value,
-            notes: document.getElementById("pNotes").value
-        }
-    });
+## 📋 عرض المواعيد
+function loadSlots(){
+db.collection("slots").orderBy("timestamp").onSnapshot(snap=>{
+let html="";
+snap.forEach(doc=>{
+let s = doc.data();
 
-    loadSlots();
+let cls = "slot";
+if(s.booked) cls += " booked";
+if(s.notes?.includes("تواصل")) cls += " follow";
+
+html += `
+<div class="${cls}" onclick="edit('${doc.id}', ${JSON.stringify(s).replace(/"/g,'&quot;')})">
+<b>${s.time}</b> - ${s.patient?.name || "متاح"}
+
+${s.patient?.phone ?
+`<br><a href="https://wa.me/2${s.patient.phone}" target="_blank">📱 واتساب</a>` : ""}
+</div>
+`;
+});
+
+slots.innerHTML = html;
+});
 }
 
-window.onload = loadSlots;
+---
+
+## ✏️ اختيار
+function edit(id,data){
+activeId=id;
+
+pName.value=data.patient?.name||"";
+pPhone.value=data.patient?.phone||"";
+pPaid.value=data.paid||0;
+pNotes.value=data.notes||"";
+pStatus.value=data.status||"حجز";
+}
+
+---
+
+## 💾 حفظ تعديل
+function save(){
+if(!activeId) return;
+
+db.collection("slots").doc(activeId).update({
+booked:true,
+status:pStatus.value,
+paid:Number(pPaid.value),
+notes:pNotes.value,
+patient:{
+name:pName.value,
+phone:pPhone.value
+}
+});
+
+loadSlots();
+}
+
+---
+
+## 🎥 محتوى
+function saveContent(){
+db.collection("content").doc("main").set({
+video:{url:videoUrl.value,desc:videoDesc.value},
+article:{
+title:articleTitle.value,
+text:articleText.value,
+image:articleImage.value
+}
+});
+alert("تم الحفظ");
+}
+
+window.onload=loadSlots;
 </script>
 
 </body>
