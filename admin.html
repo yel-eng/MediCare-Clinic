@@ -5,94 +5,116 @@
 <title>نظام العيادة المستقر</title>
 
 <style>
-:root { --main:#1a237e; --bg:#f4f7f6; }
+:root { --main: #1a237e; --bg: #f4f7f6; }
 
-body{
+body {
     font-family: 'Segoe UI', sans-serif;
     background: var(--bg);
-    margin:0;
-    padding:20px;
+    margin: 0;
+    padding: 20px;
 }
 
-.admin-grid{
-    display:grid;
-    grid-template-columns:350px 1fr;
-    gap:20px;
+.admin-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
 }
 
-.card{
-    background:#fff;
-    padding:20px;
-    border-radius:15px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.1);
-    margin-bottom:20px;
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
 }
 
-/* ===== days ===== */
-.days-row{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:15px;
+.days-row {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding-bottom: 20px;
 }
 
-.day-col{
-    background:#fff;
-    border-radius:12px;
-    border:1px solid #ddd;
+.day-col {
+    min-width: 280px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    flex-shrink: 0;
 }
 
-.day-head{
-    background:var(--main);
-    color:#fff;
-    padding:10px;
-    text-align:center;
+.day-head {
+    background: var(--main);
+    color: white;
+    padding: 12px;
+    text-align: center;
+    border-radius: 12px 12px 0 0;
+    position: relative;
 }
 
-.day-safe{
-    background:#e8f5e9;
-    color:#2e7d32;
-    padding:8px;
-    text-align:center;
-    font-weight:bold;
+.day-safe {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
 }
 
-.slot-item{
-    padding:12px;
-    border-bottom:1px solid #eee;
-    cursor:pointer;
+.slot-item {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
 }
 
-.slot-item.booked{
-    border-right:5px solid #2e7d32;
-    background:#f9fdf9;
+.slot-item:hover {
+    background: #f0f7ff;
 }
 
-.slot-item.followup{
-    background:#fff3cd !important;
-    border-right:5px solid #ff9800;
+.slot-item.booked {
+    border-right: 5px solid #2e7d32;
+    background: #f9fdf9;
 }
 
-/* ===== inputs ===== */
-input,textarea,select{
-    width:100%;
-    padding:10px;
-    margin:6px 0;
-    border-radius:8px;
-    border:1px solid #ccc;
+/* ⭐ الإضافة الجديدة فقط */
+.slot-item.followup {
+    background: #fff3cd !important;
+    border-right: 5px solid #ff9800;
 }
 
-.btn{
-    background:var(--main);
-    color:#fff;
-    border:none;
-    padding:12px;
-    width:100%;
-    border-radius:8px;
+.del-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+    color: #ff5252;
+    background: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    line-height: 18px;
+    font-weight: bold;
 }
 
-/* responsive */
-@media(max-width:900px){
-    .days-row{grid-template-columns:1fr;}
+input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.btn {
+    background: var(--main);
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
 }
 </style>
 </head>
@@ -101,59 +123,28 @@ input,textarea,select{
 
 <div class="admin-grid">
 
-<!-- ========== SIDE PANEL ========== -->
-<div>
+    <div class="side-panel">
+        <div class="card">
+            <h3>👤 بيانات الحجز</h3>
 
-    <!-- PATIENT -->
-    <div class="card">
-        <h3>👤 بيانات الحجز</h3>
+            <input type="text" id="pName" placeholder="اسم المريض">
+            <input type="text" id="pPhone" placeholder="رقم الهاتف">
+            <input type="number" id="pPaid" placeholder="المبلغ">
+            <input type="text" id="pNotes" placeholder="ملاحظات">
 
-        <input id="pName" placeholder="اسم">
-        <input id="pPhone" placeholder="هاتف">
-        <input id="pPaid" placeholder="المبلغ">
-        <input id="pNotes" placeholder="ملاحظات">
+            <select id="pStatus">
+                <option value="حجز">حجز</option>
+                <option value="كشف">كشف</option>
+                <option value="ملغي">ملغي</option>
+            </select>
 
-        <select id="pStatus">
-            <option value="حجز">حجز</option>
-            <option value="كشف">كشف</option>
-            <option value="ملغي">ملغي</option>
-        </select>
-
-        <button class="btn" onclick="updateSlot()">حفظ</button>
+            <button class="btn" onclick="updateSlot()">حفظ</button>
+        </div>
     </div>
 
-    <!-- VIDEO -->
-    <div class="card">
-        <h3>🎥 فيديو</h3>
-        <input id="videoUrl" placeholder="رابط الفيديو">
-        <input id="videoDesc" placeholder="وصف الفيديو">
-        <button class="btn" onclick="addVideo()">إضافة فيديو</button>
+    <div class="main-panel">
+        <div id="daysGrid" class="days-row"></div>
     </div>
-
-    <!-- ARTICLE -->
-    <div class="card">
-        <h3>📰 مقال</h3>
-        <input id="blogTitle" placeholder="عنوان">
-        <textarea id="blogText" placeholder="نص المقال"></textarea>
-        <input id="blogImage" placeholder="رابط صورة">
-        <button class="btn" onclick="addBlog()">إضافة مقال</button>
-    </div>
-
-    <!-- CREATE SLOTS -->
-    <div class="card">
-        <h3>📅 إضافة مواعيد</h3>
-
-        <input type="date" id="slotDate">
-        <input type="time" id="startTime">
-        <input type="time" id="endTime">
-
-        <button class="btn" onclick="setAvailability()">توليد</button>
-    </div>
-
-</div>
-
-<!-- ========== MAIN GRID ========== -->
-<div id="daysGrid" class="days-row"></div>
 
 </div>
 
@@ -162,9 +153,9 @@ input,textarea,select{
 
 <script>
 const firebaseConfig = {
-    apiKey:"AIzaSy...",
-    authDomain:"mydoctor-clinic.firebaseapp.com",
-    projectId:"mydoctor-clinic"
+    apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+    authDomain: "mydoctor-clinic.firebaseapp.com",
+    projectId: "mydoctor-clinic",
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -172,122 +163,77 @@ const db = firebase.firestore();
 
 let activeId = null;
 
-/* ===== generate slots ===== */
-function setAvailability(){
-    let date = slotDate.value;
-    let start = startTime.value;
-    let end = endTime.value;
+function loadSlots() {
+    db.collection("slots").orderBy("timestamp", "asc").get().then(snap => {
 
-    let s = new Date(`${date}T${start}`);
-    let e = new Date(`${date}T${end}`);
+        const grid = document.getElementById("daysGrid");
+        grid.innerHTML = "";
 
-    const batch = db.batch();
+        let days = {};
 
-    while(s < e){
-        let ref = db.collection("slots").doc();
-        batch.set(ref,{
-            date,
-            time:s.toTimeString().slice(0,5),
-            booked:false,
-            status:"حجز",
-            patient:{name:"",phone:""},
-            timestamp:firebase.firestore.Timestamp.fromDate(new Date(s))
-        });
-        s.setMinutes(s.getMinutes()+30);
-    }
+        snap.forEach(doc => {
+            let s = doc.data();
 
-    batch.commit().then(()=>loadSlots());
-}
-
-/* ===== load ===== */
-function loadSlots(){
-    db.collection("slots").orderBy("timestamp").get().then(snap=>{
-        let grid=document.getElementById("daysGrid");
-        grid.innerHTML="";
-
-        let days={};
-
-        snap.forEach(d=>{
-            let s=d.data();
-            if(!days[s.date]) days[s.date]=[];
-            days[s.date].push({id:d.id,...s});
+            if (!days[s.date]) days[s.date] = [];
+            days[s.date].push({ id: doc.id, ...s });
         });
 
-        for(let day in days){
+        for (let d in days) {
 
-            let col=document.createElement("div");
-            col.className="day-col";
+            let col = document.createElement("div");
+            col.className = "day-col";
 
-            let html="";
+            let html = "";
 
-            days[day].forEach(i=>{
+            days[d].forEach(item => {
 
-                let cls="";
-                if(i.patient?.notes?.includes("تواصل")) cls="followup";
+                // ⭐ شرط التلوين الجديد فقط
+                let extraClass = "";
+                if (item.patient?.notes?.includes("تواصل")) {
+                    extraClass = "followup";
+                }
 
-                html+=`
-                <div class="slot-item ${i.booked?'booked':''} ${cls}"
-                onclick="selectSlot('${i.id}','${i.patient?.name||''}','${i.patient?.phone||''}','${i.paid||0}','${i.status||''}')">
+                html += `
+                <div class="slot-item ${item.booked ? 'booked' : ''} ${extraClass}"
+                    onclick="select('${item.id}', '${item.patient?.name || ''}', '${item.patient?.phone || ''}', '${item.paid || 0}', '${item.status || ''}')">
 
-                    ${i.time}<br>
-                    ${i.patient?.name||"متاح"}
+                    <b>${item.time}</b><br>
+                    ${item.patient?.name || 'متاح'}
                 </div>`;
             });
 
-            col.innerHTML=`
-            <div class="day-head">${day}</div>
-            ${html}
-            `;
-
+            col.innerHTML = `<div class="day-head">${d}</div>${html}`;
             grid.appendChild(col);
         }
     });
 }
 
-/* ===== select ===== */
-function selectSlot(id,name,phone,paid,status){
-    activeId=id;
-    pName.value=name;
-    pPhone.value=phone;
-    pPaid.value=paid;
-    pStatus.value=status;
+function select(id, name, phone, paid, status) {
+    activeId = id;
+    document.getElementById("pName").value = name;
+    document.getElementById("pPhone").value = phone;
+    document.getElementById("pPaid").value = paid;
+    document.getElementById("pStatus").value = status;
 }
 
-/* ===== update ===== */
-function updateSlot(){
-    if(!activeId) return;
+function updateSlot() {
+    if (!activeId) return;
 
     db.collection("slots").doc(activeId).update({
-        booked:true,
-        status:pStatus.value,
-        paid:Number(pPaid.value),
-        patient:{
-            name:pName.value,
-            phone:pPhone.value,
-            notes:pNotes.value
+        booked: true,
+        status: document.getElementById("pStatus").value,
+        paid: Number(document.getElementById("pPaid").value),
+        patient: {
+            name: document.getElementById("pName").value,
+            phone: document.getElementById("pPhone").value,
+            notes: document.getElementById("pNotes").value
         }
-    }).then(loadSlots);
-}
-
-/* ===== extras ===== */
-function addVideo(){
-    db.collection("content").add({
-        type:"video",
-        url:videoUrl.value,
-        desc:videoDesc.value
     });
+
+    loadSlots();
 }
 
-function addBlog(){
-    db.collection("content").add({
-        type:"blog",
-        title:blogTitle.value,
-        text:blogText.value,
-        image:blogImage.value
-    });
-}
-
-window.onload=loadSlots;
+window.onload = loadSlots;
 </script>
 
 </body>
