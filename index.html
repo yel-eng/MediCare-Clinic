@@ -1,32 +1,45 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>حجز موعد | MyDoctor</title>
+    <title>MyDoctor Clinic | الرئيسية</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-<header class="header"><div class="logo">🏥 حجز العيادة</div></header>
 
-<div class="section">
-    <div class="box" style="max-width: 500px; margin: 0 auto;">
-        <h2>🗓️ احجز موعدك</h2>
-        <input type="text" id="name" placeholder="الاسم بالكامل">
-        <input type="tel" id="phone" placeholder="رقم الهاتف">
-        
-        <label>1. اختر اليوم:</label>
-        <select id="daySelect" onchange="filterTimesByDay()">
-            <option value="">-- اختر اليوم --</option>
-        </select>
+<header class="header">
+    <div class="logo">🩺 MyDoctor</div>
+    <nav class="nav">
+        <a href="index.html">الرئيسية</a>
+        <a href="booking.html">حجز موعد</a>
+        <a href="login.html">دخول الإدارة</a>
+    </nav>
+</header>
 
-        <label style="margin-top:15px; display:block;">2. اختر الوقت المتاح:</label>
-        <select id="slotsSelect">
-            <option value="">اختر اليوم أولاً</option>
-        </select>
-        
-        <button onclick="book()" style="margin-top:20px; width:100%; background:#4caf50; color:white; padding:15px; border:none; border-radius:8px;">تأكيد الحجز ⚡</button>
+<section class="hero" style="background: linear-gradient(rgba(13,71,161,0.7), rgba(13,71,161,0.7)), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1000&q=80'); background-size: cover; padding: 100px 20px; color: white; text-align: center;">
+    <h1>عيادة ماي دكتور</h1>
+    <p>رعاية طبية نعتز بها لخدمتكم على مدار الساعة</p>
+    <button onclick="location.href='booking.html'" style="width: auto; margin-top: 20px;">احجز موعدك الآن</button>
+</section>
+
+<section class="section">
+    <h2>خدماتنا المتميزة</h2>
+    <div class="grid">
+        <div class="card"><i class="fas fa-user-md fa-2x"></i> <h3>كشف طبي شامل</h3><p>فحص دقيق باستخدام أحدث الأجهزة.</p></div>
+        <div class="card"><i class="fas fa-vial fa-2x"></i> <h3>تحاليل فورية</h3><p>نتائج سريعة ودقيقة لجميع التحاليل.</p></div>
+        <div class="card"><i class="fas fa-heartbeat fa-2x"></i> <h3>متابعة دورية</h3><p>برامج مخصصة لمتابعة الحالات المزمنة.</p></div>
     </div>
-</div>
+</section>
+
+<section class="section">
+    <h2>المكتبة الطبية (فيديو)</h2>
+    <div id="videos" class="grid"></div>
+</section>
+
+<footer class="footer" style="background:#0d47a1; color:white; text-align:center; padding:30px; margin-top:50px;">
+    <p>© 2026 MyDoctor Clinic</p>
+</footer>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
