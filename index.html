@@ -2,17 +2,17 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDoctor Clinic | الرئيسية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MyDoctor | واجهة ذكية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #0d47a1;
-            --secondary-color: #f8fafc;
-            --accent-color: #10b981;
-            --text-dark: #1e293b;
-            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --primary: #2563eb;
+            --bg-app: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --accent: #10b981;
         }
 
         * {
@@ -20,213 +20,252 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--secondary-color);
-            color: var(--text-dark);
+            background-color: var(--bg-app);
+            color: var(--text-main);
             direction: rtl;
-            line-height: 1.6;
+            padding-bottom: 70px; /* مساحة للشريط السفلي في الموبايل */
         }
 
-        /* الهيدر */
+        /* الهيدر - نسخة الموقع */
         .header {
-            background: white;
-            padding: 1.2rem 8%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 8%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow);
             position: sticky;
             top: 0;
             z-index: 1000;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .logo {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            color: var(--primary-color);
+            color: var(--primary);
+        }
+
+        .nav-desktop {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-desktop a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* الشريط السفلي - نسخة التطبيق (يظهر في الشاشات الصغيرة فقط) */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: none; /* مخفي في الديسكتوب */
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 2000;
+            border-top: 1px solid #eee;
+        }
+
+        .bottom-nav a {
+            text-decoration: none;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            text-align: center;
+            flex: 1;
+        }
+
+        .bottom-nav a.active {
+            color: var(--primary);
+        }
+
+        .bottom-nav i {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 3px;
+        }
+
+        /* قسم الترحيب - يشبه التطبيق */
+        .app-hero {
+            padding: 30px 8%;
+            background: var(--primary);
+            color: white;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 30px;
+        }
+
+        .user-welcome {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-welcome h1 { font-size: 1.5rem; }
+
+        .search-bar {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 15px;
+            margin-top: 20px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
-        .nav a {
-            text-decoration: none;
-            color: var(--text-dark);
-            margin-right: 25px;
-            font-weight: 500;
-            transition: 0.3s;
-        }
-
-        .nav a:hover {
-            color: var(--primary-color);
-        }
-
-        /* قسم الهيرو */
-        .hero {
-            background: linear-gradient(rgba(13,71,161,0.7), rgba(13,71,161,0.7)), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1000&q=80');
-            background-size: cover;
-            background-position: center;
-            padding: 120px 20px;
-            color: white;
-            text-align: center;
-            border-radius: 0 0 40px 40px;
-            margin-bottom: 50px;
-            box-shadow: var(--shadow);
-        }
-
-        .hero h1 {
-            font-size: 3.2rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-
-        .hero button {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 14px 40px;
-            font-size: 1.1rem;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            font-weight: 700;
-        }
-
-        .hero button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        /* الأقسام */
-        .section {
-            padding: 60px 8%;
-            text-align: center;
-        }
-
-        .section h2 {
-            font-size: 2.2rem;
-            margin-bottom: 40px;
-            position: relative;
-            padding-bottom: 10px;
-            color: var(--primary-color);
-        }
-
-        .section h2::after {
-            content: '';
-            width: 60px;
-            height: 4px;
-            background: var(--accent-color);
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 2px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-
-        .card {
-            background: white;
-            padding: 40px 25px;
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s, border-color 0.3s;
-            border: 1px solid #e2e8f0;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            border-color: var(--primary-color);
-        }
-
-        .card i {
-            color: var(--primary-color);
-            margin-bottom: 25px;
-        }
-
-        .card h3 {
-            font-size: 1.4rem;
+        /* كروت الخدمات - Mobile App Style */
+        .section-title {
+            padding: 0 8%;
             margin-bottom: 15px;
-            color: var(--primary-color);
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
         }
 
-        .card p {
-            color: #64748b;
-            font-size: 0.95rem;
+        .grid-app {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            padding: 0 8% 30px;
         }
 
-        /* الفوتر */
-        .footer {
-            background: var(--primary-color);
-            color: white;
+        .service-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
             text-align: center;
-            padding: 30px;
-            margin-top: 50px;
-            border-radius: 40px 40px 0 0;
+            box-shadow: var(--shadow);
+            transition: 0.3s;
+            border: 1px solid #f1f5f9;
+        }
+
+        .service-card i {
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            background: #eff6ff;
+            color: var(--primary);
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .service-card h3 { font-size: 0.9rem; margin-top: 5px; }
+
+        /* فيديوهات - تصميم ريلز/تطبيقات */
+        #videos {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding: 0 8% 20px;
+            scrollbar-width: none;
+        }
+
+        .video-placeholder {
+            min-width: 200px;
+            height: 120px;
+            background: #ddd;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        /* Responsive التعديلات */
+        @media (max-width: 768px) {
+            .nav-desktop { display: none; }
+            .bottom-nav { display: flex; }
+            .header { padding: 15px 5%; }
+            .app-hero { border-radius: 0; }
         }
     </style>
 </head>
 <body>
 
+<!-- الهيدر (الموقع) -->
 <header class="header">
-    <div class="logo"><i class="fas fa-stethoscope"></i> MyDoctor</div>
-    <nav class="nav">
+    <div class="logo">🩺 MyDoctor</div>
+    <nav class="nav-desktop">
         <a href="index.html">الرئيسية</a>
         <a href="booking.html">حجز موعد</a>
-        <a href="login.html">دخول الإدارة</a>
+        <a href="login.html">الإدارة</a>
     </nav>
+    <i class="fas fa-bell" style="font-size: 1.2rem; color: #64748b;"></i>
 </header>
 
-<section class="hero">
-    <h1>عيادة ماي دكتور</h1>
-    <p>رعاية طبية نعتز بها لخدمتكم على مدار الساعة</p>
-    <button onclick="location.href='booking.html'">احجز موعدك الآن</button>
-</section>
-
-<section class="section">
-    <h2>خدماتنا المتميزة</h2>
-    <div class="grid">
-        <div class="card">
-            <i class="fas fa-user-md fa-3x"></i>
-            <h3>كشف طبي شامل</h3>
-            <p>فحص دقيق باستخدام أحدث الأجهزة.</p>
+<!-- قسم الهيرو (نمط التطبيق) -->
+<section class="app-hero">
+    <div class="user-welcome">
+        <div>
+            <p style="opacity: 0.8; font-size: 0.9rem;">مرحباً بك،</p>
+            <h1>كيف حالك اليوم؟</h1>
         </div>
-        <div class="card">
-            <i class="fas fa-vial fa-3x"></i>
-            <h3>تحاليل فورية</h3>
-            <p>نتائج سريعة ودقيقة لجميع التحاليل.</p>
-        </div>
-        <div class="card">
-            <i class="fas fa-heartbeat fa-3x"></i>
-            <h3>متابعة دورية</h3>
-            <p>برامج مخصصة لمتابعة الحالات المزمنة.</p>
-        </div>
+        <img src="https://ui-avatars.com/api/?name=User&background=fff&color=2563eb" style="width: 45px; border-radius: 50%; border: 2px solid white;">
+    </div>
+    <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="ابحث عن طبيب أو خدمة..." style="background:none; border:none; color:white; outline:none; width:100%; font-family:inherit;">
     </div>
 </section>
 
-<section class="section">
-    <h2>المكتبة الطبية (فيديو)</h2>
-    <div id="videos" class="grid"></div>
+<!-- الخدمات (كروت تطبيق) -->
+<div class="section-title">
+    <h2>خدماتنا</h2>
+    <a href="#" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">رؤية الكل</a>
+</div>
+
+<section class="grid-app">
+    <div class="service-card" onclick="location.href='booking.html'">
+        <i class="fas fa-calendar-check fa-lg"></i>
+        <h3>حجز سريع</h3>
+    </div>
+    <div class="service-card">
+        <i class="fas fa-microscope fa-lg"></i>
+        <h3>نتائج تحاليل</h3>
+    </div>
+    <div class="service-card">
+        <i class="fas fa-pills fa-lg"></i>
+        <h3>روشتات</h3>
+    </div>
+    <div class="service-card">
+        <i class="fas fa-video fa-lg"></i>
+        <h3>استشارة أونلاين</h3>
+    </div>
 </section>
 
-<footer class="footer">
-    <p>&copy; 2026 MyDoctor Clinic. جميع الحقوق محفوظة.</p>
+<!-- المكتبة الطبية (تنسيق عرضي مثل إنستجرام) -->
+<div class="section-title">
+    <h2>المكتبة الطبية</h2>
+</div>
+<section id="videos">
+    <!-- الفيديوهات ستظهر هنا من الجافاسكريبت -->
+    <div class="video-placeholder" style="background: url('https://images.unsplash.com/photo-1505751172107-5739a00723a5?auto=format&fit=crop&w=400&q=80'); background-size: cover;"></div>
+    <div class="video-placeholder" style="background: url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=400&q=80'); background-size: cover;"></div>
+    <div class="video-placeholder" style="background: url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=400&q=80'); background-size: cover;"></div>
+</section>
+
+<!-- شريط التنقل السفلي (الموبايل فقط) -->
+<nav class="bottom-nav">
+    <a href="index.html" class="active"><i class="fas fa-home"></i>الرئيسية</a>
+    <a href="booking.html"><i class="fas fa-calendar-plus"></i>حجز</a>
+    <a href="#"><i class="fas fa-comment-medical"></i>استشارة</a>
+    <a href="login.html"><i class="fas fa-user-circle"></i>حسابي</a>
+</nav>
+
+<footer class="footer" style="text-align: center; padding: 20px; color: #94a3b8; font-size: 0.8rem;">
+    <p>© 2026 MyDoctor Clinic</p>
 </footer>
 
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="script.js"></script>
+
 </body>
 </html>
