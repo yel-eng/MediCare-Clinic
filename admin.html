@@ -12,14 +12,13 @@
         .grid-7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
         .day-setup-row { border: 1px solid #eee; padding: 15px; border-radius: 10px; background: #fff; text-align: center; }
         .slots-grid { display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; min-height: 400px; }
-        .day-column { min-width: 250px; background: #fff; border-radius: 10px; border: 1px solid #ddd; height: fit-content; }
-        .day-header { background: var(--main); color: white; padding: 12px; border-radius: 10px 10px 0 0; text-align: center; }
+        .day-column { min-width: 250px; background: #fff; border-radius: 10px; border: 1px solid #ddd; height: fit-content; margin-bottom: 20px;}
+        .day-header { background: var(--main); color: white; padding: 12px; border-radius: 10px 10px 0 0; text-align: center; font-weight: bold; }
         .slot-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
         .booked-card { background: #e0f2f1; border-right: 4px solid var(--accent); }
-        .btn-main { background: var(--main); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-        .btn-outline { border: 1px solid var(--main); color: var(--main); background: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
+        .btn-main { background: var(--main); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-danger { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        input[type="time"] { width: 90%; padding: 5px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        input[type="time"], input[type="date"], input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin: 5px 0; }
     </style>
 </head>
 <body>
@@ -27,7 +26,7 @@
     <h2 style="color: var(--main);">🏥 لوحة تحكم العيادة</h2>
 
     <div class="card">
-        <h3>🗓️ إعداد مواعيد العمل (الأيام السبعة القادمة)</h3>
+        <h3>🗓️ إعداد مواعيد العمل</h3>
         <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
             <div>
                 <label>تاريخ البداية:</label>
