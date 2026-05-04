@@ -6,40 +6,124 @@
 
 <style>
 body{
-  font-family:Arial;
-  background:#f5f5f5;
-  padding:20px;
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  background: linear-gradient(135deg, #e9f0ff, #f5f7fb);
+  margin: 0;
+  padding: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
+/* Card */
 .box{
-  max-width:500px;
-  margin:auto;
-  background:white;
-  padding:25px;
-  border-radius:15px;
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
 }
 
-input,select{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
+/* Title */
+.box h2{
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #1a237e;
+  text-align: center;
 }
 
+/* Inputs */
+input, select{
+  width: 100%;
+  padding: 12px 14px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #dfe3e8;
+  background: #fafbff;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+input:focus, select:focus{
+  border-color: #3f51b5;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(63,81,181,0.15);
+  background: #fff;
+}
+
+/* Button */
 button{
-  width:100%;
-  padding:12px;
-  background:#2e7d32;
-  color:white;
-  border:none;
-  border-radius:8px;
+  width: 100%;
+  padding: 13px;
+  margin-top: 10px;
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.25s ease;
+  box-shadow: 0 6px 15px rgba(46,125,50,0.25);
 }
 
-.msg{ color:#c62828; font-weight:bold; margin:10px 0; }
-.ok{ color:#2e7d32; }
+button:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(46,125,50,0.3);
+}
 
+button:active{
+  transform: scale(0.98);
+}
+
+/* Message */
+.msg{
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff3f3;
+  border: 1px solid #ffcdd2;
+  color: #c62828;
+  text-align: center;
+}
+
+.ok{
+  background: #e8f5e9 !important;
+  border-color: #a5d6a7 !important;
+  color: #2e7d32 !important;
+}
+
+/* Loading state */
 .loading{
-  opacity:0.6;
-  pointer-events:none;
+  opacity: 0.7;
+  pointer-events: none;
+  position: relative;
+}
+
+/* Loading animation */
+.loading::after{
+  content: "";
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  transform: translateY(-50%);
+}
+
+@keyframes spin{
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
 }
 </style>
 </head>
