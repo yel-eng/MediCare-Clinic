@@ -3,75 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم عيادتي الشاملة</title>
+    <title>النظام الشامل لإدارة العيادة</title>
     <style>
-        :root { --main: #1a237e; --accent: #00bcd4; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        :root { --main: #1a237e; --accent: #00bcd4; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .admin-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        /* تنسيق الحصالة */
-        .wallet-zone { background: var(--main); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .wallet-amount { font-size: 22px; font-weight: bold; color: var(--accent); }
+        /* الحصالة الذكية */
+        .day-wallet { background: linear-gradient(135deg, #1a237e, #00bcd4); color: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+        .wallet-row { display: flex; justify-content: space-between; font-size: 14px; margin-top: 5px; }
 
-        /* تنسيق المواعيد */
-        .grid-7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .day-setup-row { border: 1px solid #eee; padding: 10px; border-radius: 10px; text-align: center; }
-        .slots-grid { display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; }
-        .day-column { min-width: 250px; background: #fff; border-radius: 10px; border: 1px solid #ddd; height: fit-content; }
-        .day-header { background: var(--main); color: white; padding: 10px; border-radius: 10px 10px 0 0; text-align: center; }
+        /* إدارة الأيام والمواعيد */
+        .slots-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; }
+        .day-column { min-width: 300px; background: #fff; border: 1px solid #ddd; border-radius: 12px; }
+        .day-header { background: var(--main); color: white; padding: 10px; border-radius: 12px 12px 0 0; position: relative; }
+        .delete-day { position: absolute; left: 10px; top: 10px; cursor: pointer; color: #ff5252; background: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 12px; }
+
+        /* بيانات المريض والملفات */
+        .patient-info { font-size: 12px; background: #f9f9f9; padding: 8px; border-radius: 5px; margin-top: 5px; }
+        .btn-action { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin: 2px; }
         
-        .slot-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; }
-        .booked-card { background: #e0f2f1; border-right: 4px solid var(--accent); }
-        
-        /* تنسيق المقال والفيديو */
-        .content-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        textarea, input[type="text"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        
-        .btn-main { background: var(--main); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-        .btn-danger { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        input, textarea, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .modal { display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); }
+        .modal-content { background:white; margin:5% auto; padding:20px; width:50%; border-radius:15px; }
     </style>
 </head>
 <body>
 
-    <div class="wallet-zone">
-        <span>💰 إجمالي دخل العيادة اليوم:</span>
-        <div><span id="dayTotal">0</span> ج.م</div>
-    </div>
-
-    <!-- الجزء الخاص بالمواعيد -->
-    <div class="card">
-        <h3>🗓️ إعداد جدول المواعيد</h3>
-        <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center;">
-            <input type="date" id="startDatePicker" onchange="setupWeekUI()">
-            <input type="number" id="duration" value="30" style="width: 60px;">
-            <button class="btn-main" onclick="generateSmartSlots()">توليد الجدول 🚀</button>
-        </div>
-        <div id="weekSetupGrid" class="grid-7"></div>
-    </div>
-
-    <div class="card">
-        <div id="slotsContainer" class="slots-grid"></div>
-    </div>
-
-    <!-- الجزء الخاص بالمقال والفيديو -->
-    <div class="card">
-        <h3>📝 إدارة المحتوى (فيديو ومقال)</h3>
-        <div class="content-editor">
-            <div>
-                <label>رابط فيديو اليوتيوب:</label>
-                <input type="text" id="videoUrl" placeholder="ضع الرابط هنا...">
-                <button class="btn-main" onclick="updateVideo()">تحديث الفيديو 🎬</button>
+    <div class="admin-grid">
+        <!-- القائمة الجانبية: تسجيل مريض جديد + إعداد يوم -->
+        <div class="sidebar">
+            <div class="card">
+                <h3>👤 تسجيل / تعديل مريض</h3>
+                <input type="text" id="pName" placeholder="اسم المريض">
+                <input type="text" id="pPhone" placeholder="رقم الهاتف">
+                <textarea id="pNotes" placeholder="ملاحظات طبية"></textarea>
+                <input type="file" id="pFile" style="font-size: 10px;">
+                <button class="btn-main" onclick="savePatientData()" style="width:100%; background:var(--main); color:white; padding:10px; border-radius:8px; border:none; cursor:pointer;">حفظ بيانات المريض</button>
             </div>
-            <div>
-                <label>نص المقال الطبي:</label>
-                <textarea id="articleText" rows="5" placeholder="اكتب المقال هنا..."></textarea>
-                <button class="btn-main" onclick="updateArticle()">تحديث المقال ✍️</button>
+
+            <div class="card">
+                <h3>📅 إضافة يوم للجدول</h3>
+                <input type="date" id="singleDate">
+                <div style="display:flex; gap:5px;">
+                    <input type="time" id="sTime" value="17:00">
+                    <input type="time" id="eTime" value="21:00">
+                </div>
+                <input type="number" id="interval" value="30" placeholder="مدة الجلسة">
+                <button onclick="addSingleDay()" style="width:100%; background:var(--accent); border:none; padding:10px; border-radius:8px; cursor:pointer;">إضافة هذا اليوم فقط ➕</button>
             </div>
         </div>
+
+        <!-- المحتوى الرئيسي: الجداول والحصالة -->
+        <div class="main-content">
+            <div id="daysGrid" class="slots-container">
+                <!-- الأيام ستظهر هنا برأس كل يوم حصالته الخاصة -->
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة QR وتعديل الموعد -->
+    <div id="editModal" class="modal">
+        <div class="modal-content" id="modalBody"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <!-- مكتبة QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
