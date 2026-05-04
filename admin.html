@@ -55,6 +55,20 @@
             </div>
         </div>
 
+        <div class="card">
+    <h3>👤 تسجيل مريض جديد (يدوياً)</h3>
+    <div class="registration-form">
+        <input type="text" id="pName" placeholder="اسم المريض بالكامل">
+        <input type="text" id="pPhone" placeholder="رقم الهاتف">
+        <input type="number" id="pDeposit" placeholder="المبلغ المدفوع (الفيزيتا)">
+        <textarea id="pNotes" placeholder="التشخيص أو ملاحظات إضافية"></textarea>
+        
+        <p style="font-size: 12px; color: var(--main);">اختر موعداً من الجدول بالأسفل ثم اضغط "تثبيت الحجز"</p>
+        <button class="btn-main" id="confirmBookingBtn" onclick="saveManualBooking()" style="width:100%; background:#2e7d32;">
+            تثبيت الحجز والبيانات ✅
+        </button>
+    </div>
+</div>
         <!-- المحتوى الرئيسي: الجداول والحصالة -->
         <div class="main-content">
             <div id="daysGrid" class="slots-container">
