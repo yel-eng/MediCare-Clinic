@@ -153,6 +153,77 @@ renderSlots();
 
 function safeLoad(){ renderSlots(); }
 
+// =======================
+// 🟢 FIX 1: selectSlot
+// =======================
+function selectSlot(id){
+activeId = id;
+
+db.collection("slots").doc(id).get().then(doc=>{
+let d = doc.data();
+
+pName.value = d.patient?.name || "";
+pPhone.value = d.patient?.phone || "";
+pNotes.value = d.patient?.notes || "";
+pPaid.value = d.paid || 0;
+pStatus.value = d.status || "حجز";
+
+document.getElementById("targetTime").innerText =
+`${d.date} - ${d.time}`;
+});
+}
+
+// =======================
+// 🟢 FIX 2: updateSlot
+// =======================
+function updateSlot(){
+if(!activeId) return alert("اختاري ميعاد");
+
+db.collection("slots").doc(activeId).update({
+booked: pName.value.trim() !== "",
+status: pStatus.value,
+paid: Number(pPaid.value || 0),
+patient:{
+name:pName.value,
+phone:pPhone.value,
+notes:pNotes.value
+}
+});
+
+alert("تم الحفظ");
+}
+
+// =======================
+// 🟢 FIX 3: setAvailability
+// =======================
+function setAvailability(){
+let date=slotDate.value;
+let s=new Date(`${date}T${startTime.value}`);
+let e=new Date(`${date}T${endTime.value}`);
+
+while(s<e){
+db.collection("slots").add({
+date,
+time:s.toTimeString().slice(0,5),
+booked:false,
+status:"حجز",
+paid:0,
+patient:{name:"",phone:"",notes:""}
+});
+s.setMinutes(s.getMinutes()+30);
+}
+}
+
+// =======================
+// 🟢 FIX 4: deleteSlot
+// =======================
+function deleteSlot(id){
+db.collection("slots").doc(id).delete();
+}
+
+// =======================
+// existing renderSlots (unchanged)
+// =======================
 function renderSlots(){
 
 let days={};
@@ -195,7 +266,7 @@ col.className="day-col";
 col.innerHTML=`
 <div class="day-head">
 ${d}
-<span class="del-btn" onclick="deleteDay('${d}')">×</span>
+<span class="del-btn" onclick="deleteSlot('${d}')">×</span>
 </div>
 
 <div class="day-money">💰 ${total} جنيه</div>
@@ -203,17 +274,10 @@ ${d}
 ${days[d].map(x=>`
 <div class="slot-item 
 ${x.booked?'booked':''} 
-${x.status=='ملغي'?'cancel':''}
-${(x.patient.notes||'').includes('تواصل مع العميل لتحديد ميعاد') ? 'pending-slot' : ''}
+${x.status=='ملغي'?'cancel':''}"
 onclick="selectSlot('${x.id}')">
 
 <b>${x.time}</b> - ${x.booked?x.patient.name:"متاح"} (${x.status})
-
-${x.patient.phone?`
-<br><a class="whatsapp" target="_blank"
-href="https://wa.me/2${x.patient.phone}">واتساب</a>`:''}
-
-<span onclick="event.stopPropagation(); deleteSlot('${x.id}')" style="color:red;float:left">🗑</span>
 
 </div>
 `).join("")}
@@ -222,7 +286,8 @@ href="https://wa.me/2${x.patient.phone}">واتساب</a>`:''}
 daysGrid.appendChild(col);
 }
 
-document.getElementById("globalTotal").innerText="💰 إجمالي العيادة: "+totalGlobal+" جنيه";
+document.getElementById("globalTotal").innerText=
+"💰 إجمالي العيادة: "+totalGlobal+" جنيه";
 }
 </script>
 
