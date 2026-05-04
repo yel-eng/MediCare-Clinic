@@ -4,69 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم عيادتي الذكية</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         :root { --main: #1a237e; --accent: #00bcd4; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .grid-7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .day-setup-row { border: 1px solid #eee; padding: 15px; border-radius: 10px; background: #fff; text-align: center; }
+        .slots-grid { display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; min-height: 400px; }
+        .day-column { min-width: 250px; background: #fff; border-radius: 10px; border: 1px solid #ddd; height: fit-content; }
+        .day-header { background: var(--main); color: white; padding: 12px; border-radius: 10px 10px 0 0; text-align: center; }
+        .slot-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+        .booked-card { background: #e0f2f1; border-right: 4px solid var(--accent); }
+        .btn-main { background: var(--main); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        .btn-danger { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        input[type="time"] { width: 90%; padding: 5px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
         
-        /* الهيدر المالي */
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .money-card { background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; padding: 15px 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(46,125,50,0.3); text-align: center; }
-        .money-card span { font-size: 1.5rem; font-weight: bold; display: block; }
-
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        
-        /* شبكة الإعداد */
-        .grid-7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
-        .day-setup-row { border: 1px solid #e0e0e0; padding: 15px; border-radius: 12px; background: #fff; text-align: center; transition: 0.3s; }
-        .day-setup-row:hover { border-color: var(--accent); }
-
-        /* جدول المواعيد */
-        .slots-grid { display: flex; overflow-x: auto; gap: 20px; padding: 10px 0; scrollbar-width: thin; }
-        .day-column { min-width: 280px; background: #fff; border-radius: 12px; border: 1px solid #ddd; height: fit-content; overflow: hidden; }
-        .day-header { background: var(--main); color: white; padding: 15px; text-align: center; font-weight: bold; }
-        
-        .slot-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; }
-        .booked-card { background: #f1f8e9; border-right: 5px solid #4caf50; }
-        
-        .btn-main { background: var(--main); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-main:hover { opacity: 0.9; transform: translateY(-2px); }
-        .btn-pay { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .btn-danger { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
-
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; outline: none; }
-        input:focus { border-color: var(--accent); }
+        /* إضافة الحصالة بشكل أنيق */
+        .wallet-zone { background: #1a237e; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .wallet-amount { font-size: 24px; font-weight: bold; color: #00bcd4; }
     </style>
 </head>
 <body>
 
-    <div class="admin-header">
-        <h2 style="color: var(--main); margin: 0;">🏥 لوحة تحكم العيادة</h2>
-        <div class="money-card">
-            <small>إجمالي تحصيل اليوم</small>
-            <span id="dayTotal">0</span> <small>جنية</small>
-        </div>
+    <div class="wallet-zone">
+        <span>🏥 إدارة العيادة - الحصالة المالية اليومية:</span>
+        <div><span id="dayTotal" class="wallet-amount">0</span> ج.م</div>
     </div>
 
     <div class="card">
-        <h3>🗓️ إعداد جدول المواعيد الذكي</h3>
-        <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
-            <div style="display: flex; flex-direction: column;">
+        <h3>🗓️ إعداد مواعيد العمل (الأيام السبعة القادمة)</h3>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
+            <div>
                 <label>تاريخ البداية:</label>
                 <input type="date" id="startDatePicker" onchange="setupWeekUI()">
             </div>
-            <div style="display: flex; flex-direction: column;">
+            <div>
                 <label>مدة الكشف (دقيقة):</label>
-                <input type="number" id="duration" value="30" style="width: 80px;">
+                <input type="number" id="duration" value="30" style="width: 60px;">
             </div>
-            <button class="btn-main" onclick="generateSmartSlots()">توليد المواعيد الجديدة 🚀</button>
+            <button class="btn-main" onclick="generateSmartSlots()">توليد المواعيد الآن 🚀</button>
         </div>
         <div id="weekSetupGrid" class="grid-7"></div>
     </div>
 
     <div class="card">
-        <h3>📊 المواعيد الحالية والتحصيل المالي</h3>
+        <h3>📊 المواعيد الحالية في القاعدة</h3>
         <div id="slotsContainer" class="slots-grid">
-            <p style="padding: 20px; color: #666;">جاري سحب البيانات من السحابة...</p>
+            <p style="padding: 20px;">جاري تحميل الجدول...</p>
         </div>
     </div>
 
