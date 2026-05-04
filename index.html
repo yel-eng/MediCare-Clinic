@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>د/ أحمد محمد | عيادة باطنة وجهاز هضمي</title>
+<title>العيادة المصرية الذكية | نظام إدارة عيادات احترافي</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 
 :root{
-  --primary:#2563eb;
+  --primary:#1d4ed8;
   --dark:#0f172a;
   --bg:#f8fafc;
   --card:#ffffff;
@@ -29,7 +29,23 @@ body{
   color:var(--dark);
 }
 
-/* HERO PREMIUM */
+/* HEADER */
+.header{
+  padding:15px 8%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#fff;
+  border-bottom:1px solid #eee;
+}
+
+.logo{
+  font-size:20px;
+  font-weight:700;
+  color:var(--primary);
+}
+
+/* HERO */
 .hero{
   padding:60px 8%;
   display:flex;
@@ -37,7 +53,7 @@ body{
   justify-content:space-between;
   gap:40px;
   flex-wrap:wrap;
-  background:linear-gradient(135deg,#eff6ff,#ffffff);
+  background:linear-gradient(135deg,#eff6ff,#fff);
 }
 
 .hero-text{
@@ -45,71 +61,46 @@ body{
 }
 
 .hero-text h1{
-  font-size:38px;
+  font-size:42px;
   margin-bottom:10px;
 }
 
 .hero-text h2{
   color:var(--primary);
-  margin-bottom:10px;
+  margin-bottom:15px;
 }
 
 .badge{
   display:inline-block;
-  background:#e0f2fe;
+  background:#dbeafe;
   padding:6px 12px;
   border-radius:10px;
-  font-size:13px;
   margin-bottom:15px;
 }
 
-/* TRUST */
-.trust{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:15px;
-  padding:20px 8%;
+/* CTA */
+.btn{
+  background:var(--primary);
+  color:#fff;
+  padding:14px 22px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:16px;
 }
 
-.trust-card{
-  background:#fff;
-  padding:20px;
-  border-radius:15px;
-  border:1px solid #eee;
+/* SECTIONS */
+.section{
+  padding:50px 8%;
 }
 
-.trust-card h3{
-  color:var(--primary);
+.title{
+  font-size:22px;
+  margin-bottom:20px;
 }
 
-/* VALUE SECTION */
-.value{
-  padding:40px 8%;
-}
-
-.value-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:15px;
-}
-
-.value-box{
-  background:#fff;
-  padding:20px;
-  border-radius:15px;
-  border:1px solid #eee;
-}
-
-.value-box h3{
-  color:var(--primary);
-}
-
-/* CONTENT */
-.content{
-  padding:40px 8%;
-}
-
-.cards{
+/* VALUE */
+.grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:15px;
@@ -117,28 +108,56 @@ body{
 
 .card{
   background:#fff;
-  padding:15px;
+  padding:20px;
   border-radius:15px;
+  border:1px solid #eee;
 }
 
-/* CTA */
-.cta{
+/* DOCTOR */
+.doctor-box{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  background:#fff;
+  padding:25px;
+  border-radius:20px;
+  border:1px solid #eee;
+  flex-wrap:wrap;
+}
+
+.doctor-box img{
+  width:140px;
+  border-radius:20px;
+}
+
+/* CLINIC */
+.clinic{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:15px;
+}
+
+.photo{
+  height:180px;
+  border-radius:15px;
+  background-size:cover;
+  background-position:center;
+}
+
+/* CTA FINAL */
+.final{
   background:var(--primary);
-  color:white;
+  color:#fff;
   text-align:center;
-  padding:40px;
+  padding:50px;
   margin:40px 8%;
   border-radius:20px;
 }
 
-.cta button{
+.final button{
+  margin-top:15px;
   background:#fff;
   color:var(--primary);
-  padding:10px 20px;
-  border:none;
-  border-radius:10px;
-  margin-top:10px;
-  cursor:pointer;
 }
 
 </style>
@@ -147,90 +166,110 @@ body{
 
 <body>
 
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">🏥 العيادة المصرية الذكية</div>
+  <div>نظام إدارة عيادات احترافي</div>
+</div>
+
 <!-- HERO -->
 <section class="hero">
 
   <div class="hero-text">
-    <h1>د/ أحمد محمد</h1>
-    <h2>استشاري الباطنة والجهاز الهضمي</h2>
+    <h1>حوّل عيادتك إلى نظام طبي ذكي</h1>
+    <h2>يقلل الزحمة + يزيد الحجوزات + ينظم المواعيد تلقائيًا</h2>
 
-    <div class="badge">⭐ تقييم 4.9 من 5000+ مريض</div>
+    <div class="badge">⭐ مناسب للأطباء - العيادات - المراكز الطبية</div>
 
     <p style="color:#475569; line-height:1.8;">
-      عيادة متكاملة تعتمد على نظام ذكي لإدارة المواعيد وتقليل وقت الانتظار وتقديم تجربة طبية احترافية للمريض.
+      نظام متكامل لإدارة العيادات الطبية بطريقة احترافية ترفع قيمة العيادة وتقدم تجربة فاخرة للمريض.
     </p>
+
+    <button class="btn">اطلب النظام لعيادتك الآن</button>
   </div>
 
-  <img src="https://i.pravatar.cc/320" style="border-radius:20px;width:260px;">
-
-</section>
-
-<!-- TRUST -->
-<section class="trust">
-
-  <div class="trust-card">
-    <h3>+10 سنوات</h3>
-    <p>خبرة طبية</p>
-  </div>
-
-  <div class="trust-card">
-    <h3>5000+ حالة</h3>
-    <p>تم علاجها</p>
-  </div>
-
-  <div class="trust-card">
-    <h3>نظام ذكي</h3>
-    <p>بدون زحام</p>
-  </div>
+  <img src="https://img.freepik.com/free-photo/doctor-with-stethoscope_23-2148973324.jpg" 
+       style="width:280px;border-radius:20px;">
 
 </section>
 
 <!-- VALUE -->
-<section class="value">
+<section class="section">
 
-<h2>ليه العيادة دي مختلفة؟</h2>
+<h2 class="title">ليه النظام ده هيغيّر عيادتك؟</h2>
 
-<div class="value-grid">
+<div class="grid">
 
-  <div class="value-box">
-    <h3>تقليل الانتظار</h3>
-    <p>المريض بيجي في معاده بالظبط بدون زحمة.</p>
+  <div class="card">
+    <h3>📉 تقليل الزحمة</h3>
+    <p>المريض بييجي في معاده بدون انتظار.</p>
   </div>
 
-  <div class="value-box">
-    <h3>تنظيم كامل</h3>
-    <p>كل المواعيد مترتبة بنظام رقمي دقيق.</p>
+  <div class="card">
+    <h3>📈 زيادة الحجوزات</h3>
+    <p>تنظيم المواعيد بيخلي العيادة تستقبل مرضى أكتر.</p>
   </div>
 
-  <div class="value-box">
-    <h3>تجربة فخمة</h3>
-    <p>المريض يحس إنه داخل نظام طبي محترف مش عيادة عادية.</p>
+  <div class="card">
+    <h3>🧠 نظام ذكي</h3>
+    <p>إدارة تلقائية بدون تدخل يدوي.</p>
   </div>
 
 </div>
 
 </section>
 
-<!-- CONTENT -->
-<section class="content">
+<!-- DOCTOR BRAND -->
+<section class="section">
 
-<h2>محتوى طبي</h2>
+<h2 class="title">هوية الدكتور داخل النظام</h2>
 
-<div class="cards">
+<div class="doctor-box">
 
-  <div class="card">🎥 فيديو تعريفي بالدكتور</div>
-  <div class="card">📄 مقالات طبية</div>
-  <div class="card">🧾 حالات ونتائج علاج</div>
+  <img src="https://i.pravatar.cc/300?img=12">
+
+  <div>
+    <h3>د/ أحمد محمد</h3>
+    <p style="color:var(--muted)">
+      استشاري الباطنة والجهاز الهضمي<br>
+      +10 سنوات خبرة • +5000 حالة
+    </p>
+
+    <p style="margin-top:10px;color:#334155;">
+      يظهر الدكتور داخل نظام احترافي يعكس مكانته ويعزز ثقة المرضى.
+    </p>
+  </div>
 
 </div>
 
 </section>
 
-<!-- CTA -->
-<div class="cta">
-  <h2>احجز موعدك الآن بسهولة</h2>
-  <p>نظام ذكي يوفر وقتك ويمنع الزحام</p>
-  <button onclick="location.href='booking.html'">احجز الآن</button>
+<!-- CLINIC IMAGES -->
+<section class="section">
+
+<h2 class="title">شكل العيادة داخل النظام</h2>
+
+<div class="clinic">
+
+  <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1588776814546-1ffcf47267a5');"></div>
+
+  <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1580281657527-47f249e8f8e9');"></div>
+
+  <div class="photo" style="background-image:url('https://images.unsplash.com/photo-1587351021759-3e566b6af7cc');"></div>
+
+</div>
+
+</section>
+
+<!-- FINAL CTA -->
+<div class="final">
+
+<h2>جاهز تخلي عيادتك شكلها أكبر وأذكى؟</h2>
+
+<p>نظام احترافي يخلي الدكتور يظهر كبراند طبي قوي مش مجرد عيادة</p>
+
+<button>ابدأ الآن</button>
+
 </div>
 
 </body>
