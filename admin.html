@@ -41,6 +41,47 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
   margin-top:5px;
   text-decoration:none;
 }
+  /* يمنع أي عنصر يطلع بره الصفحة */
+* {
+    box-sizing: border-box;
+}
+
+/* يمنع سكرول أفقي عام */
+body {
+    overflow-x: hidden;
+}
+
+/* يخلي الجريد يلتزم بالعرض */
+.admin-grid {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* يخلي الجزء اليمين ما يكسرش الصفحة */
+.main-panel {
+    width: 100%;
+    overflow: hidden;
+}
+
+/* ⭐ أهم تعديل */
+.days-row {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+    width: 100%;
+}
+
+/* يمنع الكارد نفسه يكبر */
+.day-col {
+    min-width: 0 !important;
+    width: 100%;
+}
+
+/* يخلي أي نص طويل ما يكسرش التصميم */
+.slot-item {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
 </style>
 </head>
 
