@@ -2,72 +2,159 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>CRM Admin Full</title>
+<title>نظام العيادة المستقر</title>
 
 <style>
-body{font-family:Arial;background:#f4f4f4;padding:20px}
-.box{background:#fff;padding:15px;margin:10px 0;border-radius:10px}
-input,textarea,select{width:100%;padding:10px;margin:5px 0}
-button{padding:10px;background:#1a237e;color:#fff;border:0;border-radius:8px;cursor:pointer}
-.card{padding:10px;border-bottom:1px solid #eee}
-.slot{padding:10px;border:1px solid #ddd;margin:5px 0;border-radius:8px;cursor:pointer}
-.booked{background:#e8f5e9}
-.follow{background:#fff3cd}
+:root { --main:#1a237e; --bg:#f4f7f6; }
+
+body{
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg);
+    margin:0;
+    padding:20px;
+}
+
+.admin-grid{
+    display:grid;
+    grid-template-columns:350px 1fr;
+    gap:20px;
+}
+
+.card{
+    background:#fff;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+/* ===== days ===== */
+.days-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+
+.day-col{
+    background:#fff;
+    border-radius:12px;
+    border:1px solid #ddd;
+}
+
+.day-head{
+    background:var(--main);
+    color:#fff;
+    padding:10px;
+    text-align:center;
+}
+
+.day-safe{
+    background:#e8f5e9;
+    color:#2e7d32;
+    padding:8px;
+    text-align:center;
+    font-weight:bold;
+}
+
+.slot-item{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    cursor:pointer;
+}
+
+.slot-item.booked{
+    border-right:5px solid #2e7d32;
+    background:#f9fdf9;
+}
+
+.slot-item.followup{
+    background:#fff3cd !important;
+    border-right:5px solid #ff9800;
+}
+
+/* ===== inputs ===== */
+input,textarea,select{
+    width:100%;
+    padding:10px;
+    margin:6px 0;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+
+.btn{
+    background:var(--main);
+    color:#fff;
+    border:none;
+    padding:12px;
+    width:100%;
+    border-radius:8px;
+}
+
+/* responsive */
+@media(max-width:900px){
+    .days-row{grid-template-columns:1fr;}
+}
 </style>
 </head>
 
 <body>
 
-<h2>🏥 Admin Dashboard</h2>
+<div class="admin-grid">
 
-<!-- ============ CREATE SLOTS ============ -->
-<div class="box">
-<h3>📅 إنشاء مواعيد</h3>
+<!-- ========== SIDE PANEL ========== -->
+<div>
 
-<input type="date" id="slotDate">
-<input type="time" id="startTime">
-<input type="time" id="endTime">
-<input type="number" id="duration" placeholder="مدة الجلسة بالدقائق">
+    <!-- PATIENT -->
+    <div class="card">
+        <h3>👤 بيانات الحجز</h3>
 
-<button onclick="generateSlots()">إنشاء المواعيد</button>
+        <input id="pName" placeholder="اسم">
+        <input id="pPhone" placeholder="هاتف">
+        <input id="pPaid" placeholder="المبلغ">
+        <input id="pNotes" placeholder="ملاحظات">
+
+        <select id="pStatus">
+            <option value="حجز">حجز</option>
+            <option value="كشف">كشف</option>
+            <option value="ملغي">ملغي</option>
+        </select>
+
+        <button class="btn" onclick="updateSlot()">حفظ</button>
+    </div>
+
+    <!-- VIDEO -->
+    <div class="card">
+        <h3>🎥 فيديو</h3>
+        <input id="videoUrl" placeholder="رابط الفيديو">
+        <input id="videoDesc" placeholder="وصف الفيديو">
+        <button class="btn" onclick="addVideo()">إضافة فيديو</button>
+    </div>
+
+    <!-- ARTICLE -->
+    <div class="card">
+        <h3>📰 مقال</h3>
+        <input id="blogTitle" placeholder="عنوان">
+        <textarea id="blogText" placeholder="نص المقال"></textarea>
+        <input id="blogImage" placeholder="رابط صورة">
+        <button class="btn" onclick="addBlog()">إضافة مقال</button>
+    </div>
+
+    <!-- CREATE SLOTS -->
+    <div class="card">
+        <h3>📅 إضافة مواعيد</h3>
+
+        <input type="date" id="slotDate">
+        <input type="time" id="startTime">
+        <input type="time" id="endTime">
+
+        <button class="btn" onclick="setAvailability()">توليد</button>
+    </div>
+
 </div>
 
-<!-- ============ CONTENT ============ -->
-<div class="box">
-<h3>🎥 فيديو + 📰 مقال</h3>
+<!-- ========== MAIN GRID ========== -->
+<div id="daysGrid" class="days-row"></div>
 
-<input id="videoUrl" placeholder="رابط الفيديو">
-<input id="videoDesc" placeholder="وصف الفيديو">
-
-<input id="articleTitle" placeholder="عنوان المقال">
-<textarea id="articleText" placeholder="المقال"></textarea>
-<input id="articleImage" placeholder="رابط صورة">
-
-<button onclick="saveContent()">حفظ المحتوى</button>
-</div>
-
-<!-- ============ SLOTS ============ -->
-<div class="box">
-<h3>📋 المواعيد</h3>
-<div id="slots"></div>
-</div>
-
-<!-- ============ PATIENT EDIT ============ -->
-<div class="box">
-<h3>👤 بيانات العميل</h3>
-
-<input id="pName" placeholder="اسم">
-<input id="pPhone" placeholder="هاتف">
-<input id="pPaid" placeholder="مدفوع">
-<input id="pNotes" placeholder="ملاحظة">
-
-<select id="pStatus">
-<option value="حجز">حجز</option>
-<option value="كشف">كشف</option>
-<option value="ملغي">ملغي</option>
-</select>
-
-<button onclick="save()">حفظ التعديل</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -75,8 +162,9 @@ button{padding:10px;background:#1a237e;color:#fff;border:0;border-radius:8px;cur
 
 <script>
 const firebaseConfig = {
-  apiKey:"xxx",
-  projectId:"mydoctor-clinic"
+    apiKey:"AIzaSy...",
+    authDomain:"mydoctor-clinic.firebaseapp.com",
+    projectId:"mydoctor-clinic"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -84,109 +172,119 @@ const db = firebase.firestore();
 
 let activeId = null;
 
----
+/* ===== generate slots ===== */
+function setAvailability(){
+    let date = slotDate.value;
+    let start = startTime.value;
+    let end = endTime.value;
 
-## 📅 إنشاء مواعيد
-function generateSlots(){
-let d = slotDate.value;
-let s = startTime.value;
-let e = endTime.value;
-let dur = parseInt(duration.value);
+    let s = new Date(`${date}T${start}`);
+    let e = new Date(`${date}T${end}`);
 
-let start = new Date(`${d}T${s}`);
-let end = new Date(`${d}T${e}`);
+    const batch = db.batch();
 
-while(start < end){
+    while(s < e){
+        let ref = db.collection("slots").doc();
+        batch.set(ref,{
+            date,
+            time:s.toTimeString().slice(0,5),
+            booked:false,
+            status:"حجز",
+            patient:{name:"",phone:""},
+            timestamp:firebase.firestore.Timestamp.fromDate(new Date(s))
+        });
+        s.setMinutes(s.getMinutes()+30);
+    }
 
-db.collection("slots").add({
-date:d,
-time:start.toTimeString().slice(0,5),
-booked:false,
-status:"حجز",
-patient:{},
-notes:"",
-timestamp:firebase.firestore.Timestamp.fromDate(start)
-});
-
-start.setMinutes(start.getMinutes()+dur);
+    batch.commit().then(()=>loadSlots());
 }
 
-loadSlots();
-}
-
----
-
-## 📋 عرض المواعيد
+/* ===== load ===== */
 function loadSlots(){
-db.collection("slots").orderBy("timestamp").onSnapshot(snap=>{
-let html="";
-snap.forEach(doc=>{
-let s = doc.data();
+    db.collection("slots").orderBy("timestamp").get().then(snap=>{
+        let grid=document.getElementById("daysGrid");
+        grid.innerHTML="";
 
-let cls = "slot";
-if(s.booked) cls += " booked";
-if(s.notes?.includes("تواصل")) cls += " follow";
+        let days={};
 
-html += `
-<div class="${cls}" onclick="edit('${doc.id}', ${JSON.stringify(s).replace(/"/g,'&quot;')})">
-<b>${s.time}</b> - ${s.patient?.name || "متاح"}
+        snap.forEach(d=>{
+            let s=d.data();
+            if(!days[s.date]) days[s.date]=[];
+            days[s.date].push({id:d.id,...s});
+        });
 
-${s.patient?.phone ?
-`<br><a href="https://wa.me/2${s.patient.phone}" target="_blank">📱 واتساب</a>` : ""}
-</div>
-`;
-});
+        for(let day in days){
 
-slots.innerHTML = html;
-});
+            let col=document.createElement("div");
+            col.className="day-col";
+
+            let html="";
+
+            days[day].forEach(i=>{
+
+                let cls="";
+                if(i.patient?.notes?.includes("تواصل")) cls="followup";
+
+                html+=`
+                <div class="slot-item ${i.booked?'booked':''} ${cls}"
+                onclick="selectSlot('${i.id}','${i.patient?.name||''}','${i.patient?.phone||''}','${i.paid||0}','${i.status||''}')">
+
+                    ${i.time}<br>
+                    ${i.patient?.name||"متاح"}
+                </div>`;
+            });
+
+            col.innerHTML=`
+            <div class="day-head">${day}</div>
+            ${html}
+            `;
+
+            grid.appendChild(col);
+        }
+    });
 }
 
----
-
-## ✏️ اختيار
-function edit(id,data){
-activeId=id;
-
-pName.value=data.patient?.name||"";
-pPhone.value=data.patient?.phone||"";
-pPaid.value=data.paid||0;
-pNotes.value=data.notes||"";
-pStatus.value=data.status||"حجز";
+/* ===== select ===== */
+function selectSlot(id,name,phone,paid,status){
+    activeId=id;
+    pName.value=name;
+    pPhone.value=phone;
+    pPaid.value=paid;
+    pStatus.value=status;
 }
 
----
+/* ===== update ===== */
+function updateSlot(){
+    if(!activeId) return;
 
-## 💾 حفظ تعديل
-function save(){
-if(!activeId) return;
-
-db.collection("slots").doc(activeId).update({
-booked:true,
-status:pStatus.value,
-paid:Number(pPaid.value),
-notes:pNotes.value,
-patient:{
-name:pName.value,
-phone:pPhone.value
-}
-});
-
-loadSlots();
+    db.collection("slots").doc(activeId).update({
+        booked:true,
+        status:pStatus.value,
+        paid:Number(pPaid.value),
+        patient:{
+            name:pName.value,
+            phone:pPhone.value,
+            notes:pNotes.value
+        }
+    }).then(loadSlots);
 }
 
----
-
-## 🎥 محتوى
-function saveContent(){
-db.collection("content").doc("main").set({
-video:{url:videoUrl.value,desc:videoDesc.value},
-article:{
-title:articleTitle.value,
-text:articleText.value,
-image:articleImage.value
+/* ===== extras ===== */
+function addVideo(){
+    db.collection("content").add({
+        type:"video",
+        url:videoUrl.value,
+        desc:videoDesc.value
+    });
 }
-});
-alert("تم الحفظ");
+
+function addBlog(){
+    db.collection("content").add({
+        type:"blog",
+        title:blogTitle.value,
+        text:blogText.value,
+        image:blogImage.value
+    });
 }
 
 window.onload=loadSlots;
