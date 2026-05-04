@@ -153,9 +153,6 @@ renderSlots();
 
 function safeLoad(){ renderSlots(); }
 
-// =======================
-// 🟢 FIX 1: selectSlot
-// =======================
 function selectSlot(id){
 activeId = id;
 
@@ -173,9 +170,6 @@ document.getElementById("targetTime").innerText =
 });
 }
 
-// =======================
-// 🟢 FIX 2: updateSlot
-// =======================
 function updateSlot(){
 if(!activeId) return alert("اختاري ميعاد");
 
@@ -193,9 +187,6 @@ notes:pNotes.value
 alert("تم الحفظ");
 }
 
-// =======================
-// 🟢 FIX 3: setAvailability
-// =======================
 function setAvailability(){
 let date=slotDate.value;
 let s=new Date(`${date}T${startTime.value}`);
@@ -214,15 +205,12 @@ s.setMinutes(s.getMinutes()+30);
 }
 }
 
-// =======================
-// 🟢 FIX 4: deleteSlot
-// =======================
 function deleteSlot(id){
 db.collection("slots").doc(id).delete();
 }
 
 // =======================
-// existing renderSlots (unchanged)
+// renderSlots (WITH WHATSAPP RESTORED)
 // =======================
 function renderSlots(){
 
@@ -278,6 +266,12 @@ ${x.status=='ملغي'?'cancel':''}"
 onclick="selectSlot('${x.id}')">
 
 <b>${x.time}</b> - ${x.booked?x.patient.name:"متاح"} (${x.status})
+
+${x.patient.phone?`
+<br><a class="whatsapp" target="_blank"
+href="https://wa.me/2${x.patient.phone}">
+واتساب 📱
+</a>`:''}
 
 </div>
 `).join("")}
