@@ -1,23 +1,309 @@
-<section class="clinic-intro">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عيادة د/ أحمد محمد</title>
 
-  <div class="clinic-text">
-    <h1>عيادة د/ أحمد محمد</h1>
-    <p>استشاري باطنة وجهاز هضمي</p>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <div class="clinic-rating">
-      ⭐⭐⭐⭐⭐ (4.9 تقييم المرضى)
-    </div>
+<style>
 
-    <p class="clinic-desc">
-      نقدم رعاية طبية متكاملة باستخدام أحدث الأساليب العلاجية،
-      مع نظام حجز ذكي يضمن لك عدم الانتظار.
+:root{
+  --main:#2563eb;
+  --bg:#f1f5f9;
+  --white:#fff;
+  --text:#0f172a;
+  --sub:#64748b;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Tajawal',sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* ================= HEADER ================= */
+.header{
+  background:#fff;
+  padding:15px 8%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #eee;
+}
+
+.logo{
+  font-weight:700;
+  font-size:20px;
+  color:var(--main);
+}
+
+.nav a{
+  margin:0 10px;
+  text-decoration:none;
+  color:var(--text);
+}
+
+/* ================= HERO ================= */
+.hero{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:40px 8%;
+  gap:30px;
+  flex-wrap:wrap;
+}
+
+.hero-text{
+  flex:1;
+}
+
+.hero-text h1{
+  font-size:32px;
+  margin-bottom:10px;
+}
+
+.hero-text h2{
+  color:var(--main);
+  font-size:18px;
+  margin-bottom:15px;
+}
+
+.rating{
+  background:#fff7ed;
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:10px;
+  margin-bottom:15px;
+  font-size:14px;
+}
+
+.desc{
+  color:var(--sub);
+  line-height:1.7;
+  margin-bottom:20px;
+}
+
+.btn{
+  background:var(--main);
+  color:#fff;
+  padding:12px 20px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:15px;
+}
+
+.hero img{
+  width:260px;
+  border-radius:20px;
+}
+
+/* ================= STATS ================= */
+.stats{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  margin:30px 0;
+}
+
+.stat{
+  text-align:center;
+}
+
+.stat h3{
+  color:var(--main);
+}
+
+/* ================= SERVICES ================= */
+.section{
+  padding:30px 8%;
+}
+
+.section h2{
+  margin-bottom:20px;
+}
+
+.services{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
+}
+
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  border:1px solid #eee;
+}
+
+.card h3{
+  margin-top:10px;
+  font-size:15px;
+}
+
+/* ================= VIDEO ================= */
+.video{
+  background:#000;
+  height:200px;
+  border-radius:15px;
+}
+
+/* ================= ARTICLES ================= */
+.articles{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+}
+
+.article{
+  background:#fff;
+  padding:15px;
+  border-radius:15px;
+}
+
+/* ================= CTA ================= */
+.cta{
+  text-align:center;
+  background:var(--main);
+  color:#fff;
+  padding:30px;
+  border-radius:20px;
+  margin:30px 8%;
+}
+
+.cta button{
+  margin-top:15px;
+  background:#fff;
+  color:var(--main);
+}
+
+/* ================= FOOTER ================= */
+.footer{
+  text-align:center;
+  padding:20px;
+  color:#888;
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:768px){
+  .hero{
+    flex-direction:column;
+    text-align:center;
+  }
+
+  .hero img{
+    width:200px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">🩺 MyDoctor</div>
+  <div class="nav">
+    <a href="#">الرئيسية</a>
+    <a href="booking.html">حجز</a>
+    <a href="#">خدمات</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+
+  <div class="hero-text">
+    <h1>د/ أحمد محمد</h1>
+    <h2>استشاري باطنة وجهاز هضمي</h2>
+
+    <div class="rating">⭐ 4.9 تقييم المرضى</div>
+
+    <p class="desc">
+      نقدم رعاية طبية متكاملة باستخدام أحدث الأساليب،
+      مع نظام حجز ذكي يقلل الانتظار وينظم المواعيد بدقة.
     </p>
 
-    <button onclick="location.href='booking.html'">
-      احجز الآن
+    <button class="btn" onclick="location.href='booking.html'">
+      احجز موعد الآن
     </button>
   </div>
 
-  <img src="doctor.jpg" class="clinic-img">
+  <img src="https://i.pravatar.cc/300" alt="doctor">
 
 </section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat">
+    <h3>+10</h3>
+    <p>سنوات خبرة</p>
+  </div>
+  <div class="stat">
+    <h3>+5000</h3>
+    <p>مريض</p>
+  </div>
+  <div class="stat">
+    <h3>98%</h3>
+    <p>رضا المرضى</p>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section class="section">
+  <h2>الخدمات</h2>
+
+  <div class="services">
+    <div class="card"><h3>كشف باطنة</h3></div>
+    <div class="card"><h3>متابعة أمراض مزمنة</h3></div>
+    <div class="card"><h3>تحاليل وتشخيص</h3></div>
+    <div class="card"><h3>استشارة أونلاين</h3></div>
+  </div>
+
+</section>
+
+<!-- VIDEO -->
+<section class="section">
+  <h2>فيديو تعريفي</h2>
+  <div class="video"></div>
+</section>
+
+<!-- ARTICLES -->
+<section class="section">
+  <h2>مقالات طبية</h2>
+
+  <div class="articles">
+    <div class="article">أعراض القولون العصبي</div>
+    <div class="article">متى تزور طبيب الباطنة؟</div>
+    <div class="article">نصائح لصحة الجهاز الهضمي</div>
+  </div>
+
+</section>
+
+<!-- CTA -->
+<div class="cta">
+  <h2>احجز بسهولة بدون انتظار</h2>
+  <p>نظام حجز ذكي ينظم المواعيد ويوفر وقتك</p>
+
+  <button onclick="location.href='booking.html'">
+    احجز الآن
+  </button>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2026 MyDoctor Clinic
+</div>
+
+</body>
+</html>
