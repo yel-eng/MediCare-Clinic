@@ -1,6 +1,210 @@
-<section class="hero-cover">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>العيادة المصرية | د/ إسلام حسني</title>
 
-  <!-- NAV داخل الكوفر -->
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+:root{
+  --primary:#1d4ed8;
+  --dark:#0f172a;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --muted:#64748b;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Tajawal',sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--dark);
+}
+
+/* HERO */
+.hero{
+  position:relative;
+  padding:70px 8%;
+  background:linear-gradient(135deg,#e0f2fe,#ffffff);
+  min-height:90vh;
+  display:flex;
+  align-items:center;
+}
+
+/* NAV inside hero */
+.navbar{
+  position:absolute;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#fff;
+  padding:12px 20px;
+  border-radius:50px;
+  display:flex;
+  gap:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.08);
+}
+
+.navbar a{
+  text-decoration:none;
+  color:var(--dark);
+  font-weight:500;
+  font-size:14px;
+}
+
+.hero-content{
+  display:flex;
+  width:100%;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.hero-text{
+  flex:1;
+}
+
+.hero-text h1{
+  font-size:42px;
+}
+
+.hero-text p{
+  color:var(--muted);
+  margin-top:10px;
+  line-height:1.8;
+}
+
+.hero-img{
+  flex:1;
+  text-align:left;
+}
+
+.hero-img img{
+  width:320px;
+  border-radius:20px;
+}
+
+/* WA ICON */
+.wa{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#25d366;
+  color:#fff;
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+}
+
+/* CARDS */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:15px;
+  padding:50px 8%;
+}
+
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  border:1px solid #eee;
+}
+
+/* DOCTOR SECTION */
+.doctor{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:30px;
+  padding:60px 8%;
+  flex-wrap:wrap;
+}
+
+.doctor img{
+  width:300px;
+  border-radius:20px;
+}
+
+/* GALLERY */
+.gallery{
+  display:flex;
+  overflow-x:auto;
+  gap:15px;
+  padding:40px 8%;
+}
+
+.gallery img{
+  width:250px;
+  border-radius:15px;
+}
+
+/* MEDIA */
+.media{
+  padding:50px 8%;
+}
+
+.media-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:15px;
+}
+
+/* CTA BOX */
+.cta{
+  background:#1e3a8a;
+  color:#fff;
+  margin:40px 8%;
+  padding:30px;
+  border-radius:20px;
+}
+
+/* CONTACT */
+.contact{
+  padding:50px 8%;
+}
+
+.contact-box{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  border:1px solid #eee;
+}
+
+/* MAP */
+.map{
+  padding:40px 8%;
+}
+
+/* FOOTER */
+footer{
+  text-align:center;
+  padding:20px;
+  color:#64748b;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- HERO -->
+<section class="hero">
+
+  <!-- NAV -->
   <div class="navbar">
     <a href="#">الرئيسية</a>
     <a href="#doctor">عن الدكتور</a>
@@ -8,28 +212,112 @@
     <a href="#contact">تواصل</a>
   </div>
 
-  <div class="hero-inner">
+  <div class="hero-content">
 
     <div class="hero-text">
-      <span class="badge">🏥 العيادة المصرية الذكية</span>
-
-      <h1>نظام طبي متكامل يرفع قيمة عيادتك</h1>
-
+      <h1>العيادة المصرية</h1>
       <p>
-        إدارة مواعيد احترافية — تقليل الزحمة — تجربة مريض فاخرة — وتحويل العيادة إلى Brand طبي حقيقي
+        نظام طبي ذكي متكامل لإدارة العيادات + رفع مستوى الخدمة + تقليل الزحمة + تجربة مريض فاخرة
       </p>
-
-      <div class="hero-actions">
-        <button>احجز الآن</button>
-        <button class="ghost">شاهد النظام</button>
-      </div>
-
     </div>
 
-    <div class="hero-image">
-      <img src="https://i.pravatar.cc/420?img=12">
+    <div class="hero-img">
+      <img src="https://i.pravatar.cc/320?img=12">
     </div>
 
   </div>
 
 </section>
+
+<!-- CARDS -->
+<section class="cards">
+
+  <div class="card">
+    <h3>⭐ مستوى خدمة عالي</h3>
+  </div>
+
+  <div class="card">
+    <h3>🧠 أحدث تقنيات طبية</h3>
+  </div>
+
+  <div class="card">
+    <h3>❤️ اهتمام شخصي بالمرضى</h3>
+  </div>
+
+</section>
+
+<!-- DOCTOR -->
+<section class="doctor" id="doctor">
+
+  <div>
+    <h2>عن الدكتور</h2>
+    <p>د/ إسلام حسني - استشاري الباطنة</p>
+    <p style="color:#64748b;line-height:1.8;">
+      خبرة طويلة في التشخيص والعلاج باستخدام أحدث البروتوكولات الطبية.
+    </p>
+  </div>
+
+  <img src="https://i.pravatar.cc/320?img=12">
+
+</section>
+
+<!-- GALLERY -->
+<section class="gallery">
+  <img src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5">
+  <img src="https://images.unsplash.com/photo-1580281657527-47f249e8f8e9">
+  <img src="https://images.unsplash.com/photo-1587351021759-3e566b6af7cc">
+</section>
+
+<!-- MEDIA -->
+<section class="media" id="media">
+
+<h2>المكتبة الطبية</h2>
+
+<div class="media-grid">
+
+  <div class="card">🎥 فيديو تعريفي</div>
+  <div class="card">📄 مقالات طبية</div>
+  <div class="card">🧪 صور طبية</div>
+
+</div>
+
+</section>
+
+<!-- CTA -->
+<div class="cta">
+
+<h2>استشارة مجانية أول مرة</h2>
+<p>احجز الآن - عدد الحجوزات محدود</p>
+
+<p>📞 01211538334</p>
+<p>📱 01556614498</p>
+
+</div>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+
+<div class="contact-box">
+  <h2>تواصل معنا</h2>
+  <p>واتساب / اتصال مباشر مع العيادة</p>
+</div>
+
+</section>
+
+<!-- MAP -->
+<section class="map">
+  <div class="card">📍 خريطة موقع العيادة</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  © 2026 العيادة المصرية - جميع الحقوق محفوظة
+</footer>
+
+<!-- WHATSAPP -->
+<a class="wa" href="https://wa.me/201211538334">
+<i class="fab fa-whatsapp"></i>
+</a>
+
+</body>
+</html>
