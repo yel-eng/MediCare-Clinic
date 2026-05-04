@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>حجز موعد</title>
+<title>نظام حجز احترافي</title>
 
 <style>
 body{
@@ -34,13 +34,14 @@ button{
   border-radius:8px;
 }
 
-.msg{
-  margin:10px 0;
-  color:#c62828;
-  font-weight:bold;
+.msg{ color:#c62828; font-weight:bold; margin:10px 0; }
+.ok{ color:#2e7d32; }
+
+.loading{
+  opacity:0.6;
+  pointer-events:none;
 }
 </style>
-
 </head>
 
 <body>
@@ -52,15 +53,13 @@ button{
 <input id="name" placeholder="الاسم">
 <input id="phone" placeholder="رقم الهاتف">
 
-<!-- اختيار اليوم -->
 <input type="date" id="dateInput" onchange="checkDay()">
 
-<!-- الأوقات -->
 <select id="timeSelect" style="display:none;"></select>
 
 <div id="msg" class="msg"></div>
 
-<button onclick="book()">تأكيد الحجز</button>
+<button id="btn" onclick="book()">تأكيد الحجز</button>
 
 </div>
 
@@ -69,7 +68,6 @@ button{
 
 <script>
 
-// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -79,199 +77,138 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let selectedSlotId = null;
-let noSlotsMode = false;
-
+let selectedDate = "";
+let availableSlots = [];
 
 // ==========================
-// عند اختيار يوم
+// check day + smart loading
 // ==========================
-function checkDay(){
+async function checkDay(){
 
-  let date = document.getElementById("dateInput").value;
+  selectedDate = dateInput.value;
+  msg.innerHTML = "⏳ جاري تحميل المواعيد...";
 
-  let select = document.getElementById("timeSelect");
-  let msg = document.getElementById("msg");
+  let snap = await db.collection("slots")
+    .where("date","==",selectedDate)
+    .get();
 
-  select.style.display = "none";
-  msg.innerHTML = "جاري التحميل...";
+  availableSlots = [];
 
-  db.collection("slots")
-    .where("date","==",date)
-    .get()
-    .then(snap=>{
+  snap.forEach(doc=>{
+    let d = doc.data();
+    if(!d.booked) availableSlots.push({id:doc.id, ...d});
+  });
 
-      // لو مفيش مواعيد أصلا
-      if(snap.empty){
-        noSlotsMode = true;
-        selectedSlotId = null;
+  if(availableSlots.length === 0){
 
-        msg.innerHTML = "📞 سنتواصل معك لتحديد ميعاد";
-        return;
-      }
+    msg.innerHTML = "❌ لا يوجد مواعيد متاحة — سيتم تسجيل طلبك";
 
-      // فلترة المواعيد الفاضية
-      let available = [];
+    timeSelect.style.display = "none";
+    return;
+  }
 
-      snap.forEach(doc=>{
-        let s = doc.data();
-        if(!s.booked){
-          available.push({id:doc.id, ...s});
-        }
-      });
+  msg.innerHTML = "";
 
-      // لو اليوم كله محجوز
-      if(available.length === 0){
-        noSlotsMode = true;
-        selectedSlotId = null;
+  timeSelect.style.display = "block";
+  timeSelect.innerHTML = `<option value="">اختر الوقت</option>`;
 
-        msg.innerHTML = "❌ اليوم ممتلئ - سنتواصل معك";
-        return;
-      }
+  availableSlots.sort((a,b)=>a.time.localeCompare(b.time));
 
-      // في مواعيد متاحة
-      noSlotsMode = false;
-      msg.innerHTML = "";
-
-      select.innerHTML = `<option value="">اختر الوقت</option>`;
-
-      available.sort((a,b)=> a.time.localeCompare(b.time));
-
-      available.forEach(s=>{
-        select.innerHTML += `
-          <option value="${s.id}">
-            ${s.time}
-          </option>
-        `;
-      });
-
-      select.style.display = "block";
-
-    });
-
+  availableSlots.forEach(s=>{
+    timeSelect.innerHTML += `<option value="${s.id}">${s.time}</option>`;
+  });
 }
 
 
 // ==========================
-// الحجز
+// SMART fallback (nearest slot)
 // ==========================
-function book(){
+function findNearestSlot(){
 
-  let name = document.getElementById("name").value;
-  let phone = document.getElementById("phone").value;
+  if(availableSlots.length === 0) return null;
+
+  return availableSlots[0]; // أبسط intelligent fallback
+}
+
+
+// ==========================
+// booking with transaction
+// ==========================
+async function book(){
+
+  let name = document.getElementById("name").value.trim();
+  let phone = document.getElementById("phone").value.trim();
   let slotId = document.getElementById("timeSelect").value;
 
   if(!name || !phone){
-    alert("املأ البيانات");
+    msg.innerHTML = "⚠️ املأ البيانات";
     return;
   }
 
-  // لو مفيش اختيار وقت
-  if(!slotId){
-    alert("اختار وقت");
-    return;
-  }
+  btn.classList.add("loading");
+  msg.innerHTML = "⏳ جاري تأكيد الحجز...";
 
-  db.collection("slots").doc(slotId).get().then(doc=>{
+  try{
 
-    // 🔥 الحل هنا
-    if(!doc.exists){
-      alert("الموعد غير موجود ❌");
-      return;
-    }
+    // ======================
+    // CASE 1: no slots → queue system
+    // ======================
+    if(!slotId){
 
-    let s = doc.data();
-
-    // حماية إضافية
-    if(!s){
-      alert("خطأ في البيانات ❌");
-      return;
-    }
-
-    if(s.booked){
-      alert("الموعد اتحجز ❌");
-      return;
-    }
-
-    doc.ref.update({
-      booked:true,
-      patient:{
+      await db.collection("requests").add({
         name,
         phone,
-        notes:""
+        date:selectedDate,
+        status:"pending",
+        createdAt:firebase.firestore.Timestamp.now()
+      });
+
+      msg.innerHTML = "📩 تم تسجيل طلبك وسنتواصل معك";
+      btn.classList.remove("loading");
+      return;
+    }
+
+    // ======================
+    // CASE 2: transaction booking (ANTI DOUBLE BOOKING)
+    // ======================
+    await db.runTransaction(async (transaction)=>{
+
+      let ref = db.collection("slots").doc(slotId);
+      let doc = await transaction.get(ref);
+
+      if(!doc.exists) throw "Slot not found";
+
+      let data = doc.data();
+
+      if(data.booked){
+        throw "هذا الموعد محجوز بالفعل";
       }
-    }).then(()=>{
-      alert("تم الحجز ✅");
-      location.reload();
+
+      transaction.update(ref,{
+        booked:true,
+        status:"confirmed",
+        patient:{
+          name,
+          phone,
+          notes:""
+        }
+      });
+
     });
 
-  }).catch(err=>{
+    msg.innerHTML = "✅ تم الحجز بنجاح";
+    msg.className = "msg ok";
+
+    checkDay();
+
+  }catch(err){
+
     console.error(err);
-    alert("حصل خطأ ❌");
-  });
+    msg.innerHTML = "❌ حدث خطأ: " + err;
 
-}
-
-  // ======================
-  // لو مفيش مواعيد
-  // ======================
-  if(noSlotsMode){
-
-    db.collection("slots").add({
-      date: date,
-      time: "غير محدد",
-      booked: true,
-      status: "حجز",
-      paid: 0,
-      patient:{
-        name,
-        phone,
-        notes: "تواصل مع العميل لتحديد ميعاد"
-      },
-      timestamp: firebase.firestore.Timestamp.now()
-    }).then(()=>{
-
-      alert("تم تسجيل طلبك ✅ سنتواصل معك");
-
-    });
-
-    return;
+  }finally{
+    btn.classList.remove("loading");
   }
-
-  // ======================
-  // حجز عادي
-  // ======================
-  let slotId = document.getElementById("timeSelect").value;
-
-  if(!slotId){
-    alert("اختار وقت");
-    return;
-  }
-
-  db.collection("slots").doc(slotId).get().then(doc=>{
-
-    let s = doc.data();
-
-    if(s.booked){
-      alert("الموعد اتحجز ❌");
-      return;
-    }
-
-    doc.ref.update({
-      booked:true,
-      patient:{
-        name,
-        phone,
-        notes:""
-      }
-    }).then(()=>{
-
-      alert("تم الحجز ✅");
-      checkDay();
-
-    });
-
-  });
 
 }
 
