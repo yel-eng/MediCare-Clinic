@@ -1,85 +1,134 @@
-const firebaseConfig = {
-    apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
-    authDomain: "mydoctor-clinic.firebaseapp.com",
-    projectId: "mydoctor-clinic",
-    storageBucket: "mydoctor-clinic.appspot.com",
-    messagingSenderId: "996532645974",
-    appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7"
-};
-
-if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+// إعداد Firebase (نفس الإعدادات السابقة)
+const firebaseConfig = { /* إعداداتك هنا */ };
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const PRICE = 200;
+const storage = firebase.storage();
 
-// --- وظائف المواعيد والحصالة ---
-function setupWeekUI() {
-    const grid = document.getElementById("weekSetupGrid");
-    const startVal = document.getElementById("startDatePicker").value;
-    let start = startVal ? new Date(startVal) : new Date();
-    grid.innerHTML = "";
-    for (let i = 0; i < 7; i++) {
-        let d = new Date(start); d.setDate(start.getDate() + i);
-        let dStr = d.toISOString().split('T')[0];
-        grid.innerHTML += `<div class="day-setup-row">
-            <b>${d.toLocaleDateString('ar-EG',{weekday:'long'})}</b><br>${dStr}
-            <input type="time" class="start-t" value="17:00"><input type="time" class="end-t" value="21:00">
-        </div>`;
-    }
-}
+// 1. إضافة يوم واحد فقط (مرونة كاملة)
+async function addSingleDay() {
+    const date = document.getElementById("singleDate").value;
+    const sTime = document.getElementById("sTime").value;
+    const eTime = document.getElementById("eTime").value;
+    const interval = parseInt(document.getElementById("interval").value);
 
-async function generateSmartSlots() {
-    const dur = parseInt(document.getElementById("duration").value);
-    const rows = document.querySelectorAll(".day-setup-row");
-    for (let row of rows) {
-        let date = row.innerText.split('\n')[1];
-        let sT = row.querySelector(".start-t").value;
-        let eT = row.querySelector(".end-t").value;
-        let curr = new Date(`${date}T${sT}`);
-        let end = new Date(`${date}T${eT}`);
-        while (curr < end) {
-            await db.collection("slots").add({ date, time: curr.toTimeString().substring(0,5), booked: false, paid: false, timestamp: curr });
-            curr.setMinutes(curr.getMinutes() + dur);
-        }
-    }
-    alert("تم!");
-}
+    if(!date) return alert("اختر التاريخ");
 
-function loadAdminSlots() {
-    db.collection("slots").orderBy("timestamp", "asc").onSnapshot(snap => {
-        const container = document.getElementById("slotsContainer");
-        let daysMap = {}; let total = 0;
-        snap.forEach(doc => {
-            let s = doc.data(); 
-            if(!daysMap[s.date]) daysMap[s.date] = [];
-            daysMap[s.date].push({id: doc.id, ...s});
-            if(s.booked && s.paid) total += PRICE;
+    let current = new Date(`${date}T${sTime}`);
+    let end = new Date(`${date}T${eTime}`);
+
+    const batch = db.batch();
+    while(current < end) {
+        let ref = db.collection("slots").doc();
+        batch.set(ref, {
+            date: date,
+            time: current.toTimeString().substring(0,5),
+            booked: false,
+            status: 'متاح', // متاح، حجز، تم الكشف
+            paid: 0,
+            patient: null,
+            timestamp: firebase.firestore.Timestamp.fromDate(new Date(current))
         });
-        document.getElementById("dayTotal").innerText = total;
-        container.innerHTML = "";
-        for (let day in daysMap) {
-            let html = `<div class="day-column"><div class="day-header">${day}</div>`;
-            daysMap[day].forEach(slot => {
-                html += `<div class="slot-item ${slot.booked?'booked-card':''}">
-                    ${slot.time} ${slot.booked?'✅':''}
-                    <button onclick="db.collection('slots').doc('${slot.id}').update({paid:!${slot.paid}})">${slot.paid?'مدفوع':'تحصيل'}</button>
+        current.setMinutes(current.getMinutes() + interval);
+    }
+    await batch.commit();
+    alert("تمت إضافة اليوم للجدول");
+}
+
+// 2. تحميل المواعيد مع "الحصالة اليومية" لكل عمود
+function loadDashboard() {
+    db.collection("slots").orderBy("timestamp", "asc").onSnapshot(snap => {
+        const grid = document.getElementById("daysGrid");
+        grid.innerHTML = "";
+        let daysData = {};
+
+        snap.forEach(doc => {
+            let s = doc.data();
+            if(!daysData[s.date]) daysData[s.date] = { slots: [], totalPaid: 0, totalBooked: 0 };
+            daysData[s.date].slots.push({id: doc.id, ...s});
+            if(s.status === 'تم الكشف') daysData[s.date].totalPaid += Number(s.paid || 0);
+            if(s.booked) daysData[s.date].totalBooked++;
+        });
+
+        for(let date in daysData) {
+            let dayBox = document.createElement("div");
+            dayBox.className = "day-column";
+            
+            let html = `
+                <div class="day-header">
+                    <span class="delete-day" onclick="deleteFullDay('${date}')">X</span>
+                    <b>${date}</b>
+                    <div class="day-wallet">
+                        <div class="wallet-row"><span>المحقق:</span> <span>${daysData[date].totalPaid} ج.م</span></div>
+                        <div class="wallet-row"><span>الحجوزات:</span> <span>${daysData[date].totalBooked}</span></div>
+                    </div>
                 </div>`;
+
+            daysData[date].slots.forEach(slot => {
+                html += `
+                    <div class="slot-item ${slot.booked ? 'booked-card' : ''}" style="padding:10px; border-bottom:1px solid #eee;">
+                        <b>${slot.time}</b> - ${slot.status}
+                        ${slot.booked ? `
+                            <div class="patient-info">
+                                👤 ${slot.patient.name} <br> 📞 ${slot.patient.phone}
+                                <div style="margin-top:5px;">
+                                    <button class="btn-action" style="background:#4caf50; color:white;" onclick="markDone('${slot.id}')">تم الكشف</button>
+                                    <button class="btn-action" style="background:#2196f3; color:white;" onclick="showPatientDetails('${slot.id}')">الملف / QR</button>
+                                </div>
+                            </div>
+                        ` : `<button class="btn-action" onclick="quickBook('${slot.id}')">حجز سريع</button>`}
+                        <button class="btn-action" style="color:red;" onclick="deleteSlot('${slot.id}')">حذف</button>
+                    </div>`;
             });
-            container.innerHTML += html + `</div>`;
+            dayBox.innerHTML = html;
+            grid.appendChild(dayBox);
         }
     });
 }
 
-// --- وظائف المقال والفيديو الجديدة ---
-async function updateVideo() {
-    const url = document.getElementById("videoUrl").value;
-    await db.collection("content").doc("video").set({ url });
-    alert("تم تحديث الفيديو");
+// 3. حذف يوم كامل أو موعد منفرد
+async function deleteFullDay(date) {
+    if(confirm(`حذف يوم ${date} بالكامل؟`)) {
+        let snap = await db.collection("slots").where("date", "==", date).get();
+        let batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+    }
 }
 
-async function updateArticle() {
-    const text = document.getElementById("articleText").value;
-    await db.collection("content").doc("article").set({ text });
-    alert("تم تحديث المقال");
+// 4. نظام الكشف المالي (الحصالة تتحرك هنا)
+async function markDone(id) {
+    let amount = prompt("أدخل المبلغ المحصل لهذا الكشف:", "200");
+    if(amount) {
+        await db.collection("slots").doc(id).update({
+            status: 'تم الكشف',
+            paid: Number(amount)
+        });
+    }
 }
 
-window.onload = () => { setupWeekUI(); loadAdminSlots(); };
+// 5. رفع الملفات وتوليد الـ QR
+async function showPatientDetails(id) {
+    let doc = await db.collection("slots").doc(id).get();
+    let data = doc.data();
+    const modal = document.getElementById("editModal");
+    const body = document.getElementById("modalBody");
+    
+    modal.style.display = "block";
+    body.innerHTML = `
+        <h3>ملف المريض: ${data.patient.name}</h3>
+        <div id="qrcode"></div>
+        <hr>
+        <p>تعديل بيانات الحجز:</p>
+        <input type="text" id="editName" value="${data.patient.name}">
+        <button class="btn-main" style="background:var(--main); color:white;" onclick="updateSlot('${id}')">تحديث</button>
+        <button onclick="document.getElementById('editModal').style.display='none'">إغلاق</button>
+    `;
+    
+    new QRCode(document.getElementById("qrcode"), {
+        text: `Patient:${data.patient.name}|Slot:${data.time}`,
+        width: 128, height: 128
+    });
+}
+
+// تشغيل النظام
+window.onload = loadDashboard;
