@@ -97,23 +97,33 @@ function loadTimes(){
   db.collection("slots")
     .where("date","==",day)
     .where("booked","==",false)
-    .orderBy("timestamp","asc")
     .get()
     .then(snap=>{
 
       if(snap.empty){
-        select.innerHTML = "<option>لا يوجد أوقات</option>";
+        select.innerHTML = "<option>لا يوجد أوقات متاحة</option>";
         return;
       }
 
-      select.innerHTML = "<option value=''>اختر الوقت</option>";
+      let times = [];
 
       snap.forEach(doc=>{
         let s = doc.data();
+        times.push({
+          id: doc.id,
+          time: s.time
+        });
+      });
 
+      // 🔥 ترتيب الوقت يدويًا (بدون timestamp)
+      times.sort((a,b)=> a.time.localeCompare(b.time));
+
+      select.innerHTML = "<option value=''>اختر الوقت</option>";
+
+      times.forEach(t=>{
         select.innerHTML += `
-          <option value="${doc.id}">
-            ${s.time}
+          <option value="${t.id}">
+            ${t.time}
           </option>
         `;
       });
@@ -121,7 +131,6 @@ function loadTimes(){
     });
 
 }
-
 
 /**********************
 الحجز
