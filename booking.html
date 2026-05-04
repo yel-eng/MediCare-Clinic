@@ -19,7 +19,7 @@ body{
   border-radius:15px;
 }
 
-select,input{
+input,select{
   width:100%;
   padding:10px;
   margin:8px 0;
@@ -32,6 +32,12 @@ button{
   color:white;
   border:none;
   border-radius:8px;
+}
+
+.msg{
+  margin:10px 0;
+  color:#c62828;
+  font-weight:bold;
 }
 </style>
 
@@ -46,15 +52,13 @@ button{
 <input id="name" placeholder="الاسم">
 <input id="phone" placeholder="رقم الهاتف">
 
-<!-- الأيام -->
-<select id="daySelect" onchange="loadTimes()">
-  <option value="">اختر اليوم</option>
-</select>
+<!-- اختيار اليوم -->
+<input type="date" id="dateInput" onchange="checkDay()">
 
 <!-- الأوقات -->
-<select id="timeSelect">
-  <option value="">اختر الوقت</option>
-</select>
+<select id="timeSelect" style="display:none;"></select>
+
+<div id="msg" class="msg"></div>
 
 <button onclick="book()">تأكيد الحجز</button>
 
@@ -75,84 +79,126 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-
-// ===============================
-// تحميل الأيام (مظبوط)
-// ===============================
-function loadDays(){
-
-  db.collection("slots")
-    .orderBy("date")
-    .get()
-    .then(snap=>{
-
-      let days = new Set();
-
-      snap.forEach(doc=>{
-        let d = doc.data();
-        if(!d.booked){
-          days.add(d.date);
-        }
-      });
-
-      let select = document.getElementById("daySelect");
-      select.innerHTML = `<option value="">اختر اليوم</option>`;
-
-      // تحويل Set لـ Array وترتيب
-      [...days].sort().forEach(day=>{
-        select.innerHTML += `<option value="${day}">${day}</option>`;
-      });
-
-    });
-
-}
+let selectedSlotId = null;
+let noSlotsMode = false;
 
 
-// ===============================
-// تحميل الأوقات حسب اليوم
-// ===============================
-function loadTimes(){
+// ==========================
+// عند اختيار يوم
+// ==========================
+function checkDay(){
 
-  let day = document.getElementById("daySelect").value;
+  let date = document.getElementById("dateInput").value;
 
   let select = document.getElementById("timeSelect");
-  select.innerHTML = `<option>جاري التحميل...</option>`;
+  let msg = document.getElementById("msg");
+
+  select.style.display = "none";
+  msg.innerHTML = "جاري التحميل...";
 
   db.collection("slots")
-    .where("date","==",day)
-    .where("booked","==",false)
-    .orderBy("time")
+    .where("date","==",date)
     .get()
     .then(snap=>{
 
-      select.innerHTML = `<option value="">اختر الوقت</option>`;
+      // لو مفيش مواعيد أصلا
+      if(snap.empty){
+        noSlotsMode = true;
+        selectedSlotId = null;
+
+        msg.innerHTML = "📞 سنتواصل معك لتحديد ميعاد";
+        return;
+      }
+
+      // فلترة المواعيد الفاضية
+      let available = [];
 
       snap.forEach(doc=>{
         let s = doc.data();
+        if(!s.booked){
+          available.push({id:doc.id, ...s});
+        }
+      });
 
+      // لو اليوم كله محجوز
+      if(available.length === 0){
+        noSlotsMode = true;
+        selectedSlotId = null;
+
+        msg.innerHTML = "❌ اليوم ممتلئ - سنتواصل معك";
+        return;
+      }
+
+      // في مواعيد متاحة
+      noSlotsMode = false;
+      msg.innerHTML = "";
+
+      select.innerHTML = `<option value="">اختر الوقت</option>`;
+
+      available.sort((a,b)=> a.time.localeCompare(b.time));
+
+      available.forEach(s=>{
         select.innerHTML += `
-          <option value="${doc.id}">
+          <option value="${s.id}">
             ${s.time}
           </option>
         `;
       });
 
+      select.style.display = "block";
+
     });
 
 }
 
 
-// ===============================
+// ==========================
 // الحجز
-// ===============================
+// ==========================
 function book(){
 
   let name = document.getElementById("name").value;
   let phone = document.getElementById("phone").value;
+  let date = document.getElementById("dateInput").value;
+
+  if(!name || !phone || !date){
+    alert("املأ البيانات");
+    return;
+  }
+
+  // ======================
+  // لو مفيش مواعيد
+  // ======================
+  if(noSlotsMode){
+
+    db.collection("slots").add({
+      date: date,
+      time: "غير محدد",
+      booked: true,
+      status: "حجز",
+      paid: 0,
+      patient:{
+        name,
+        phone,
+        notes: "تواصل مع العميل لتحديد ميعاد"
+      },
+      timestamp: firebase.firestore.Timestamp.now()
+    }).then(()=>{
+
+      alert("تم تسجيل طلبك ✅ سنتواصل معك");
+
+    });
+
+    return;
+  }
+
+  // ======================
+  // حجز عادي
+  // ======================
   let slotId = document.getElementById("timeSelect").value;
 
-  if(!name || !phone || !slotId){
-    alert("املأ البيانات");
+  if(!slotId){
+    alert("اختار وقت");
     return;
   }
 
@@ -167,24 +213,21 @@ function book(){
 
     doc.ref.update({
       booked:true,
-      patient:{name,phone}
+      patient:{
+        name,
+        phone,
+        notes:""
+      }
     }).then(()=>{
 
       alert("تم الحجز ✅");
-
-      loadDays();
-      loadTimes();
+      checkDay();
 
     });
 
   });
 
 }
-
-
-// ===============================
-window.onload = loadDays;
-// ===============================
 
 </script>
 
