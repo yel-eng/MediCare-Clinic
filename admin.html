@@ -57,10 +57,11 @@ border-radius:8px;
 margin-top:5px;
 font-size:13px;
 display:none;
-} 
-  .pending-slot{
-  background:#ffe0b2 !important;
-  border-right:5px solid #ff9800 !important;
+}
+
+.pending-slot{
+background:#ffe0b2 !important;
+border-right:5px solid #ff9800 !important;
 }
 </style>
 </head>
@@ -230,7 +231,10 @@ ${d}
 <div class="day-money">💰 ${total} جنيه</div>
 
 ${days[d].map(x=>`
-<div class="slot-item ${x.booked?'booked':''} ${x.status=='ملغي'?'cancel':''}"
+<div class="slot-item 
+${x.booked?'booked':''} 
+${x.status=='ملغي'?'cancel':''}
+${x.patient.notes==='تواصل مع العميل لتحديد ميعاد'?'pending-slot':''}"
 onclick="selectSlot('${x.id}')">
 
 <b>${x.time}</b> - ${x.booked?x.patient.name:"متاح"} (${x.status})
@@ -262,73 +266,6 @@ el.classList.add("now-slot");
 },200);
 
 document.getElementById("globalTotal").innerText="💰 إجمالي العيادة: "+totalGlobal+" جنيه";
-}
-
-// باقي كودك زي ما هو 👇
-
-function setAvailability(){
-let date=slotDate.value;
-let s=new Date(`${date}T${startTime.value}`);
-let e=new Date(`${date}T${endTime.value}`);
-
-while(s<e){
-db.collection("slots").add({
-date,
-time:s.toTimeString().slice(0,5),
-booked:false,
-status:"حجز",
-paid:0,
-patient:{name:"",phone:"",notes:""}
-});
-s.setMinutes(s.getMinutes()+30);
-}
-}
-
-function selectSlot(id){
-activeId=id;
-
-db.collection("slots").doc(id).get().then(doc=>{
-let d=doc.data();
-pName.value=d.patient.name||"";
-pPhone.value=d.patient.phone||"";
-pNotes.value=d.patient.notes||"";
-pPaid.value=d.paid||"";
-pStatus.value=d.status||"حجز";
-});
-}
-
-function updateSlot(){
-if(!confirm("تأكيد الحفظ؟")) return;
-
-db.collection("slots").doc(activeId).update({
-booked:pName.value!="",
-status:pStatus.value,
-paid:Number(pPaid.value||0),
-patient:{
-name:pName.value,
-phone:pPhone.value,
-notes:pNotes.value
-}
-});
-}
-
-function deleteSlot(id){
-if(confirm("حذف الميعاد؟")){
-db.collection("slots").doc(id).delete();
-}
-}
-
-function deleteDay(date){
-if(confirm("حذف اليوم بالكامل؟")){
-db.collection("slots").where("date","==",date).get().then(snap=>{
-snap.forEach(doc=>doc.ref.delete());
-});
-}
-}
-
-function generateQR(){
-let url=location.href+"?id="+activeId;
-qrImg.src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data="+encodeURIComponent(url);
 }
 </script>
 
