@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عيادة د/ أحمد محمد</title>
+<title>عيادة د/ أحمد محمد | نظام طبي احترافي</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 
@@ -11,10 +11,11 @@
 
 :root{
   --main:#2563eb;
+  --dark:#0f172a;
   --bg:#f1f5f9;
-  --white:#fff;
-  --text:#0f172a;
+  --card:#ffffff;
   --sub:#64748b;
+  --accent:#10b981;
 }
 
 *{
@@ -26,10 +27,10 @@
 
 body{
   background:var(--bg);
-  color:var(--text);
+  color:var(--dark);
 }
 
-/* ================= HEADER ================= */
+/* HEADER */
 .header{
   background:#fff;
   padding:15px 8%;
@@ -48,15 +49,15 @@ body{
 .nav a{
   margin:0 10px;
   text-decoration:none;
-  color:var(--text);
+  color:var(--dark);
 }
 
-/* ================= HERO ================= */
+/* HERO */
 .hero{
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  padding:40px 8%;
+  align-items:center;
+  padding:50px 8%;
   gap:30px;
   flex-wrap:wrap;
 }
@@ -66,142 +67,139 @@ body{
 }
 
 .hero-text h1{
-  font-size:32px;
-  margin-bottom:10px;
+  font-size:34px;
 }
 
 .hero-text h2{
   color:var(--main);
-  font-size:18px;
-  margin-bottom:15px;
+  margin:10px 0;
 }
 
-.rating{
-  background:#fff7ed;
+.badge{
   display:inline-block;
+  background:#eef2ff;
   padding:6px 12px;
   border-radius:10px;
-  margin-bottom:15px;
-  font-size:14px;
+  margin:10px 0;
+  font-size:13px;
 }
 
 .desc{
   color:var(--sub);
-  line-height:1.7;
-  margin-bottom:20px;
+  line-height:1.8;
+  margin-bottom:15px;
 }
 
 .btn{
   background:var(--main);
   color:#fff;
-  padding:12px 20px;
+  padding:12px 18px;
   border:none;
   border-radius:10px;
   cursor:pointer;
-  font-size:15px;
 }
 
-.hero img{
-  width:260px;
-  border-radius:20px;
+/* DOCTOR TRUST LAYER */
+.trust{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:15px;
+  padding:0 8%;
+  margin-top:20px;
 }
 
-/* ================= STATS ================= */
-.stats{
-  display:flex;
-  justify-content:center;
-  gap:40px;
-  margin:30px 0;
-}
-
-.stat{
+.trust-card{
+  background:var(--card);
+  padding:15px;
+  border-radius:15px;
+  border:1px solid #eee;
   text-align:center;
 }
 
-.stat h3{
+.trust-card h3{
   color:var(--main);
 }
 
-/* ================= SERVICES ================= */
-.section{
-  padding:30px 8%;
+/* WHY CLINIC */
+.why{
+  padding:40px 8%;
 }
 
-.section h2{
-  margin-bottom:20px;
-}
-
-.services{
+.why-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:15px;
+}
+
+.why-box{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  border:1px solid #eee;
+}
+
+.why-box h3{
+  color:var(--main);
+  margin-bottom:10px;
+}
+
+/* MEDIA HUB */
+.section-title{
+  padding:0 8%;
+  margin-top:30px;
+  font-size:20px;
+}
+
+.media-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:15px;
+  padding:20px 8%;
 }
 
 .card{
   background:#fff;
-  padding:20px;
+  padding:15px;
   border-radius:15px;
-  text-align:center;
   border:1px solid #eee;
 }
 
-.card h3{
-  margin-top:10px;
-  font-size:15px;
-}
-
-/* ================= VIDEO ================= */
-.video{
-  background:#000;
-  height:200px;
-  border-radius:15px;
-}
-
-/* ================= ARTICLES ================= */
-.articles{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:15px;
-}
-
-.article{
-  background:#fff;
-  padding:15px;
-  border-radius:15px;
-}
-
-/* ================= CTA ================= */
-.cta{
+.upload-box{
+  border:2px dashed #cbd5e1;
+  padding:20px;
   text-align:center;
+  border-radius:15px;
+  color:var(--sub);
+}
+
+/* VIDEO */
+.video{
+  height:180px;
+  background:#000;
+  border-radius:15px;
+}
+
+/* CTA */
+.cta{
   background:var(--main);
   color:#fff;
-  padding:30px;
+  text-align:center;
+  padding:40px;
+  margin:40px 8%;
   border-radius:20px;
-  margin:30px 8%;
 }
 
 .cta button{
-  margin-top:15px;
   background:#fff;
   color:var(--main);
+  margin-top:10px;
 }
 
-/* ================= FOOTER ================= */
-.footer{
-  text-align:center;
-  padding:20px;
-  color:#888;
-}
-
-/* ================= RESPONSIVE ================= */
+/* RESPONSIVE */
 @media(max-width:768px){
   .hero{
     flex-direction:column;
     text-align:center;
-  }
-
-  .hero img{
-    width:200px;
   }
 }
 
@@ -216,7 +214,7 @@ body{
   <div class="nav">
     <a href="#">الرئيسية</a>
     <a href="booking.html">حجز</a>
-    <a href="#">خدمات</a>
+    <a href="#">لوحة التحكم</a>
   </div>
 </div>
 
@@ -227,82 +225,100 @@ body{
     <h1>د/ أحمد محمد</h1>
     <h2>استشاري باطنة وجهاز هضمي</h2>
 
-    <div class="rating">⭐ 4.9 تقييم المرضى</div>
+    <div class="badge">⭐ تقييم 4.9 من 5000+ مريض</div>
 
     <p class="desc">
-      نقدم رعاية طبية متكاملة باستخدام أحدث الأساليب،
-      مع نظام حجز ذكي يقلل الانتظار وينظم المواعيد بدقة.
+      نظام طبي متكامل يضمن تقليل وقت الانتظار، تنظيم المواعيد، وزيادة كفاءة استقبال المرضى مع تجربة راقية للطبيب والمريض.
     </p>
 
     <button class="btn" onclick="location.href='booking.html'">
-      احجز موعد الآن
+      احجز الآن
     </button>
   </div>
 
-  <img src="https://i.pravatar.cc/300" alt="doctor">
+  <img src="https://i.pravatar.cc/320" style="border-radius:20px;width:280px;">
 
 </section>
 
-<!-- STATS -->
-<div class="stats">
-  <div class="stat">
-    <h3>+10</h3>
-    <p>سنوات خبرة</p>
+<!-- TRUST LAYER -->
+<section class="trust">
+
+  <div class="trust-card">
+    <h3>+10 سنوات</h3>
+    <p>خبرة طبية</p>
   </div>
-  <div class="stat">
-    <h3>+5000</h3>
-    <p>مريض</p>
+
+  <div class="trust-card">
+    <h3>تنظيم كامل</h3>
+    <p>بدون زحام</p>
   </div>
-  <div class="stat">
-    <h3>98%</h3>
-    <p>رضا المرضى</p>
+
+  <div class="trust-card">
+    <h3>نظام ذكي</h3>
+    <p>إدارة مواعيد تلقائية</p>
   </div>
+
+  <div class="trust-card">
+    <h3>رضا 98%</h3>
+    <p>من المرضى</p>
+  </div>
+
+</section>
+
+<!-- WHY CLINIC -->
+<section class="why">
+
+<h2 class="section-title">لماذا هذه العيادة؟</h2>
+
+<div class="why-grid">
+
+  <div class="why-box">
+    <h3>تقليل الزحام</h3>
+    <p>نظام حجز ذكي يمنع التكدس داخل العيادة.</p>
+  </div>
+
+  <div class="why-box">
+    <h3>زيادة الحجز</h3>
+    <p>تجربة إلكترونية تسهل على المرضى الحجز بسرعة.</p>
+  </div>
+
+  <div class="why-box">
+    <h3>صورة احترافية للطبيب</h3>
+    <p>عرض خبرات، فيديوهات، ومقالات طبية بشكل راقي.</p>
+  </div>
+
 </div>
 
-<!-- SERVICES -->
-<section class="section">
-  <h2>الخدمات</h2>
+</section>
 
-  <div class="services">
-    <div class="card"><h3>كشف باطنة</h3></div>
-    <div class="card"><h3>متابعة أمراض مزمنة</h3></div>
-    <div class="card"><h3>تحاليل وتشخيص</h3></div>
-    <div class="card"><h3>استشارة أونلاين</h3></div>
+<!-- MEDIA HUB -->
+<h2 class="section-title">المركز الطبي (ميديا)</h2>
+
+<section class="media-grid">
+
+  <div class="card">
+    <h3>🎥 فيديو تعريفي</h3>
+    <div class="video"></div>
+    <div class="upload-box">ارفع فيديو الطبيب هنا</div>
   </div>
 
-</section>
+  <div class="card">
+    <h3>📄 مقالات طبية</h3>
+    <div class="upload-box">إضافة مقال جديد + صورة</div>
+  </div>
 
-<!-- VIDEO -->
-<section class="section">
-  <h2>فيديو تعريفي</h2>
-  <div class="video"></div>
-</section>
-
-<!-- ARTICLES -->
-<section class="section">
-  <h2>مقالات طبية</h2>
-
-  <div class="articles">
-    <div class="article">أعراض القولون العصبي</div>
-    <div class="article">متى تزور طبيب الباطنة؟</div>
-    <div class="article">نصائح لصحة الجهاز الهضمي</div>
+  <div class="card">
+    <h3>🖼️ صور الحالات</h3>
+    <div class="upload-box">رفع صور قبل/بعد أو حالات</div>
   </div>
 
 </section>
 
 <!-- CTA -->
 <div class="cta">
-  <h2>احجز بسهولة بدون انتظار</h2>
-  <p>نظام حجز ذكي ينظم المواعيد ويوفر وقتك</p>
-
-  <button onclick="location.href='booking.html'">
-    احجز الآن
-  </button>
-</div>
-
-<!-- FOOTER -->
-<div class="footer">
-  © 2026 MyDoctor Clinic
+  <h2>ابدأ نظام عيادتك الذكي الآن</h2>
+  <p>من تنظيم المواعيد إلى بناء هوية طبية احترافية</p>
+  <button onclick="location.href='booking.html'">احجز الآن</button>
 </div>
 
 </body>
