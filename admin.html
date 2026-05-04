@@ -204,7 +204,7 @@ ${days[d].map(x=>`
 <div class="slot-item 
 ${x.booked?'booked':''} 
 ${x.status=='ملغي'?'cancel':''}
-${x.patient.notes==='تواصل مع العميل لتحديد ميعاد'?'pending-slot':''}"
+${(x.patient.notes||'').includes('تواصل مع العميل لتحديد ميعاد') ? 'pending-slot' : ''}
 onclick="selectSlot('${x.id}')">
 
 <b>${x.time}</b> - ${x.booked?x.patient.name:"متاح"} (${x.status})
