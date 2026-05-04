@@ -2,32 +2,58 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>حجز موعد | عيادتي</title>
+<title>حجز موعد</title>
 
 <style>
-body{font-family:Arial;background:#f5f5f5;padding:20px}
-.box{max-width:500px;margin:auto;background:#fff;padding:25px;border-radius:12px}
-input,select{width:100%;padding:12px;margin:8px 0;border:1px solid #ccc;border-radius:8px}
-button{width:100%;padding:14px;background:#4caf50;color:#fff;border:none;border-radius:8px;font-size:16px}
+body{
+  font-family:Arial;
+  background:#f5f5f5;
+  padding:20px;
+}
+
+.box{
+  max-width:500px;
+  margin:auto;
+  background:white;
+  padding:25px;
+  border-radius:15px;
+}
+
+select,input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  background:#2e7d32;
+  color:white;
+  border:none;
+  border-radius:8px;
+}
 </style>
+
 </head>
 
 <body>
 
 <div class="box">
 
-<h2>🗓️ احجز موعدك</h2>
+<h2>📅 احجز موعدك</h2>
 
 <input id="name" placeholder="الاسم">
 <input id="phone" placeholder="رقم الهاتف">
 
+<!-- الأيام -->
 <select id="daySelect" onchange="loadTimes()">
-<option>جاري تحميل الأيام...</option>
+  <option value="">اختر اليوم</option>
 </select>
 
+<!-- الأوقات -->
 <select id="timeSelect">
-<option>اختر الوقت</option>
+  <option value="">اختر الوقت</option>
 </select>
 
 <button onclick="book()">تأكيد الحجز</button>
@@ -38,6 +64,8 @@ button{width:100%;padding:14px;background:#4caf50;color:#fff;border:none;border-
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
+
+// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -48,82 +76,63 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 
-/**********************
-تحميل الأيام
-**********************/
+// ===============================
+// تحميل الأيام (مظبوط)
+// ===============================
 function loadDays(){
 
-  let select = document.getElementById("daySelect");
-  select.innerHTML = "";
-
   db.collection("slots")
-    .where("booked","==",false)
+    .orderBy("date")
     .get()
     .then(snap=>{
 
       let days = new Set();
 
       snap.forEach(doc=>{
-        days.add(doc.data().date);
+        let d = doc.data();
+        if(!d.booked){
+          days.add(d.date);
+        }
       });
 
-      if(days.size === 0){
-        select.innerHTML = "<option>لا يوجد مواعيد</option>";
-        return;
-      }
+      let select = document.getElementById("daySelect");
+      select.innerHTML = `<option value="">اختر اليوم</option>`;
 
-      select.innerHTML = "<option value=''>اختر اليوم</option>";
-
-      days.forEach(d=>{
-        select.innerHTML += `<option value="${d}">${d}</option>`;
+      // تحويل Set لـ Array وترتيب
+      [...days].sort().forEach(day=>{
+        select.innerHTML += `<option value="${day}">${day}</option>`;
       });
 
     });
+
 }
 
 
-/**********************
-تحميل الأوقات
-**********************/
+// ===============================
+// تحميل الأوقات حسب اليوم
+// ===============================
 function loadTimes(){
 
   let day = document.getElementById("daySelect").value;
+
   let select = document.getElementById("timeSelect");
-
-  select.innerHTML = "";
-
-  if(!day) return;
+  select.innerHTML = `<option>جاري التحميل...</option>`;
 
   db.collection("slots")
     .where("date","==",day)
     .where("booked","==",false)
+    .orderBy("time")
     .get()
     .then(snap=>{
 
-      if(snap.empty){
-        select.innerHTML = "<option>لا يوجد أوقات متاحة</option>";
-        return;
-      }
-
-      let times = [];
+      select.innerHTML = `<option value="">اختر الوقت</option>`;
 
       snap.forEach(doc=>{
         let s = doc.data();
-        times.push({
-          id: doc.id,
-          time: s.time
-        });
-      });
 
-      // 🔥 ترتيب الوقت يدويًا (بدون timestamp)
-      times.sort((a,b)=> a.time.localeCompare(b.time));
-
-      select.innerHTML = "<option value=''>اختر الوقت</option>";
-
-      times.forEach(t=>{
         select.innerHTML += `
-          <option value="${t.id}">
-            ${t.time}
+          <option value="${doc.id}">
+            ${s.time}
           </option>
         `;
       });
@@ -132,9 +141,10 @@ function loadTimes(){
 
 }
 
-/**********************
-الحجز
-**********************/
+
+// ===============================
+// الحجز
+// ===============================
 function book(){
 
   let name = document.getElementById("name").value;
@@ -146,34 +156,24 @@ function book(){
     return;
   }
 
-  let ref = db.collection("slots").doc(slotId);
-
-  ref.get().then(doc=>{
+  db.collection("slots").doc(slotId).get().then(doc=>{
 
     let s = doc.data();
 
     if(s.booked){
       alert("الموعد اتحجز ❌");
-      loadDays();
-      loadTimes();
       return;
     }
 
-    ref.update({
+    doc.ref.update({
       booked:true,
-      status:"حجز",
-      patient:{
-        name:name,
-        phone:phone
-      }
+      patient:{name,phone}
     }).then(()=>{
 
-      alert("تم الحجز بنجاح ✅");
+      alert("تم الحجز ✅");
 
       loadDays();
-      document.getElementById("timeSelect").innerHTML = "";
-      document.getElementById("name").value = "";
-      document.getElementById("phone").value = "";
+      loadTimes();
 
     });
 
@@ -182,7 +182,10 @@ function book(){
 }
 
 
+// ===============================
 window.onload = loadDays;
+// ===============================
+
 </script>
 
 </body>
