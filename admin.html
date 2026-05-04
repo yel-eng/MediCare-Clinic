@@ -116,6 +116,19 @@ input, textarea, select {
     cursor: pointer;
     font-weight: bold;
 }
+    /* تابلت */
+@media (max-width: 992px) {
+    .days-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* موبايل */
+@media (max-width: 600px) {
+    .days-row {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 </head>
 
