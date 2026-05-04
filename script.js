@@ -1,25 +1,27 @@
-// إعدادات Firebase
+// --- إعدادات Firebase ---
 const firebaseConfig = { /* بياناتك هنا */ };
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 
-let selectedSlotId = null;
+let activeSlotId = null; // الموعد المحدد حالياً للتعديل أو الحجز
 
-// 1. توليد الجلسات بناءً على مدة الجلسة (مرونة كاملة)
+// --- 1. توليد الجلسات (حسب مدة الجلسة واليوم المختار) ---
 async function generateSlots() {
-    const date = document.getElementById("targetDate").value;
-    const start = document.getElementById("startTime").value;
-    const end = document.getElementById("endTime").value;
+    const d = document.getElementById("targetDate").value;
+    const s = document.getElementById("startTime").value;
+    const e = document.getElementById("endTime").value;
     const dur = parseInt(document.getElementById("duration").value);
 
-    if(!date) return alert("اختر التاريخ");
+    if(!d) return alert("من فضلك اختر التاريخ أولاً");
 
-    let curr = new Date(`${date}T${start}`);
-    let stop = new Date(`${date}T${end}`);
+    let curr = new Date(`${d}T${s}`);
+    let stop = new Date(`${d}T${e}`);
 
+    const batch = db.batch();
     while(curr < stop) {
-        await db.collection("slots").add({
-            date: date,
+        let ref = db.collection("slots").doc();
+        batch.set(ref, {
+            date: d,
             time: curr.toTimeString().substring(0,5),
             booked: false,
             status: 'متاح',
@@ -28,104 +30,123 @@ async function generateSlots() {
         });
         curr.setMinutes(curr.getMinutes() + dur);
     }
-    alert("تمت جدولة اليوم بنجاح");
+    await batch.commit();
+    alert("تم توليد الجدول بنجاح");
 }
 
-// 2. عرض البيانات والحصالة (حساب الحصالة بناءً على الحالة)
-function loadAdminDashboard() {
+// --- 2. سحب البيانات وتحديث الحصالة (المنطق المالي) ---
+function loadClinic() {
     db.collection("slots").orderBy("timestamp", "asc").onSnapshot(snap => {
-        const container = document.getElementById("daysGrid");
-        let daysMap = {};
-        let grandTotal = 0;
+        const grid = document.getElementById("daysGrid");
+        let daysGroups = {};
+        let grandSafe = 0;
 
         snap.forEach(doc => {
             let data = doc.data();
-            if(!daysMap[data.date]) daysMap[data.date] = { slots: [], dayIncome: 0 };
-            daysMap[data.date].slots.push({id: doc.id, ...data});
+            if(!daysGroups[data.date]) daysGroups[data.date] = { slots: [], dayCash: 0 };
+            daysGroups[data.date].slots.push({id: doc.id, ...data});
             
-            // حساب الحصالة: الكشف فقط هو ما يضاف
+            // الحصالة تحسب فقط من حالة "كشف"
             if(data.status === 'كشف') {
-                daysMap[data.date].dayIncome += Number(data.paid || 0);
-                grandTotal += Number(data.paid || 0);
+                daysGroups[data.date].dayCash += Number(data.paid || 0);
+                grandSafe += Number(data.paid || 0);
             }
         });
 
-        document.getElementById("grandTotal").innerText = grandTotal + " ج.م";
-        container.innerHTML = "";
+        document.getElementById("grandTotal").innerText = grandSafe + " ج.م";
+        grid.innerHTML = "";
 
-        for(let date in daysMap) {
-            let dayDiv = document.createElement("div");
-            dayDiv.className = "day-col";
+        for(let date in daysGroups) {
+            let col = document.createElement("div");
+            col.className = "day-col";
             let html = `
                 <div class="day-head">
                     <span class="del-day" onclick="deleteDay('${date}')">×</span>
-                    <b>${date}</b> <br>
-                    <small>حصالة اليوم: ${daysMap[date].dayIncome} ج.م</small>
+                    <b>${date}</b><br>
+                    <small>حصالة اليوم: ${daysGroups[date].dayCash} ج.م</small>
                 </div>`;
-            
-            daysMap[date].slots.forEach(slot => {
+
+            daysGroups[date].slots.forEach(slot => {
                 html += `
-                <div class="slot-item ${slot.booked ? 'booked' : ''}" onclick="prepareEdit('${slot.id}', '${slot.patient?.name || ''}', '${slot.patient?.phone || ''}', '${slot.paid}', '${slot.status}')">
-                    <b>${slot.time}</b> - ${slot.status}
+                <div class="slot-item ${slot.booked ? 'booked' : ''}" onclick="openForEdit('${slot.id}')">
+                    <b>${slot.time}</b> - <span class="status-label">${slot.status}</span>
                     ${slot.booked ? `
                         <div class="patient-card">
-                            👤 ${slot.patient.name} <br>
-                            📞 <a class="wa-link" href="https://wa.me/2${slot.patient.phone}" target="_blank">${slot.patient.phone} (واتساب)</a>
+                            👤 ${slot.patient.name}<br>
+                            📞 <a href="https://wa.me/2${slot.patient.phone}" target="_blank" style="color:#25d366">واتساب 📱</a>
                         </div>
                     ` : ''}
                 </div>`;
             });
-            dayDiv.innerHTML = html;
-            container.appendChild(dayDiv);
+            col.innerHTML = html;
+            grid.appendChild(col);
         }
     });
 }
 
-// 3. تحضير البيانات للتعديل عند الضغط على الموعد
-function prepareEdit(id, name, phone, paid, status) {
-    selectedSlotId = id;
-    document.getElementById("pName").value = name;
-    document.getElementById("pPhone").value = phone;
-    document.getElementById("pPaid").value = paid;
-    document.getElementById("pStatus").value = status;
-    alert("تم اختيار موعد " + id + " للتعديل أو الحجز");
+// --- 3. فتح البيانات للتعديل (الضغط على الموعد يسحب البيانات للخانات) ---
+async function openForEdit(id) {
+    activeSlotId = id;
+    const doc = await db.collection("slots").doc(id).get();
+    const data = doc.data();
+
+    // ملء الخانات الجانبية تلقائياً لتمكين التعديل
+    document.getElementById("pName").value = data.patient?.name || "";
+    document.getElementById("pPhone").value = data.patient?.phone || "";
+    document.getElementById("pPaid").value = data.paid || 0;
+    document.getElementById("pStatus").value = data.status || "حجز";
+    document.getElementById("pNotes").value = data.patient?.notes || "";
+    
+    // تمييز الموعد المختار بصرياً
+    document.querySelectorAll('.slot-item').forEach(el => el.style.border = "none");
+    event.currentTarget.style.border = "2px solid #00bcd4";
 }
 
-// 4. حفظ أو تعديل بيانات المريض
+// --- 4. التثبيت النهائي (العميل أو الإدمن) ---
 async function saveBooking() {
-    if(!selectedSlotId) return alert("اختر موعداً من الجدول أولاً");
-    
-    const pData = {
-        name: document.getElementById("pName").value,
-        phone: document.getElementById("pPhone").value,
-        notes: document.getElementById("pNotes").value
+    if(!activeSlotId) return alert("اختر ميعاداً من الجدول أولاً بالضغط عليه");
+
+    const name = document.getElementById("pName").value;
+    const phone = document.getElementById("pPhone").value;
+    const paid = document.getElementById("pPaid").value;
+    const status = document.getElementById("pStatus").value;
+    const notes = document.getElementById("pNotes").value;
+
+    if(!name || !phone) return alert("الاسم ورقم الهاتف مطلوبان");
+
+    await db.collection("slots").doc(activeSlotId).update({
+        booked: status !== "ملغي",
+        status: status,
+        paid: Number(paid),
+        patient: { name, phone, notes }
+    });
+    alert("تم حفظ وتحديث البيانات والحصالة ✅");
+}
+
+// --- 5. رفع المحتوى الطبي (مقال بصورة + فيديو بوصف) ---
+async function uploadContent() {
+    const art = {
+        title: document.getElementById("artTitle").value,
+        text: document.getElementById("artText").value,
+        image: "رابط_الصورة_هنا" // يمكن تطويرها لرفع ملف حقيقي
+    };
+    const vid = {
+        url: document.getElementById("vidUrl").value,
+        desc: document.getElementById("vidDesc").value
     };
 
-    await db.collection("slots").doc(selectedSlotId).update({
-        booked: pData.name !== "",
-        status: document.getElementById("pStatus").value,
-        paid: Number(document.getElementById("pPaid").value),
-        patient: pData
-    });
-    alert("تم التحديث");
+    await db.collection("content").doc("medical").set({ art, vid });
+    alert("تم نشر المقال والفيديو بنجاح");
 }
 
-// 5. حذف يوم كامل (مرونة المسح)
+// --- 6. مسح يوم بالكامل ---
 async function deleteDay(date) {
-    if(confirm("حذف يوم " + date + " بالكامل؟")) {
-        let snap = await db.collection("slots").where("date", "==", date).get();
-        snap.forEach(d => d.ref.delete());
+    if(confirm(`هل أنت متأكد من حذف يوم ${date} بالكامل؟`)) {
+        const snap = await db.collection("slots").where("date", "==", date).get();
+        const batch = db.batch();
+        snap.forEach(d => batch.delete(d.ref));
+        await batch.commit();
     }
 }
 
-// 6. رفع المحتوى (مقال بصورة وفيديو بوصف)
-async function uploadContent() {
-    const art = { title: document.getElementById("artTitle").value, text: document.getElementById("artText").value };
-    const vid = { url: document.getElementById("vidUrl").value, desc: document.getElementById("vidDesc").value };
-    
-    await db.collection("content").doc("article").set(art);
-    await db.collection("content").doc("video").set(vid);
-    alert("تم نشر المحتوى الطبي");
-}
-
-window.onload = loadAdminDashboard;
+window.onload = loadClinic;
