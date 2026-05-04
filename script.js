@@ -132,3 +132,96 @@ async function showPatientDetails(id) {
 
 // تشغيل النظام
 window.onload = loadDashboard;
+
+let selectedSlotId = null; // لتخزين الموعد الذي ستختارينه من الجدول
+
+// دالة لاختيار الموعد من الجدول (تلوينه عند الضغط عليه)
+function selectSlot(id) {
+    selectedSlotId = id;
+    alert("تم اختيار الموعد، الآن أكمل بيانات المريض بالأعلى واضغط تثبيت");
+}
+
+// دالة حفظ المريض والمبلغ (التي سألتِ عنها)
+async function saveManualBooking() {
+    const name = document.getElementById("pName").value;
+    const phone = document.getElementById("pPhone").value;
+    const deposit = document.getElementById("pDeposit").value;
+    const notes = document.getElementById("pNotes").value;
+
+    if (!selectedSlotId || !name) {
+        return alert("من فضلك اختر موعداً من الجدول أولاً وأدخل اسم المريض");
+    }
+
+    try {
+        await db.collection("slots").doc(selectedSlotId).update({
+            booked: true,
+            status: 'حجز مؤكد',
+            paid: Number(deposit), // الخانة التي طلبتِها للمبلغ
+            patient: {
+                name: name,
+                phone: phone,
+                notes: notes,
+                registeredAt: new Date().toLocaleString()
+            }
+        });
+        alert("تم تسجيل المريض وحفظ المبلغ في الحصالة!");
+        selectedSlotId = null; // إعادة تعيين
+        clearForm();
+    } catch (e) {
+        alert("خطأ في الحفظ: " + e.message);
+    }
+}
+
+// تعديل دالة العرض لإظهار البيانات والمبلغ داخل الجدول
+function loadAdminSlots() {
+    db.collection("slots").orderBy("timestamp", "asc").onSnapshot(snap => {
+        const container = document.getElementById("slotsContainer");
+        const totalDisplay = document.getElementById("dayTotal");
+        let dailyIncome = 0;
+        let daysMap = {};
+
+        snap.forEach(doc => {
+            let s = doc.data();
+            if (!daysMap[s.date]) daysMap[s.date] = [];
+            daysMap[s.date].push({id: doc.id, ...s});
+            
+            // إضافة المبلغ للحصالة إذا كان هناك دفع
+            if (s.paid) dailyIncome += Number(s.paid);
+        });
+
+        totalDisplay.innerText = dailyIncome;
+        container.innerHTML = "";
+
+        for (let date in daysMap) {
+            let dayDiv = document.createElement("div");
+            dayDiv.className = "day-column";
+            let html = `<div class="day-header"><b>${date}</b></div>`;
+            
+            daysMap[date].forEach(slot => {
+                html += `
+                    <div class="slot-item ${slot.booked ? 'booked-card' : ''}" onclick="selectSlot('${slot.id}')">
+                        <div style="flex:1">
+                            <b>${slot.time}</b> 
+                            ${slot.booked ? `
+                                <div class="patient-card" style="font-size:11px; margin-top:5px; color:#1a237e; border-top:1px dashed #ccc;">
+                                    👤 ${slot.patient.name} <br>
+                                    💰 دفع: ${slot.paid} ج.م <br>
+                                    📝 ${slot.patient.notes || ''}
+                                </div>
+                            ` : '<br><small style="color:green">متاح للحجز</small>'}
+                        </div>
+                        <button class="btn-danger" onclick="deleteSlot('${slot.id}')">×</button>
+                    </div>`;
+            });
+            dayDiv.innerHTML = html;
+            container.appendChild(dayDiv);
+        }
+    });
+}
+
+function clearForm() {
+    document.getElementById("pName").value = "";
+    document.getElementById("pPhone").value = "";
+    document.getElementById("pDeposit").value = "";
+    document.getElementById("pNotes").value = "";
+}
