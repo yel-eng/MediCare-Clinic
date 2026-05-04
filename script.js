@@ -9,125 +9,77 @@ const firebaseConfig = {
 
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
-
-// سعر الكشف
 const PRICE = 200;
 
-function getLocalDateString(dateObj) {
-    return dateObj.toISOString().split('T')[0];
-}
-
-// 1. رسم واجهة الأيام السبعة في الإعداد
+// --- وظائف المواعيد والحصالة ---
 function setupWeekUI() {
     const grid = document.getElementById("weekSetupGrid");
-    if (!grid) return;
     const startVal = document.getElementById("startDatePicker").value;
     let start = startVal ? new Date(startVal) : new Date();
-    
-    grid.innerHTML = ""; 
+    grid.innerHTML = "";
     for (let i = 0; i < 7; i++) {
-        let curr = new Date(start);
-        curr.setDate(start.getDate() + i);
-        let dStr = getLocalDateString(curr);
-        let dName = curr.toLocaleDateString('ar-EG', { weekday: 'long' });
-        
-        grid.innerHTML += `
-            <div class="day-setup-row" data-date="${dStr}">
-                <b style="color:var(--main)">${dName}</b><br>
-                <small style="color:#777">${dStr}</small><br>
-                <input type="time" class="start-t" value="17:00" style="width:80%">
-                <input type="time" class="end-t" value="21:00" style="width:80%">
-            </div>`;
+        let d = new Date(start); d.setDate(start.getDate() + i);
+        let dStr = d.toISOString().split('T')[0];
+        grid.innerHTML += `<div class="day-setup-row">
+            <b>${d.toLocaleDateString('ar-EG',{weekday:'long'})}</b><br>${dStr}
+            <input type="time" class="start-t" value="17:00"><input type="time" class="end-t" value="21:00">
+        </div>`;
     }
 }
 
-// 2. توليد المواعيد وحفظها
 async function generateSmartSlots() {
-    const dur = parseInt(document.getElementById("duration").value) || 30;
+    const dur = parseInt(document.getElementById("duration").value);
     const rows = document.querySelectorAll(".day-setup-row");
-    const batch = db.batch();
-
-    rows.forEach(row => {
-        const date = row.dataset.date;
-        const sTime = row.querySelector(".start-t").value;
-        const eTime = row.querySelector(".end-t").value;
-
-        if (sTime && eTime) {
-            let current = new Date(`${date}T${sTime}`);
-            let end = new Date(`${date}T${eTime}`);
-            while (current < end) {
-                let tStr = current.toTimeString().substring(0, 5);
-                let ref = db.collection("slots").doc();
-                batch.set(ref, {
-                    date, time: tStr, booked: false, paid: false,
-                    timestamp: firebase.firestore.Timestamp.fromDate(new Date(current))
-                });
-                current.setMinutes(current.getMinutes() + dur);
-            }
+    for (let row of rows) {
+        let date = row.innerText.split('\n')[1];
+        let sT = row.querySelector(".start-t").value;
+        let eT = row.querySelector(".end-t").value;
+        let curr = new Date(`${date}T${sT}`);
+        let end = new Date(`${date}T${eT}`);
+        while (curr < end) {
+            await db.collection("slots").add({ date, time: curr.toTimeString().substring(0,5), booked: false, paid: false, timestamp: curr });
+            curr.setMinutes(curr.getMinutes() + dur);
         }
-    });
-    await batch.commit();
-    alert("تم تحديث جدول العيادة بنجاح ✨");
+    }
+    alert("تم!");
 }
 
-// 3. عرض المواعيد وحساب الحصالة
 function loadAdminSlots() {
-    const container = document.getElementById("slotsContainer");
-    const totalBox = document.getElementById("dayTotal");
-    if (!container) return;
-
     db.collection("slots").orderBy("timestamp", "asc").onSnapshot(snap => {
-        container.innerHTML = "";
-        let daysMap = {};
-        let income = 0;
-
+        const container = document.getElementById("slotsContainer");
+        let daysMap = {}; let total = 0;
         snap.forEach(doc => {
-            let s = doc.data();
-            if (!daysMap[s.date]) daysMap[s.date] = [];
+            let s = doc.data(); 
+            if(!daysMap[s.date]) daysMap[s.date] = [];
             daysMap[s.date].push({id: doc.id, ...s});
-            if (s.booked && s.paid) income += PRICE;
+            if(s.booked && s.paid) total += PRICE;
         });
-
-        totalBox.innerText = income;
-
-        for (let date in daysMap) {
-            let col = document.createElement("div");
-            col.className = "day-column";
-            let dName = new Date(date).toLocaleDateString('ar-EG', { weekday: 'long' });
-            
-            let html = `<div class="day-header">${dName} <br> <small>${date}</small></div>`;
-            daysMap[date].forEach(slot => {
-                html += `
-                <div class="slot-item ${slot.booked ? 'booked-card' : ''}">
-                    <div>
-                        <b>${slot.time}</b><br>
-                        <small>${slot.booked ? (slot.patient?.name || 'محجوز') : 'متاح'}</small>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        ${slot.booked ? `
-                            <button class="btn-pay" onclick="togglePay('${slot.id}', ${slot.paid})" 
-                                    style="background:${slot.paid ? '#4caf50' : '#ff9800'}; color:white;">
-                                ${slot.paid ? 'مدفوع' : 'تحصيل'}
-                            </button>` : ''}
-                        <button class="btn-danger" onclick="deleteSlot('${slot.id}')">×</button>
-                    </div>
+        document.getElementById("dayTotal").innerText = total;
+        container.innerHTML = "";
+        for (let day in daysMap) {
+            let html = `<div class="day-column"><div class="day-header">${day}</div>`;
+            daysMap[day].forEach(slot => {
+                html += `<div class="slot-item ${slot.booked?'booked-card':''}">
+                    ${slot.time} ${slot.booked?'✅':''}
+                    <button onclick="db.collection('slots').doc('${slot.id}').update({paid:!${slot.paid}})">${slot.paid?'مدفوع':'تحصيل'}</button>
                 </div>`;
             });
-            col.innerHTML = html;
-            container.appendChild(col);
+            container.innerHTML += html + `</div>`;
         }
     });
 }
 
-async function togglePay(id, status) {
-    await db.collection("slots").doc(id).update({ paid: !status });
+// --- وظائف المقال والفيديو الجديدة ---
+async function updateVideo() {
+    const url = document.getElementById("videoUrl").value;
+    await db.collection("content").doc("video").set({ url });
+    alert("تم تحديث الفيديو");
 }
 
-async function deleteSlot(id) {
-    if(confirm("حذف هذا الموعد نهائياً؟")) await db.collection("slots").doc(id).delete();
+async function updateArticle() {
+    const text = document.getElementById("articleText").value;
+    await db.collection("content").doc("article").set({ text });
+    alert("تم تحديث المقال");
 }
 
-window.onload = () => {
-    setupWeekUI();
-    loadAdminSlots();
-};
+window.onload = () => { setupWeekUI(); loadAdminSlots(); };
