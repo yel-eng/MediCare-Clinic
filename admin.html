@@ -52,49 +52,15 @@ body {
     position: relative;
 }
 
-.day-safe {
-    background: #e8f5e9;
-    color: #2e7d32;
-    padding: 8px;
-    text-align: center;
-    font-weight: bold;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-}
-
 .slot-item {
     padding: 12px;
     border-bottom: 1px solid #eee;
     cursor: pointer;
 }
 
-.slot-item:hover {
-    background: #f0f7ff;
-}
-
 .slot-item.booked {
     border-right: 5px solid #2e7d32;
     background: #f9fdf9;
-}
-
-/* ⭐ الإضافة الجديدة فقط */
-.slot-item.followup {
-    background: #fff3cd !important;
-    border-right: 5px solid #ff9800;
-}
-
-.del-btn {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    cursor: pointer;
-    color: #ff5252;
-    background: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    line-height: 18px;
-    font-weight: bold;
 }
 
 input, textarea, select {
@@ -103,7 +69,6 @@ input, textarea, select {
     margin: 8px 0;
     border: 1px solid #ccc;
     border-radius: 8px;
-    box-sizing: border-box;
 }
 
 .btn {
@@ -123,7 +88,22 @@ input, textarea, select {
 
 <div class="admin-grid">
 
+    <!-- SIDE PANEL -->
     <div class="side-panel">
+
+        <!-- ⭐ إضافة إنشاء المواعيد (رجعت زي ما كانت) -->
+        <div class="card">
+            <h3>📅 إنشاء مواعيد</h3>
+
+            <input type="date" id="slotDate">
+            <input type="time" id="startTime">
+            <input type="time" id="endTime">
+            <input type="number" id="duration" placeholder="مدة الجلسة بالدقائق">
+
+            <button class="btn" onclick="generateSlots()">إنشاء المواعيد</button>
+        </div>
+
+        <!-- بيانات الحجز -->
         <div class="card">
             <h3>👤 بيانات الحجز</h3>
 
@@ -140,8 +120,10 @@ input, textarea, select {
 
             <button class="btn" onclick="updateSlot()">حفظ</button>
         </div>
+
     </div>
 
+    <!-- MAIN -->
     <div class="main-panel">
         <div id="daysGrid" class="days-row"></div>
     </div>
@@ -163,6 +145,51 @@ const db = firebase.firestore();
 
 let activeId = null;
 
+/* =========================
+   ⭐ إضافة المواعيد (NEW)
+========================= */
+function generateSlots(){
+
+    let date = document.getElementById("slotDate").value;
+    let start = document.getElementById("startTime").value;
+    let end = document.getElementById("endTime").value;
+    let duration = parseInt(document.getElementById("duration").value);
+
+    if(!date || !start || !end || !duration){
+        alert("املأ البيانات");
+        return;
+    }
+
+    let startDate = new Date(`${date}T${start}`);
+    let endDate = new Date(`${date}T${end}`);
+
+    while(startDate < endDate){
+
+        let time = startDate.toTimeString().slice(0,5);
+
+        db.collection("slots").add({
+            date,
+            time,
+            booked:false,
+            status:"حجز",
+            paid:0,
+            patient:{
+                name:"",
+                phone:"",
+                notes:""
+            },
+            timestamp: firebase.firestore.Timestamp.fromDate(new Date(startDate))
+        });
+
+        startDate.setMinutes(startDate.getMinutes() + duration);
+    }
+
+    loadSlots();
+}
+
+/* =========================
+   LOAD (زي ما هو)
+========================= */
 function loadSlots() {
     db.collection("slots").orderBy("timestamp", "asc").get().then(snap => {
 
@@ -187,14 +214,8 @@ function loadSlots() {
 
             days[d].forEach(item => {
 
-                // ⭐ شرط التلوين الجديد فقط
-                let extraClass = "";
-                if (item.patient?.notes?.includes("تواصل")) {
-                    extraClass = "followup";
-                }
-
                 html += `
-                <div class="slot-item ${item.booked ? 'booked' : ''} ${extraClass}"
+                <div class="slot-item ${item.booked ? 'booked' : ''}"
                     onclick="select('${item.id}', '${item.patient?.name || ''}', '${item.patient?.phone || ''}', '${item.paid || 0}', '${item.status || ''}')">
 
                     <b>${item.time}</b><br>
@@ -208,6 +229,9 @@ function loadSlots() {
     });
 }
 
+/* =========================
+   SELECT
+========================= */
 function select(id, name, phone, paid, status) {
     activeId = id;
     document.getElementById("pName").value = name;
@@ -216,6 +240,9 @@ function select(id, name, phone, paid, status) {
     document.getElementById("pStatus").value = status;
 }
 
+/* =========================
+   UPDATE
+========================= */
 function updateSlot() {
     if (!activeId) return;
 
