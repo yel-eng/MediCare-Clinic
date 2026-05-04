@@ -20,6 +20,15 @@ body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; pa
 
 .day-money { background:#fff3e0; padding:6px; text-align:center; font-weight:bold; }
 
+.total-box{
+background:#c8e6c9;
+padding:10px;
+margin-bottom:15px;
+text-align:center;
+font-weight:bold;
+border-radius:10px;
+}
+
 .slot-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
 
 .slot-item:hover { background: #f0f7ff; }
@@ -38,6 +47,8 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
 </head>
 
 <body>
+
+<div class="total-box" id="globalTotal">💰 إجمالي العيادة: 0</div>
 
 <div class="admin-grid">
 
@@ -63,8 +74,8 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
 <button class="btn" style="background:#00897b" onclick="generateQR()">QR</button>
 <img id="qrImg" width="120">
 
-<input id="search" placeholder="بحث..." onkeyup="loadSlots()">
-<select id="filter" onchange="loadSlots()">
+<input id="search" placeholder="بحث..." onkeyup="safeLoad()">
+<select id="filter" onchange="safeLoad()">
 <option value="all">الكل</option>
 <option value="booked">محجوز</option>
 <option value="free">متاح</option>
@@ -106,43 +117,49 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let activeId=null;
+let cache=[]; // ✅ caching
 
-function setAvailability(){
-let date=slotDate.value;
-let s=new Date(`${date}T${startTime.value}`);
-let e=new Date(`${date}T${endTime.value}`);
-
-while(s<e){
-db.collection("slots").add({
-date,
-time:s.toTimeString().slice(0,5),
-booked:false,
-status:"حجز",
-paid:0,
-patient:{name:"",phone:"",notes:""}
-});
-s.setMinutes(s.getMinutes()+30);
-}
-loadSlots();
-}
-
-function loadSlots(){
-db.collection("slots").get().then(snap=>{
-
-let days={};
-let searchVal = search.value.toLowerCase();
-let filter = document.getElementById("filter").value;
-
+// 🔄 REALTIME بدل get
+db.collection("slots").onSnapshot(snap=>{
+cache=[];
 snap.forEach(doc=>{
 let d=doc.data();
 
-if(searchVal && !d.patient.name.toLowerCase().includes(searchVal) && !d.patient.phone.includes(searchVal)) return;
+// 🛡 حماية null
+d.patient = d.patient || {name:"",phone:"",notes:""};
+
+cache.push({id:doc.id,...d});
+});
+
+renderSlots();
+});
+
+// 🛡 wrapper للبحث
+function safeLoad(){
+renderSlots();
+}
+
+// 🎯 render بدل loadSlots
+function renderSlots(){
+
+let days={};
+let totalGlobal=0;
+
+let searchVal = (search.value||"").toLowerCase();
+let filter = document.getElementById("filter").value;
+
+cache.forEach(d=>{
+
+let name = (d.patient.name||"").toLowerCase();
+let phone = (d.patient.phone||"");
+
+if(searchVal && !name.includes(searchVal) && !phone.includes(searchVal)) return;
 
 if(filter=="booked" && !d.booked) return;
 if(filter=="free" && d.booked) return;
 
 if(!days[d.date]) days[d.date]=[];
-days[d.date].push({id:doc.id,...d});
+days[d.date].push(d);
 });
 
 daysGrid.innerHTML="";
@@ -150,10 +167,14 @@ daysGrid.innerHTML="";
 for(let d in days){
 
 let total=0;
+
 days[d].sort((a,b)=>a.time.localeCompare(b.time));
 
 days[d].forEach(x=>{
-if(x.status=="كشف") total+=Number(x.paid||0);
+if(x.status=="كشف"){
+total+=Number(x.paid||0);
+totalGlobal+=Number(x.paid||0);
+}
 });
 
 let col=document.createElement("div");
@@ -177,7 +198,7 @@ ${x.patient.phone?`
 <br><a class="whatsapp" target="_blank"
 href="https://wa.me/2${x.patient.phone}">واتساب</a>`:''}
 
-<span onclick="deleteSlot('${x.id}')" style="color:red;float:left">🗑</span>
+<span onclick="event.stopPropagation(); deleteSlot('${x.id}')" style="color:red;float:left">🗑</span>
 
 </div>
 `).join("")}
@@ -186,7 +207,27 @@ href="https://wa.me/2${x.patient.phone}">واتساب</a>`:''}
 daysGrid.appendChild(col);
 }
 
+document.getElementById("globalTotal").innerText="💰 إجمالي العيادة: "+totalGlobal+" جنيه";
+}
+
+// باقي كودك كما هو بدون حذف 👇
+
+function setAvailability(){
+let date=slotDate.value;
+let s=new Date(`${date}T${startTime.value}`);
+let e=new Date(`${date}T${endTime.value}`);
+
+while(s<e){
+db.collection("slots").add({
+date,
+time:s.toTimeString().slice(0,5),
+booked:false,
+status:"حجز",
+paid:0,
+patient:{name:"",phone:"",notes:""}
 });
+s.setMinutes(s.getMinutes()+30);
+}
 }
 
 function selectSlot(id){
@@ -203,7 +244,6 @@ pStatus.value=d.status||"حجز";
 }
 
 function updateSlot(){
-
 if(!confirm("تأكيد الحفظ؟")) return;
 
 db.collection("slots").doc(activeId).update({
@@ -215,12 +255,12 @@ name:pName.value,
 phone:pPhone.value,
 notes:pNotes.value
 }
-}).then(loadSlots);
+});
 }
 
 function deleteSlot(id){
 if(confirm("حذف الميعاد؟")){
-db.collection("slots").doc(id).delete().then(loadSlots);
+db.collection("slots").doc(id).delete();
 }
 }
 
@@ -228,7 +268,6 @@ function deleteDay(date){
 if(confirm("حذف اليوم بالكامل؟")){
 db.collection("slots").where("date","==",date).get().then(snap=>{
 snap.forEach(doc=>doc.ref.delete());
-loadSlots();
 });
 }
 }
@@ -237,8 +276,6 @@ function generateQR(){
 let url=location.href+"?id="+activeId;
 qrImg.src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data="+encodeURIComponent(url);
 }
-
-window.onload=loadSlots;
 </script>
 
 </body>
