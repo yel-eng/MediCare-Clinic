@@ -1,10 +1,13 @@
 // --- إعدادات Firebase ---
-const firebaseConfig = { /* بياناتك هنا */ };
-if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-const db = firebase.firestore();
-
-let activeSlotId = null; // الموعد المحدد حالياً للتعديل أو الحجز
-
+تكوين Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+    authDomain: "mydoctor-clinic.firebaseapp.com",
+    projectId: "mydoctor-clinic",
+    storageBucket: "mydoctor-clinic.appspot.com",
+    messagingSenderId: "996532645974",
+    appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7"
+};
 // --- 1. توليد الجلسات (حسب مدة الجلسة واليوم المختار) ---
 async function generateSlots() {
     const d = document.getElementById("targetDate").value;
