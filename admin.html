@@ -43,6 +43,21 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
 .btn { background: var(--main); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; }
 
 .whatsapp { background:#25d366; color:white; padding:6px 10px; border-radius:6px; display:inline-block; margin-top:5px; text-decoration:none;}
+
+/* ⭐ إضافات بدون تعديل */
+.now-slot{
+background:#fff9c4 !important;
+border-right:5px solid #fbc02d !important;
+}
+
+.patient-history{
+background:#e3f2fd;
+padding:8px;
+border-radius:8px;
+margin-top:5px;
+font-size:13px;
+display:none;
+}
 </style>
 </head>
 
@@ -60,6 +75,8 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
 <p id="targetTime">اختر ميعاداً</p>
 
 <input id="pName" placeholder="الاسم">
+<div id="historyBox" class="patient-history"></div>
+
 <input id="pPhone" placeholder="الهاتف">
 <textarea id="pNotes" placeholder="ملاحظات"></textarea>
 <input id="pPaid" type="number" placeholder="المبلغ">
@@ -117,29 +134,50 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let activeId=null;
-let cache=[]; // ✅ caching
+let cache=[];
 
-// 🔄 REALTIME بدل get
+// 🔄 realtime
 db.collection("slots").onSnapshot(snap=>{
 cache=[];
 snap.forEach(doc=>{
 let d=doc.data();
-
-// 🛡 حماية null
 d.patient = d.patient || {name:"",phone:"",notes:""};
-
 cache.push({id:doc.id,...d});
 });
-
 renderSlots();
 });
 
-// 🛡 wrapper للبحث
-function safeLoad(){
-renderSlots();
+// 🔍 تاريخ المريض (إضافة فقط)
+pName.addEventListener("input", ()=>{
+let name=(pName.value||"").toLowerCase();
+
+if(!name){
+historyBox.style.display="none";
+return;
 }
 
-// 🎯 render بدل loadSlots
+let visits=cache.filter(x=>(x.patient.name||"").toLowerCase()===name);
+
+if(visits.length==0){
+historyBox.style.display="none";
+return;
+}
+
+visits.sort((a,b)=> new Date(b.date)-new Date(a.date));
+
+let last=visits[0];
+
+historyBox.style.display="block";
+historyBox.innerHTML=
+`📊 زيارات: ${visits.length}<br>
+📅 آخر زيارة: ${last.date} - ${last.time}<br>
+📝 ${last.patient.notes||"لا يوجد"}`;
+});
+
+// 🛡 wrapper
+function safeLoad(){ renderSlots(); }
+
+// 🎯 render
 function renderSlots(){
 
 let days={};
@@ -154,7 +192,6 @@ let name = (d.patient.name||"").toLowerCase();
 let phone = (d.patient.phone||"");
 
 if(searchVal && !name.includes(searchVal) && !phone.includes(searchVal)) return;
-
 if(filter=="booked" && !d.booked) return;
 if(filter=="free" && d.booked) return;
 
@@ -207,10 +244,23 @@ href="https://wa.me/2${x.patient.phone}">واتساب</a>`:''}
 daysGrid.appendChild(col);
 }
 
+// ⏰ highlight الميعاد الحالي
+setTimeout(()=>{
+let now=new Date();
+let nowTime=now.toTimeString().slice(0,5);
+let today=now.toISOString().slice(0,10);
+
+document.querySelectorAll(".slot-item").forEach(el=>{
+if(el.innerText.includes(today) && el.innerText.includes(nowTime)){
+el.classList.add("now-slot");
+}
+});
+},200);
+
 document.getElementById("globalTotal").innerText="💰 إجمالي العيادة: "+totalGlobal+" جنيه";
 }
 
-// باقي كودك كما هو بدون حذف 👇
+// باقي كودك زي ما هو 👇
 
 function setAvailability(){
 let date=slotDate.value;
