@@ -6,82 +6,34 @@
 
 <style>
 :root { --main: #1a237e; --bg: #f4f7f6; }
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; overflow-x:hidden;}
 
 .admin-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
 
 .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
-.days-row { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 20px; }
+.days-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
 
-.day-col { min-width: 280px; background: white; border: 1px solid #ddd; border-radius: 12px; flex-shrink: 0; }
+.day-col { background: white; border: 1px solid #ddd; border-radius: 12px; }
 
 .day-head { background: var(--main); color: white; padding: 12px; text-align: center; border-radius: 12px 12px 0 0; position: relative; }
 
-.day-safe { background: #e8f5e9; color: #2e7d32; padding: 8px; text-align: center; font-weight: bold; border-bottom: 1px solid #eee; font-size: 14px; }
+.day-money { background:#fff3e0; padding:6px; text-align:center; font-weight:bold; }
 
 .slot-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
 
 .slot-item:hover { background: #f0f7ff; }
 
-.slot-item.booked { border-right: 5px solid #2e7d32; background: #f9fdf9; }
+.booked { border-right: 5px solid #2e7d32; }
+.cancel { border-right: 5px solid red; }
 
-.del-btn { position: absolute; right: 10px; top: 10px; cursor: pointer; color: #ff5252; background: white; border-radius: 50%; width: 20px; height: 20px; line-height: 18px; font-weight: bold; }
+.del-btn { position:absolute; left:10px; top:10px; cursor:pointer; color:red; }
 
-input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; }
 
-.btn { background: var(--main); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.btn { background: var(--main); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; }
 
-.whatsapp {
-  background:#25d366;
-  color:white;
-  padding:6px 10px;
-  border-radius:6px;
-  display:inline-block;
-  margin-top:5px;
-  text-decoration:none;
-}
-  /* يمنع أي عنصر يطلع بره الصفحة */
-* {
-    box-sizing: border-box;
-}
-
-/* يمنع سكرول أفقي عام */
-body {
-    overflow-x: hidden;
-}
-
-/* يخلي الجريد يلتزم بالعرض */
-.admin-grid {
-    width: 100%;
-    max-width: 100%;
-}
-
-/* يخلي الجزء اليمين ما يكسرش الصفحة */
-.main-panel {
-    width: 100%;
-    overflow: hidden;
-}
-
-/* ⭐ أهم تعديل */
-.days-row {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 15px;
-    width: 100%;
-}
-
-/* يمنع الكارد نفسه يكبر */
-.day-col {
-    min-width: 0 !important;
-    width: 100%;
-}
-
-/* يخلي أي نص طويل ما يكسرش التصميم */
-.slot-item {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
+.whatsapp { background:#25d366; color:white; padding:6px 10px; border-radius:6px; display:inline-block; margin-top:5px; text-decoration:none;}
 </style>
 </head>
 
@@ -89,7 +41,6 @@ body {
 
 <div class="admin-grid">
 
-<!-- SIDE PANEL -->
 <div class="side-panel">
 
 <div class="card">
@@ -99,10 +50,7 @@ body {
 
 <input id="pName" placeholder="الاسم">
 <input id="pPhone" placeholder="الهاتف">
-
-<!-- NEW -->
 <textarea id="pNotes" placeholder="ملاحظات"></textarea>
-
 <input id="pPaid" type="number" placeholder="المبلغ">
 
 <select id="pStatus">
@@ -111,38 +59,21 @@ body {
 <option value="ملغي">ملغي</option>
 </select>
 
-<!-- NEW -->
-<input type="file" id="pImage">
-
 <button class="btn" onclick="updateSlot()">حفظ</button>
-
-<!-- NEW QR -->
 <button class="btn" style="background:#00897b" onclick="generateQR()">QR</button>
 <img id="qrImg" width="120">
 
-</div>
+<input id="search" placeholder="بحث..." onkeyup="loadSlots()">
+<select id="filter" onchange="loadSlots()">
+<option value="all">الكل</option>
+<option value="booked">محجوز</option>
+<option value="free">متاح</option>
+</select>
 
-
-<!-- CONTENT -->
-<div class="card">
-<h3>📰 مقال</h3>
-<input id="artTitle" placeholder="العنوان">
-<textarea id="artText" placeholder="المقال"></textarea>
-<input type="file" id="artImage">
-<button class="btn" onclick="saveArticle()">حفظ المقال</button>
-</div>
-
-<div class="card">
-<h3>🎥 فيديو</h3>
-<input id="vidUrl" placeholder="رابط الفيديو">
-<textarea id="vidDesc" placeholder="الوصف"></textarea>
-<button class="btn" onclick="saveVideo()">حفظ الفيديو</button>
 </div>
 
 </div>
 
-
-<!-- MAIN PANEL -->
 <div class="main-panel">
 
 <div class="card">
@@ -166,7 +97,7 @@ body {
 
 <script>
 const firebaseConfig = {
-apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+apiKey: "AIza...",
 authDomain: "mydoctor-clinic.firebaseapp.com",
 projectId: "mydoctor-clinic"
 };
@@ -176,126 +107,136 @@ const db = firebase.firestore();
 
 let activeId=null;
 
-
-// توليد
 function setAvailability(){
 let date=slotDate.value;
-let start=startTime.value;
-let end=endTime.value;
-
-let s=new Date(`${date}T${start}`);
-let e=new Date(`${date}T${end}`);
+let s=new Date(`${date}T${startTime.value}`);
+let e=new Date(`${date}T${endTime.value}`);
 
 while(s<e){
 db.collection("slots").add({
 date,
 time:s.toTimeString().slice(0,5),
 booked:false,
+status:"حجز",
+paid:0,
 patient:{name:"",phone:"",notes:""}
 });
 s.setMinutes(s.getMinutes()+30);
 }
-
 loadSlots();
 }
 
-
-// عرض
 function loadSlots(){
 db.collection("slots").get().then(snap=>{
 
-let grid=daysGrid;
-grid.innerHTML="";
 let days={};
+let searchVal = search.value.toLowerCase();
+let filter = document.getElementById("filter").value;
 
 snap.forEach(doc=>{
 let d=doc.data();
+
+if(searchVal && !d.patient.name.toLowerCase().includes(searchVal) && !d.patient.phone.includes(searchVal)) return;
+
+if(filter=="booked" && !d.booked) return;
+if(filter=="free" && d.booked) return;
+
 if(!days[d.date]) days[d.date]=[];
 days[d.date].push({id:doc.id,...d});
 });
 
+daysGrid.innerHTML="";
+
 for(let d in days){
+
+let total=0;
+days[d].sort((a,b)=>a.time.localeCompare(b.time));
+
+days[d].forEach(x=>{
+if(x.status=="كشف") total+=Number(x.paid||0);
+});
 
 let col=document.createElement("div");
 col.className="day-col";
 
 col.innerHTML=`
-<div class="day-head">${d}</div>
+<div class="day-head">
+${d}
+<span class="del-btn" onclick="deleteDay('${d}')">×</span>
+</div>
+
+<div class="day-money">💰 ${total} جنيه</div>
+
 ${days[d].map(x=>`
-<div class="slot-item ${x.booked?'booked':''}"
-onclick="selectSlot('${x.id}','${x.patient?.name}','${x.patient?.phone}','${x.patient?.notes}')">
+<div class="slot-item ${x.booked?'booked':''} ${x.status=='ملغي'?'cancel':''}"
+onclick="selectSlot('${x.id}')">
 
-<b>${x.time}</b> - ${x.booked?x.patient.name:"متاح"}
+<b>${x.time}</b> - ${x.booked?x.patient.name:"متاح"} (${x.status})
 
-${x.patient?.phone?`
-<br>
-<a class="whatsapp" target="_blank"
-href="https://wa.me/2${x.patient.phone}">
-واتساب 📱
-</a>
-`:''}
+${x.patient.phone?`
+<br><a class="whatsapp" target="_blank"
+href="https://wa.me/2${x.patient.phone}">واتساب</a>`:''}
+
+<span onclick="deleteSlot('${x.id}')" style="color:red;float:left">🗑</span>
 
 </div>
 `).join("")}
 `;
 
-grid.appendChild(col);
+daysGrid.appendChild(col);
 }
 
 });
 }
 
-
-// اختيار
-function selectSlot(id,name,phone,notes){
+function selectSlot(id){
 activeId=id;
-pName.value=name||"";
-pPhone.value=phone||"";
-pNotes.value=notes||"";
+
+db.collection("slots").doc(id).get().then(doc=>{
+let d=doc.data();
+pName.value=d.patient.name||"";
+pPhone.value=d.patient.phone||"";
+pNotes.value=d.patient.notes||"";
+pPaid.value=d.paid||"";
+pStatus.value=d.status||"حجز";
+});
 }
 
-
-// تحديث
 function updateSlot(){
+
+if(!confirm("تأكيد الحفظ؟")) return;
 
 db.collection("slots").doc(activeId).update({
 booked:pName.value!="",
+status:pStatus.value,
+paid:Number(pPaid.value||0),
 patient:{
 name:pName.value,
 phone:pPhone.value,
 notes:pNotes.value
 }
 }).then(loadSlots);
-
 }
 
+function deleteSlot(id){
+if(confirm("حذف الميعاد؟")){
+db.collection("slots").doc(id).delete().then(loadSlots);
+}
+}
 
-// QR
+function deleteDay(date){
+if(confirm("حذف اليوم بالكامل؟")){
+db.collection("slots").where("date","==",date).get().then(snap=>{
+snap.forEach(doc=>doc.ref.delete());
+loadSlots();
+});
+}
+}
+
 function generateQR(){
-let url="https://example.com/patient?id="+activeId;
+let url=location.href+"?id="+activeId;
 qrImg.src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data="+encodeURIComponent(url);
 }
-
-
-// مقال
-function saveArticle(){
-db.collection("content").doc("article").set({
-title:artTitle.value,
-text:artText.value
-});
-alert("تم حفظ المقال");
-}
-
-
-// فيديو
-function saveVideo(){
-db.collection("content").doc("video").set({
-url:vidUrl.value,
-desc:vidDesc.value
-});
-alert("تم حفظ الفيديو");
-}
-
 
 window.onload=loadSlots;
 </script>
