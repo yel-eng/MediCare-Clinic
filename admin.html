@@ -2,112 +2,212 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة تحكم العيادة الاحترافية</title>
+    <title>نظام إدارة العيادة المتكامل</title>
     <style>
-        :root { --primary: #1a237e; --secondary: #00bcd4; --bg: #f8f9fa; --success: #2e7d32; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .grid-container { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        :root { --primary: #1a237e; --accent: #00bcd4; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .dashboard { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
         /* الحصالة */
-        .safe-box { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 15px; border-radius: 12px; text-align: center; }
-        .safe-box h2 { margin: 5px 0; font-size: 28px; }
-
-        /* الفورم */
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input, textarea, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .btn { cursor: pointer; border: none; padding: 12px; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .btn-main { background: var(--primary); color: white; width: 100%; }
-        .btn-success { background: var(--success); color: white; }
+        .wallet-card { background: var(--primary); color: white; text-align: center; padding: 15px; border-radius: 12px; }
+        .wallet-amount { font-size: 28px; font-weight: bold; color: var(--accent); }
 
         /* الجدول */
-        .days-wrapper { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; }
-        .day-col { min-width: 300px; background: white; border: 1px solid #eee; border-radius: 12px; }
-        .day-head { background: var(--primary); color: white; padding: 10px; position: relative; border-radius: 12px 12px 0 0; }
-        .del-day { position: absolute; left: 10px; top: 10px; color: #ff5252; cursor: pointer; background: white; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; }
+        .days-container { display: flex; overflow-x: auto; gap: 15px; padding: 10px 0; }
+        .day-column { min-width: 280px; background: #fff; border: 1px solid #ddd; border-radius: 10px; }
+        .day-header { background: #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px 10px 0 0; }
         
-        .slot-item { padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-        .slot-item:hover { background: #f1f8e9; }
-        .booked { border-right: 5px solid var(--success); background: #f9fdf9; }
-        .patient-card { font-size: 12px; background: #e8eaf6; padding: 8px; border-radius: 5px; margin-top: 5px; }
-        .wa-link { color: #25d366; text-decoration: none; font-weight: bold; }
+        .slot { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+        .slot:hover { background: #e3f2fd; }
+        .slot.booked { border-right: 5px solid #4caf50; background: #f1f8e9; }
+        .slot.active { border: 2px solid var(--accent); }
+
+        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: #4caf50; }
+        .delete-btn { color: red; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="grid-container">
-    <!-- الجانب الأيمن: الإدخال -->
-    <div class="sidebar">
-        <div class="safe-box">
-            <span>إجمالي الحصالة (المحقق اليوم) 💰</span>
-            <h2 id="grandTotal">0 ج.م</h2>
+<div class="dashboard">
+    <!-- الجانب الأيمن: التحكم -->
+    <div class="controls">
+        <div class="wallet-card">
+            <div>إجمالي الحصالة اليومية 💰</div>
+            <div class="wallet-amount" id="totalSafe">0 ج.م</div>
         </div>
 
         <div class="card">
-            <h3>📝 إدارة المحتوى</h3>
-            <label>المقال وصورته:</label>
+            <h3>🎬 المحتوى الطبي</h3>
+            <label>المقال:</label>
             <input type="text" id="artTitle" placeholder="عنوان المقال">
-            <textarea id="artText" placeholder="نص المقال..."></textarea>
+            <textarea id="artDesc" placeholder="وصف المقال..."></textarea>
             <input type="file" id="artImg" accept="image/*">
             <hr>
-            <label>الفيديو والوصف:</label>
-            <input type="text" id="vidUrl" placeholder="رابط يوتيوب">
-            <input type="text" id="vidDesc" placeholder="وصف الفيديو">
-            <button class="btn btn-main" onclick="uploadContent()">نشر المحتوى</button>
+            <label>الفيديو:</label>
+            <input type="text" id="vidLink" placeholder="رابط فيديو (يوتيوب)">
+            <textarea id="vidDesc" placeholder="وصف الفيديو..."></textarea>
+            <button class="btn" onclick="saveMedicalContent()">نشر المحتوى</button>
         </div>
 
         <div class="card">
-            <h3>👤 تسجيل/تعديل مريض</h3>
-            <input type="text" id="pName" placeholder="الاسم (إلزامي)">
-            <input type="text" id="pPhone" placeholder="رقم التليفون (إلزامي)">
-            <input type="number" id="pPaid" placeholder="المبلغ المدفوع">
-            <textarea id="pNotes" placeholder="ملاحظات أو ملفات..."></textarea>
+            <h3>👤 بيانات العميل</h3>
+            <input type="text" id="pName" placeholder="الاسم (مطلوب)">
+            <input type="text" id="pPhone" placeholder="رقم التليفون (مطلوب)">
+            <input type="number" id="pPaid" placeholder="المبلغ">
+            <textarea id="pNotes" placeholder="ملاحظات طبية..."></textarea>
+            <input type="file" id="pFiles" multiple>
             <select id="pStatus">
-                <option value="حجز">حجز فقط</option>
+                <option value="حجز">حجز مؤكد</option>
                 <option value="كشف">تم الكشف (يضاف للحصالة)</option>
                 <option value="ملغي">إلغاء الحجز</option>
             </select>
-            <p style="font-size: 11px; color: red;">* اختر ميعاداً من الجدول أولاً</p>
-            <button class="btn btn-success" style="width: 100%" onclick="saveBooking()">تثبيت / تحديث الحجز</button>
+            <button class="btn btn-add" onclick="updatePatientData()">تحديث / حجز البيانات</button>
         </div>
     </div>
 
-    <!-- الجانب الأيسر: الجدولة والعرض -->
-    <div class="main-content">
+    <!-- الجانب الأيسر: الجدول -->
+    <div class="main-view">
         <div class="card">
-            <h3>📅 جدولة الأيام (حرية اختيار اليوم)</h3>
+            <h3>📅 جدولة المواعيد (حرية كاملة)</h3>
             <div style="display: flex; gap: 10px; align-items: flex-end;">
-                <div>
-                    <label>اختر اليوم:</label>
-                    <input type="date" id="targetDate">
-                </div>
-                <div>
-                    <label>من:</label>
-                    <input type="time" id="startTime" value="17:00">
-                </div>
-                <div>
-                    <label>إلى:</label>
-                    <input type="time" id="endTime" value="21:00">
-                </div>
-                <div>
-                    <label>مدة الجلسة (دقيقة):</label>
-                    <input type="number" id="duration" value="30" style="width: 80px;">
-                </div>
-                <button class="btn btn-main" onclick="generateSlots()">توليد الجلسات</button>
+                <input type="date" id="newDate">
+                <input type="time" id="newStart" value="17:00">
+                <input type="time" id="newEnd" value="22:00">
+                <input type="number" id="newDur" placeholder="مدة الجلسة" value="30" style="width: 100px;">
+                <button class="btn" style="width: 150px;" onclick="addWorkDay()">إضافة اليوم</button>
             </div>
         </div>
 
         <div class="card">
-            <h3>📊 جدول المواعيد والحصالة اليومية</h3>
-            <div id="daysGrid" class="days-wrapper">
-                <!-- المواعيد تظهر هنا -->
+            <h3>📊 جدول المواعيد والحصالة</h3>
+            <div id="daysGrid" class="days-container">
+                <!-- المواعيد تظهر هنا ديناميكياً -->
             </div>
         </div>
     </div>
 </div>
 
+<!-- Firebase & Script -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="script.js"></script>
+<script>
+    const firebaseConfig = { /* بياناتك هنا */ };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let selectedId = null;
+
+    // 1. إضافة يوم عمل جديد مع تقسيم الجلسات تلقائياً
+    async function addWorkDay() {
+        const date = document.getElementById("newDate").value;
+        const start = document.getElementById("newStart").value;
+        const end = document.getElementById("newEnd").value;
+        const dur = parseInt(document.getElementById("newDur").value);
+
+        if(!date) return alert("اختر التاريخ");
+
+        let curr = new Date(`${date}T${start}`);
+        let stop = new Date(`${date}T${end}`);
+
+        while(curr < stop) {
+            await db.collection("clinic_slots").add({
+                date: date,
+                time: curr.toTimeString().substring(0,5),
+                booked: false,
+                status: 'متاح',
+                paid: 0,
+                timestamp: firebase.firestore.Timestamp.fromDate(new Date(curr))
+            });
+            curr.setMinutes(curr.getMinutes() + dur);
+        }
+        alert("تمت جدولة اليوم بنجاح");
+    }
+
+    // 2. عرض البيانات وربط الحصالة وحالة الكشف
+    function syncData() {
+        db.collection("clinic_slots").orderBy("timestamp", "asc").onSnapshot(snap => {
+            const grid = document.getElementById("daysGrid");
+            let days = {};
+            let totalMoney = 0;
+
+            snap.forEach(doc => {
+                let data = doc.data();
+                if(!days[data.date]) days[data.date] = { items: [], cash: 0 };
+                days[data.date].items.push({id: doc.id, ...data});
+                
+                // الحصالة: تحسب فقط الحالات التي "تم الكشف" فيها
+                if(data.status === 'كشف') {
+                    days[data.date].cash += Number(data.paid || 0);
+                    totalMoney += Number(data.paid || 0);
+                }
+            });
+
+            document.getElementById("totalSafe").innerText = totalMoney + " ج.م";
+            grid.innerHTML = "";
+
+            for(let d in days) {
+                let col = document.createElement("div");
+                col.className = "day-column";
+                let html = `<div class="day-header"><b>${d}</b> <span class="delete-btn" onclick="deleteDay('${d}')">حذف</span></div>`;
+                html += `<div style="padding:5px; font-size:12px; color:green; text-align:center">حصالة اليوم: ${days[d].cash} ج.م</div>`;
+                
+                days[d].items.forEach(slot => {
+                    html += `
+                    <div class="slot ${slot.booked ? 'booked' : ''} ${selectedId === slot.id ? 'active' : ''}" onclick="selectSlot('${slot.id}', '${slot.patient?.name || ''}', '${slot.patient?.phone || ''}', '${slot.paid}', '${slot.status}', '${slot.patient?.notes || ''}')">
+                        <b>${slot.time}</b> - ${slot.status}
+                        ${slot.booked ? `<div style="font-size:11px">👤 ${slot.patient.name}</div>` : ''}
+                    </div>`;
+                });
+                col.innerHTML = html;
+                grid.appendChild(col);
+            }
+        });
+    }
+
+    // 3. اختيار موعد لتعديل بياناته (سحب البيانات للخانات)
+    function selectSlot(id, name, phone, paid, status, notes) {
+        selectedId = id;
+        document.getElementById("pName").value = name;
+        document.getElementById("pPhone").value = phone;
+        document.getElementById("pPaid").value = paid;
+        document.getElementById("pStatus").value = status;
+        document.getElementById("pNotes").value = notes;
+    }
+
+    // 4. تحديث البيانات (حفظ التعديلات أو تسجيل عميل جديد)
+    async function updatePatientData() {
+        if(!selectedId) return alert("اضغط على ميعاد من الجدول أولاً");
+        
+        const name = document.getElementById("pName").value;
+        const phone = document.getElementById("pPhone").value;
+        const status = document.getElementById("pStatus").value;
+
+        if(!name || !phone) return alert("الاسم والتليفون أساسي");
+
+        await db.collection("clinic_slots").doc(selectedId).update({
+            booked: status !== 'ملغي',
+            status: status,
+            paid: Number(document.getElementById("pPaid").value),
+            patient: {
+                name: name,
+                phone: phone,
+                notes: document.getElementById("pNotes").value
+            }
+        });
+        alert("تم تحديث البيانات");
+    }
+
+    async function deleteDay(date) {
+        if(confirm("مسح اليوم؟")) {
+            const snap = await db.collection("clinic_slots").where("date", "==", date).get();
+            snap.forEach(d => d.ref.delete());
+        }
+    }
+
+    window.onload = syncData;
+</script>
 </body>
 </html>
