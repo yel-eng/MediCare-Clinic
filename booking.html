@@ -159,12 +159,58 @@ function book(){
 
   let name = document.getElementById("name").value;
   let phone = document.getElementById("phone").value;
-  let date = document.getElementById("dateInput").value;
+  let slotId = document.getElementById("timeSelect").value;
 
-  if(!name || !phone || !date){
+  if(!name || !phone){
     alert("املأ البيانات");
     return;
   }
+
+  // لو مفيش اختيار وقت
+  if(!slotId){
+    alert("اختار وقت");
+    return;
+  }
+
+  db.collection("slots").doc(slotId).get().then(doc=>{
+
+    // 🔥 الحل هنا
+    if(!doc.exists){
+      alert("الموعد غير موجود ❌");
+      return;
+    }
+
+    let s = doc.data();
+
+    // حماية إضافية
+    if(!s){
+      alert("خطأ في البيانات ❌");
+      return;
+    }
+
+    if(s.booked){
+      alert("الموعد اتحجز ❌");
+      return;
+    }
+
+    doc.ref.update({
+      booked:true,
+      patient:{
+        name,
+        phone,
+        notes:""
+      }
+    }).then(()=>{
+      alert("تم الحجز ✅");
+      location.reload();
+    });
+
+  }).catch(err=>{
+    console.error(err);
+    alert("حصل خطأ ❌");
+  });
+
+}
 
   // ======================
   // لو مفيش مواعيد
