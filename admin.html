@@ -44,7 +44,6 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
 
 .whatsapp { background:#25d366; color:white; padding:6px 10px; border-radius:6px; display:inline-block; margin-top:5px; text-decoration:none;}
 
-/* ⭐ إضافات بدون تعديل */
 .now-slot{
 background:#fff9c4 !important;
 border-right:5px solid #fbc02d !important;
@@ -141,7 +140,7 @@ const db = firebase.firestore();
 let activeId=null;
 let cache=[];
 
-// 🔄 realtime
+// realtime
 db.collection("slots").onSnapshot(snap=>{
 cache=[];
 snap.forEach(doc=>{
@@ -152,37 +151,8 @@ cache.push({id:doc.id,...d});
 renderSlots();
 });
 
-// 🔍 تاريخ المريض (إضافة فقط)
-pName.addEventListener("input", ()=>{
-let name=(pName.value||"").toLowerCase();
-
-if(!name){
-historyBox.style.display="none";
-return;
-}
-
-let visits=cache.filter(x=>(x.patient.name||"").toLowerCase()===name);
-
-if(visits.length==0){
-historyBox.style.display="none";
-return;
-}
-
-visits.sort((a,b)=> new Date(b.date)-new Date(a.date));
-
-let last=visits[0];
-
-historyBox.style.display="block";
-historyBox.innerHTML=
-`📊 زيارات: ${visits.length}<br>
-📅 آخر زيارة: ${last.date} - ${last.time}<br>
-📝 ${last.patient.notes||"لا يوجد"}`;
-});
-
-// 🛡 wrapper
 function safeLoad(){ renderSlots(); }
 
-// 🎯 render
 function renderSlots(){
 
 let days={};
@@ -251,19 +221,6 @@ href="https://wa.me/2${x.patient.phone}">واتساب</a>`:''}
 
 daysGrid.appendChild(col);
 }
-
-// ⏰ highlight الميعاد الحالي
-setTimeout(()=>{
-let now=new Date();
-let nowTime=now.toTimeString().slice(0,5);
-let today=now.toISOString().slice(0,10);
-
-document.querySelectorAll(".slot-item").forEach(el=>{
-if(el.innerText.includes(today) && el.innerText.includes(nowTime)){
-el.classList.add("now-slot");
-}
-});
-},200);
 
 document.getElementById("globalTotal").innerText="💰 إجمالي العيادة: "+totalGlobal+" جنيه";
 }
