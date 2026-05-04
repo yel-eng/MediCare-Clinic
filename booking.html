@@ -155,13 +155,18 @@ async function book(){
     // ======================
     if(!slotId){
 
-      await db.collection("requests").add({
-        name,
-        phone,
-        date:selectedDate,
-        status:"pending",
-        createdAt:firebase.firestore.Timestamp.now()
-      });
+     await db.collection("slots").add({
+  date: selectedDate,
+  time: "REQUEST",
+  booked: true,
+  status: "pending",
+  patient:{
+    name,
+    phone,
+    notes:"تواصل مع العميل لتحديد ميعاد"
+  },
+  createdAt: firebase.firestore.Timestamp.now()
+});4
 
       msg.innerHTML = "📩 تم تسجيل طلبك وسنتواصل معك";
       btn.classList.remove("loading");
