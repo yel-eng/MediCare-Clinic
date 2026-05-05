@@ -249,13 +249,94 @@ footer{
   padding:70px 8%;
 ">
 
-  <!-- overlay فاتح جدًا -->
+  <!-- overlay فاتح -->
   <div style="
     position:absolute;
     inset:0;
-    background:rgba(255,255,255,0.78);
+    background:rgba(255,255,255,0.80);
   "></div>
 
+  <!-- NAV -->
+  <div class="navbar">
+    <a href="#">الرئيسية</a>
+    <a href="#doctor">عن الدكتور</a>
+    <a href="#media">المكتبة الطبية</a>
+    <a href="#contact">تواصل</a>
+  </div>
+
+  <div class="hero-content" style="
+    position:relative;
+    z-index:2;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+    gap:40px;
+    flex-wrap:wrap;
+  ">
+
+    <!-- TEXT -->
+    <div class="hero-text" style="
+      flex:1;
+      max-width:520px;
+    ">
+
+      <h1 style="font-size:42px; margin-bottom:10px;">
+        العيادة المصرية
+      </h1>
+
+      <p style="
+        color:#475569;
+        line-height:1.9;
+        font-size:16px;
+        margin-bottom:20px;
+      ">
+        رعاية طبية بثقة وتنظيم احترافي يضمن لك تجربة مريحة بدون زحام  
+        باستخدام نظام ذكي لإدارة المواعيد بدقة
+      </p>
+
+      <!-- BUTTON -->
+      <button onclick="location.href='https://yel-eng.github.io/MediCare-Clinic/booking.html'"
+        style="
+          background:#1d4ed8;
+          color:#fff;
+          padding:14px 26px;
+          border:none;
+          border-radius:12px;
+          font-size:15px;
+          cursor:pointer;
+          transition:0.3s;
+        "
+        onmouseover="this.style.transform='translateY(-2px)'"
+        onmouseout="this.style.transform='translateY(0)'"
+      >
+        احجز الآن
+      </button>
+
+    </div>
+
+    <!-- IMAGE -->
+    <div class="hero-img" style="
+      flex:1;
+      display:flex;
+      justify-content:center;
+    ">
+
+      <div style="
+        background:#fff;
+        padding:10px;
+        border-radius:20px;
+        box-shadow:0 20px 40px rgba(0,0,0,0.08);
+      ">
+        <img src="https://i.pravatar.cc/320?img=12"
+          style="width:280px; border-radius:15px;">
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
   <!-- NAV -->
   <div class="navbar">
     <a href="#">الرئيسية</a>
