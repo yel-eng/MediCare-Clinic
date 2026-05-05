@@ -7,7 +7,61 @@
 <style>
 :root { --main: #1a237e; --bg: #f4f7f6; }
 body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; overflow-x:hidden;}
+/* NAVBAR عمودي */
+.side-nav {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 220px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1a237e, #3949ab);
+  padding: 25px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 999;
+}
 
+/* اللوجو */
+.side-nav .logo {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* اللينكات */
+.side-nav a {
+  text-decoration: none;
+  color: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  transition: 0.3s;
+  font-size: 15px;
+}
+
+/* hover */
+.side-nav a:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateX(-5px);
+}
+
+/* الصفحة الحالية */
+.side-nav a.active {
+  background: #fff;
+  color: #1a237e;
+  font-weight: bold;
+}
+
+/* disabled */
+.side-nav a.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* عشان المحتوى ما يتغطّيش */
+body {
+  margin-right: 220px;
+}
 .admin-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
 
 .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
@@ -111,6 +165,24 @@ window.logout = function () {
 };
 </script>
 <body>
+  <div class="side-nav">
+
+  <h2 class="logo">Admin</h2>
+
+  <a href="https://yel-eng.github.io/MediCare-Clinic/admin.html">
+    🏠 لوحة التحكم
+  </a>
+
+  <a href="https://yel-eng.github.io/MediCare-Clinic/index-admin.html">
+    📂 إدارة المحتوى
+  </a>
+
+  <a href="#" class="disabled">
+    🚧 قريباً
+  </a>
+
+</div>
+  <a href="admin.html" class="active">🏠 لوحة التحكم</a>
 <button onclick="logout()" style="background:red;color:#fff;padding:10px;border:none;border-radius:8px">
 تسجيل خروج
 </button>
