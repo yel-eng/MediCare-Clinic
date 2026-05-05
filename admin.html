@@ -191,32 +191,37 @@ window.logout = function () {
   gap: 10px;
   z-index: 999;
 ">
+<div class="side-nav" style="
+  position: fixed;
+  top: 0;
+  left: 0; /* بدل right */
+  width: 220px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1a237e, #3949ab);
+  padding: 25px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 999;
+">
+
+  <h2 class="logo" style="color:#fff; text-align:center;">
+    Admin
+  </h2>
 
   <a href="https://yel-eng.github.io/MediCare-Clinic/admin.html"
      style="
-       background: linear-gradient(135deg, #1a237e, #3949ab);
-       color: #fff;
-       padding: 10px 18px;
-       border-radius: 8px;
-       text-decoration: none;
-       font-size: 14px;
-       transition: 0.3s;
+       text-decoration:none;
+       color:#fff;
+       padding:12px;
+       border-radius:10px;
+       transition:0.3s;
+       font-size:15px;
      ">
-    🏠 Dashboard
+    🏠 لوحة التحكم
   </a>
 
-  <a href="https://yel-eng.github.io/MediCare-Clinic/index-admin.html"
-     style="
-       background: linear-gradient(135deg, #1a237e, #3949ab);
-       color: #fff;
-       padding: 10px 18px;
-       border-radius: 8px;
-       text-decoration: none;
-       font-size: 14px;
-       transition: 0.3s;
-     ">
-    📂 Content
-  </a>
+</div>
 
 </div>
 <div class="total-box" id="globalTotal">💰 إجمالي العيادة: 0</div>
