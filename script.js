@@ -1,3 +1,9 @@
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "login.html";
+  }
+});
+
 // --- إعدادات Firebase ---
 const firebaseConfig = { /* بياناتك هنا */ };
 if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
