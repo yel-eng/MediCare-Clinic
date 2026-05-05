@@ -126,7 +126,6 @@ body{
   padding:60px 8%;
 }
 
-/* CARD */
 /* CARDS */
 .cards{
   display:grid;
@@ -138,7 +137,7 @@ body{
   padding:60px 8%;
 }
 
-/* CARD */
+
 .card{
   background:#fff;
   border-radius:20px;
@@ -163,7 +162,7 @@ body{
   transform:translateY(-8px);
   box-shadow:0 20px 40px rgba(0,0,0,0.08);
 }
-}
+
 
 /* DOCTOR SECTION */
 
@@ -171,16 +170,26 @@ body{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:50px;
+  gap:60px; /* زوديها شوية */
   padding:60px 8%;
 }
 
 /* النص */
 .doctor > div{
   flex:1;
+  max-width:500px;   /* أهم سطر */
   text-align:right;
 }
 
+  
+.doctor > div{
+  flex:1;
+  max-width:500px;
+  text-align:right;
+  margin-right:40px; /* دي الحركة المهمة */
+}
+
+  
 /* الصورة */
 .doctor img{
   width:320px;
