@@ -217,15 +217,78 @@ body{
   gap:15px;
 }
 
-/* CTA BOX */
 .cta{
-  background:#1e3a8a;
+  margin:60px 8%;
+  border-radius:25px;
+  background:linear-gradient(135deg,#1d4ed8,#2563eb);
   color:#fff;
-  margin:40px 8%;
-  padding:30px;
-  border-radius:20px;
+  padding:40px;
+  position:relative;
+  overflow:hidden;
 }
 
+/* توزيع داخلي */
+.cta-content{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:20px;
+}
+
+/* النص */
+.cta-text h2{
+  font-size:28px;
+  margin-bottom:10px;
+}
+
+.cta-text p{
+  opacity:0.9;
+  line-height:1.8;
+}
+
+/* الأزرار */
+.cta-buttons{
+  margin-top:20px;
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
+}
+
+.call-btn{
+  background:#fff;
+  color:#1d4ed8;
+  padding:12px 20px;
+  border-radius:12px;
+  text-decoration:none;
+  font-weight:500;
+}
+
+.wa-btn{
+  background:#25d366;
+  color:#fff;
+  padding:12px 20px;
+  border-radius:12px;
+  text-decoration:none;
+  font-weight:500;
+}
+
+/* البادج */
+.cta-badge{
+  background:#fff;
+  color:#1d4ed8;
+  padding:10px 18px;
+  border-radius:50px;
+  font-weight:600;
+}
+
+/* موبايل */
+@media(max-width:600px){
+  .cta-content{
+    flex-direction:column;
+    text-align:center;
+  }
+}
 /* CONTACT */
 .contact{
   padding:50px 8%;
@@ -479,14 +542,32 @@ footer{
 
 </section>
 
-<!-- CTA -->
 <div class="cta">
 
-<h2>استشارة مجانية أول مرة</h2>
-<p>احجز الآن - عدد الحجوزات محدود</p>
+  <div class="cta-content">
 
-<p>📞 01211538334</p>
-<p>📱 01556614498</p>
+    <div class="cta-text">
+      <h2>استشارة مجانية لأول مرة 🎯</h2>
+      <p>
+        احجز الآن – الأماكن محدودة جدًا هذا الشهر  
+        واستفد من تقييم طبي كامل بدون رسوم
+      </p>
+
+      <div class="cta-buttons">
+        <a href="tel:01211538334" class="call-btn">📞 اتصل الآن</a>
+
+        <a href="https://wa.me/201556614498" class="wa-btn">
+          <i class="fab fa-whatsapp"></i> واتساب
+        </a>
+      </div>
+
+    </div>
+
+    <div class="cta-badge">
+      🔥 عرض محدود
+    </div>
+
+  </div>
 
 </div>
 
