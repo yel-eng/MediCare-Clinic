@@ -462,13 +462,20 @@ footer{
 <h2>المكتبة الطبية</h2>
 
 
-  <div class="media-grid">
+ <section class="media" id="media">
 
-  <div class="media-grid" id="mediaContainer"> 🎥 فيديو تعريفي </div>
- <div class="media-grid" id="mediaContainer">📄 مقالات طبية< </div>
-  <div class="media-grid" id="mediaContainer">🧪 صور طبية</div>
+<h2>المكتبة الطبية</h2>
 
-</div>
+<h3>📸 صور</h3>
+<div class="media-grid" id="imagesContainer"></div>
+
+<h3>🎥 فيديوهات</h3>
+<div class="media-grid" id="videosContainer"></div>
+
+<h3>📄 مقالات</h3>
+<div class="media-grid" id="articlesContainer"></div>
+
+</section>
 
 </section>
 
@@ -510,52 +517,13 @@ footer{
 <script>
 let data = JSON.parse(localStorage.getItem("clinicData")) || [];
 
-const container = document.getElementById("mediaContainer");
-
-data.forEach(item => {
-
-  if(item.type === "image"){
-    container.innerHTML += `
-      <div class="card">
-        <img src="${item.link}" style="width:100%;border-radius:10px">
-      </div>
-    `;
-  }
-
-  if(item.type === "video"){
-
-  let videoLink = item.link.replace("watch?v=", "embed/");
-
-  container.innerHTML += `
-    <div class="card">
-      <iframe width="100%" height="200" src="${videoLink}" frameborder="0" allowfullscreen></iframe>
-    </div>
-  `;
-}
-
-  if(item.type === "article"){
-    container.innerHTML += `
-      <div class="card">
-        <h3>${item.title}</h3>
-        <p>${item.desc}</p>
-      </div>
-    `;
-  }
-
-});
-</script>
-  document.addEventListener("DOMContentLoaded", function () {
-
-let data = JSON.parse(localStorage.getItem("clinicData")) || [];
-
 const imagesContainer = document.getElementById("imagesContainer");
 const videosContainer = document.getElementById("videosContainer");
 const articlesContainer = document.getElementById("articlesContainer");
 
-if(!imagesContainer || !videosContainer || !articlesContainer) return;
-
 data.forEach(item => {
 
+  // الصور
   if(item.type === "image"){
     imagesContainer.innerHTML += `
       <div class="card">
@@ -564,16 +532,18 @@ data.forEach(item => {
     `;
   }
 
+  // الفيديوهات
   if(item.type === "video"){
-    let videoLink = item.link.replace("watch?v=", "embed/");
-
     videosContainer.innerHTML += `
       <div class="card">
-        <iframe width="100%" height="220" src="${videoLink}" frameborder="0" allowfullscreen></iframe>
+        <video controls style="width:100%;border-radius:10px">
+          <source src="${item.link}" type="video/mp4">
+        </video>
       </div>
     `;
   }
 
+  // المقالات
   if(item.type === "article"){
     articlesContainer.innerHTML += `
       <div class="card">
@@ -582,8 +552,6 @@ data.forEach(item => {
       </div>
     `;
   }
-
-});
 
 });
 </script>
