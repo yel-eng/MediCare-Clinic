@@ -64,7 +64,34 @@ border-right:5px solid #ff9800 !important;
 }
 </style>
 </head>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic",
+  appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// 🔒 حماية الصفحة
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+  }
+});
+
+// زر تسجيل الخروج
+window.logout = function(){
+  signOut(auth).then(()=>{
+    window.location.href = "login.html";
+  });
+}
+</script>
 <body>
 
 <div class="total-box" id="globalTotal">💰 إجمالي العيادة: 0</div>
