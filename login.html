@@ -2,7 +2,40 @@
 <input type="password" id="password" placeholder="Password">
 
 <button onclick="login()">Login</button>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic",
+  appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// لو المستخدم مسجل بالفعل → يدخل مباشرة
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.location.href = "admin.html";
+  }
+});
+
+window.login = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      window.location.href = "admin.html";
+    })
+    .catch((error) => {
+      alert(error.message);
+    });
+};
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
