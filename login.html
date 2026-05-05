@@ -36,4 +36,7 @@ window.login = function () {
     })
     .catch(err => alert(err.message));
 };
+  import { setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+setPersistence(auth, browserSessionPersistence);
 </script>
