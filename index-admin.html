@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم</title>
+
+<style>
+body{font-family:Tajawal;background:#f8fafc;padding:20px}
+input,textarea{width:100%;padding:10px;margin:5px 0}
+button{padding:10px 15px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;cursor:pointer}
+.card{background:#fff;padding:15px;margin-top:10px;border-radius:10px}
+</style>
+</head>
+
+<body>
+
+<h2>إضافة محتوى</h2>
+
+<select id="type">
+  <option value="article">مقال</option>
+  <option value="video">فيديو</option>
+  <option value="image">صورة</option>
+</select>
+
+<input id="title" placeholder="العنوان">
+<input id="link" placeholder="لينك الصورة أو الفيديو">
+<textarea id="desc" placeholder="الوصف (اختياري)"></textarea>
+
+<button onclick="addItem()">إضافة</button>
+
+<h2>المحتوى الحالي</h2>
+<div id="list"></div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("clinicData")) || [];
+
+function save(){
+  localStorage.setItem("clinicData", JSON.stringify(data));
+  render();
+}
+
+function addItem(){
+  const item = {
+    id: Date.now(),
+    type: document.getElementById("type").value,
+    title: document.getElementById("title").value,
+    link: document.getElementById("link").value,
+    desc: document.getElementById("desc").value
+  };
+
+  data.push(item);
+  save();
+}
+
+function deleteItem(id){
+  data = data.filter(i => i.id !== id);
+  save();
+}
+
+function render(){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.forEach(item=>{
+    list.innerHTML += `
+      <div class="card">
+        <b>${item.title}</b> (${item.type})
+        <br>
+        <button onclick="deleteItem(${item.id})">حذف</button>
+      </div>
+    `;
+  });
+}
+
+render();
+</script>
+
+</body>
+</html>
