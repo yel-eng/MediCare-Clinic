@@ -523,12 +523,15 @@ data.forEach(item => {
   }
 
   if(item.type === "video"){
-    container.innerHTML += `
-      <div class="card">
-        <iframe width="100%" height="200" src="${item.link}" frameborder="0" allowfullscreen></iframe>
-      </div>
-    `;
-  }
+
+  let videoLink = item.link.replace("watch?v=", "embed/");
+
+  container.innerHTML += `
+    <div class="card">
+      <iframe width="100%" height="200" src="${videoLink}" frameborder="0" allowfullscreen></iframe>
+    </div>
+  `;
+}
 
   if(item.type === "article"){
     container.innerHTML += `
