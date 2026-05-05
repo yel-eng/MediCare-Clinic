@@ -169,16 +169,21 @@ body{
 .doctor{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:60px; /* زوديها شوية */
+  justify-content:center; /* بدل space-between */
+  gap:30px;
   padding:60px 8%;
 }
 
 /* النص */
 .doctor > div{
-  flex:1;
-  max-width:500px;   /* أهم سطر */
-  text-align:right;
+  flex:0.9;
+  max-width:450px;
+}
+
+/* الصورة */
+.doctor img{
+  width:280px;
+  border-radius:20px;
 }
 
   
@@ -187,13 +192,6 @@ body{
   max-width:500px;
   text-align:right;
   margin-right:40px; /* دي الحركة المهمة */
-}
-
-  
-/* الصورة */
-.doctor img{
-  width:320px;
-  border-radius:20px;
 }
 /* GALLERY */
 .gallery{
