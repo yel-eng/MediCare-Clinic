@@ -543,6 +543,45 @@ data.forEach(item => {
   }
 
 });
+</script><script>
+document.addEventListener("DOMContentLoaded", function () {
+
+let data = JSON.parse(localStorage.getItem("clinicData")) || [];
+
+const container = document.getElementById("mediaContainer");
+
+if(!container) return;
+
+data.forEach(item => {
+
+  if(item.type === "image"){
+    container.innerHTML += `
+      <div class="card">
+        <img src="${item.link}" style="width:100%;border-radius:10px">
+      </div>
+    `;
+  }
+
+  if(item.type === "video"){
+    container.innerHTML += `
+      <div class="card">
+        <iframe width="100%" height="200" src="${item.link}" frameborder="0" allowfullscreen></iframe>
+      </div>
+    `;
+  }
+
+  if(item.type === "article"){
+    container.innerHTML += `
+      <div class="card">
+        <h3>${item.title}</h3>
+        <p>${item.desc}</p>
+      </div>
+    `;
+  }
+
+});
+
+});
 </script>
 </body>
 </html>
