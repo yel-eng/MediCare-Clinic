@@ -187,6 +187,7 @@ button:hover{
  </div>   
 </div>
   <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -199,99 +200,51 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-<script>
-let editingId = null;
-let data = JSON.parse(localStorage.getItem("clinicData")) || [];
 
-function save(){
-  localStorage.setItem("clinicData", JSON.stringify(data));
+let editingId = null;
+let data = [];
+
+// 🟢 تحميل البيانات
+async function loadData(){
+  const snapshot = await getDocs(collection(db, "content"));
+
+  data = [];
+
+  snapshot.forEach(docSnap=>{
+    data.push({ id: docSnap.id, ...docSnap.data() });
+  });
+
   render();
 }
 
-function addItem(){
+// 🟢 إضافة / تعديل
+window.addItem = async function(){
+
+  const item = {
+    type: type.value,
+    title: title.value,
+    link: link.value,
+    desc: desc.value
+  };
 
   if(editingId){
-    // ✏️ تعديل
-    data = data.map(item => {
-      if(item.id === editingId){
-        return {
-          ...item,
-          type: document.getElementById("type").value,
-          title: document.getElementById("title").value,
-          link: document.getElementById("link").value,
-          desc: document.getElementById("desc").value
-        };
-      }
-      return item;
-    });
-
+    await updateDoc(doc(db, "content", editingId), item);
     editingId = null;
-
   }else{
-    // ➕ إضافة جديدة
-    const item = {
-      id: Date.now(),
-      type: document.getElementById("type").value,
-      title: document.getElementById("title").value,
-      link: document.getElementById("link").value,
-      desc: document.getElementById("desc").value
-    };
-
-    data.push(item);
+    await addDoc(collection(db, "content"), item);
   }
 
-  save();
+  loadData();
 }
 
-function deleteItem(id){
-  data = data.filter(i => i.id !== id);
-  save();
+// 🟢 حذف
+window.deleteItem = async function(id){
+  await deleteDoc(doc(db, "content", id));
+  loadData();
 }
 
-function render(){
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-
-  data.forEach(item=>{
-    list.innerHTML += `
-      <div class="card">
-      
-        <button class="del-btn" onclick="deleteItem(${item.id})">×</button>
-
-        <button onclick="editItem(${item.id})"
-          style="position:absolute;top:10px;right:10px;background:#0ea5e9;">
-          ✏️
-        </button>
-
-        <div class="badge">${item.type}</div>
-
-        <h3>${item.title}</h3>
-
-        ${
-          item.type === "image"
-          ? `<img src="${item.link}" style="width:100%;border-radius:10px;margin-top:10px">`
-          : ""
-        }
-
-        ${
-          item.type === "video"
-          ? `<video controls style="width:100%;border-radius:10px;margin-top:10px">
-               <source src="${item.link}">
-             </video>`
-          : ""
-        }
-
-        ${
-          item.desc
-          ? `<p style="color:#64748b;margin-top:10px">${item.desc}</p>`
-          : ""
-        }
-
-      </div>
-    `;
-  });
-}
- function editItem(id){
+// 🟢 تعديل
+window.editItem = function(id){
   const item = data.find(i => i.id === id);
 
   type.value = item.type;
@@ -301,61 +254,44 @@ function render(){
 
   editingId = id;
 }
-  render();
-    async function addItem(){
 
-  const item = {
-    type: type.value,
-    title: title.value,
-    link: link.value,
-    desc: desc.value
-  };
+// 🟢 عرض
+function render(){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
-  if(editingId){
-    // تعديل
-    await updateDoc(doc(db, "content", editingId), item);
-    editingId = null;
-  }else{
-    // إضافة
-    await addDoc(collection(db, "content"), item);
-  }
+  data.forEach(item=>{
+    list.innerHTML += `
+      <div class="card">
 
-  loadData();
-}
+        <button class="del-btn" onclick="deleteItem('${item.id}')">×</button>
 
-    async function addItem(){
+        <button onclick="editItem('${item.id}')"
+          style="position:absolute;top:10px;right:10px;background:#0ea5e9;">
+          ✏️
+        </button>
 
-  const item = {
-    type: type.value,
-    title: title.value,
-    link: link.value,
-    desc: desc.value
-  };
+        <div class="badge">${item.type}</div>
 
-  if(editingId){
-    // تعديل
-    await updateDoc(doc(db, "content", editingId), item);
-    editingId = null;
-  }else{
-    // إضافة
-    await addDoc(collection(db, "content"), item);
-  }
+        <h3>${item.title}</h3>
 
-  loadData();
-}
+        ${item.type === "image" ? `<img src="${item.link}" style="width:100%">` : ""}
 
-    async function loadData(){
-  const querySnapshot = await getDocs(collection(db, "content"));
+        ${item.type === "video" ? `
+          <video controls style="width:100%">
+            <source src="${item.link}">
+          </video>` : ""}
 
-  data = [];
+        ${item.desc ? `<p>${item.desc}</p>` : ""}
 
-  querySnapshot.forEach(docSnap=>{
-    data.push({ id: docSnap.id, ...docSnap.data() });
+      </div>
+    `;
   });
-
-  render();
 }
-    loadData();
+
+// تشغيل
+loadData();
+
 </script>
 
 </body>
