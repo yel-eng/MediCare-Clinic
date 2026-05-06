@@ -343,6 +343,16 @@ window.logout = function () {
 </div>
 
 
+
+
+
+
+
+
+
+
+        
+
 <script>
 const firebaseConfig = {
 apiKey: "AIza...",
@@ -365,6 +375,13 @@ cache.push({id:doc.id,...d});
 renderSlots();
 });
 
+
+
+
+
+
+
+        
 function safeLoad(){ renderSlots(); }
 
 function selectSlot(id){
@@ -401,7 +418,7 @@ notes:pNotes.value
 alert("تم الحفظ");
 }
 
-function setAvailability(){
+window.setAvailability = function () {
 let date=slotDate.value;
 let s=new Date(`${date}T${startTime.value}`);
 let e=new Date(`${date}T${endTime.value}`);
