@@ -637,8 +637,21 @@ footer{
 <a class="wa" href="https://wa.me/201211538334">
 <i class="fab fa-whatsapp"></i>
 </a>
+ <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 <script>
-let data = JSON.parse(localStorage.getItem("clinicData")) || [];
+
 
 const imagesContainer = document.getElementById("imagesContainer");
 const videosContainer = document.getElementById("videosContainer");
@@ -679,5 +692,77 @@ data.forEach(item => {
 });
 </script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 👇 نجيب العناصر من الصفحة
+const imagesContainer = document.getElementById("imagesContainer");
+const videosContainer = document.getElementById("videosContainer");
+const articlesContainer = document.getElementById("articlesContainer");
+
+// 👇 الدالة المهمة
+async function loadData(){
+
+  const snapshot = await getDocs(collection(db, "content"));
+
+  // مهم عشان ميكررش المحتوى
+  imagesContainer.innerHTML = "";
+  videosContainer.innerHTML = "";
+  articlesContainer.innerHTML = "";
+
+  snapshot.forEach(doc => {
+
+    const item = doc.data();
+
+    // صور
+    if(item.type === "image"){
+      imagesContainer.innerHTML += `
+        <div class="card">
+          <img src="${item.link}" style="width:100%;border-radius:10px">
+        </div>
+      `;
+    }
+
+    // فيديو
+    if(item.type === "video"){
+      videosContainer.innerHTML += `
+        <div class="card">
+          <video controls style="width:100%">
+            <source src="${item.link}">
+          </video>
+        </div>
+      `;
+    }
+
+    // مقال
+    if(item.type === "article"){
+      articlesContainer.innerHTML += `
+        <div class="card">
+          <h3>${item.title}</h3>
+          <p>${item.desc}</p>
+        </div>
+      `;
+    }
+
+  });
+
+}
+
+// 👇 تشغيل
+loadData();
+
+</script>
 </body>
 </html>
