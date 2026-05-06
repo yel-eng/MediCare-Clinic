@@ -638,6 +638,7 @@ footer{
 <i class="fab fa-whatsapp"></i>
 </a>
  <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -650,6 +651,58 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// containers
+const imagesContainer = document.getElementById("imagesContainer");
+const videosContainer = document.getElementById("videosContainer");
+const articlesContainer = document.getElementById("articlesContainer");
+
+async function loadData(){
+
+  const snapshot = await getDocs(collection(db, "content"));
+
+  imagesContainer.innerHTML = "";
+  videosContainer.innerHTML = "";
+  articlesContainer.innerHTML = "";
+
+  snapshot.forEach((docSnap) => {
+
+    const item = docSnap.data();
+
+    if(item.type === "image"){
+      imagesContainer.innerHTML += `
+        <div class="card">
+          <img src="${item.link}" style="width:100%;border-radius:10px">
+        </div>
+      `;
+    }
+
+    if(item.type === "video"){
+      videosContainer.innerHTML += `
+        <div class="card">
+          <video controls style="width:100%">
+            <source src="${item.link}">
+          </video>
+        </div>
+      `;
+    }
+
+    if(item.type === "article"){
+      articlesContainer.innerHTML += `
+        <div class="card">
+          <h3>${item.title}</h3>
+          <p>${item.desc}</p>
+        </div>
+      `;
+    }
+
+  });
+
+}
+
+loadData();
+
+</script>
 <script>
 
 
@@ -657,16 +710,7 @@ const imagesContainer = document.getElementById("imagesContainer");
 const videosContainer = document.getElementById("videosContainer");
 const articlesContainer = document.getElementById("articlesContainer");
 
-data.forEach(item => {
-
-  // الصور
-  if(item.type === "image"){
-    imagesContainer.innerHTML += `
-      <div class="card">
-        <img src="${item.link}" style="width:100%;border-radius:10px">
-      </div>
-    `;
-  }
+const snapshot = await getDocs(collection(db, "content"));
 
   // الفيديوهات
   if(item.type === "video"){
