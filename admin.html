@@ -372,12 +372,20 @@ window.logout = function () {
 
         
 
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 <script>
 const firebaseConfig = {
-apiKey: "AIza...",
-authDomain: "mydoctor-clinic.firebaseapp.com",
-projectId: "mydoctor-clinic"
+  apiKey: "YOUR_KEY",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic"
 };
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 
 let activeId=null;
 let cache=[];
@@ -439,25 +447,40 @@ alert("تم الحفظ");
 
 
         
-window.setAvailability = function () {
-let date=slotDate.value;
-let s=new Date(`${date}T${startTime.value}`);
-let e=new Date(`${date}T${endTime.value}`);
+function setAvailability(){
 
-while(s<e){
-db.collection("slots").add({
-date,
-time:s.toTimeString().slice(0,5),
-booked:false,
-status:"حجز",
-paid:0,
-patient:{name:"",phone:"",notes:""}
-});
-let duration = Number(document.getElementById("slotDuration").value);
+  let date = slotDate.value;
+  let start = startTime.value;
+  let end = endTime.value;
+  let duration = Number(slotDuration.value);
 
-s.setMinutes(s.getMinutes() + duration);
+  let s = new Date(`${date}T${start}`);
+  let e = new Date(`${date}T${end}`);
+
+  while(s < e){
+
+    db.collection("slots").add({
+      date: date,
+      time: s.toTimeString().slice(0,5),
+      booked: false,
+      status: "حجز",
+      paid: 0,
+      patient: {
+        name: "",
+        phone: "",
+        notes: ""
+      }
+    });
+
+    s.setMinutes(s.getMinutes() + duration);
+  }
+
+  alert("تم إنشاء المواعيد ✔️");
 }
-}
+
+
+
+        
 
 
 
