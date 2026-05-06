@@ -222,6 +222,11 @@ function render(){
       
         <button class="del-btn" onclick="deleteItem(${item.id})">×</button>
 
+        <button onclick="editItem(${item.id})"
+          style="position:absolute;top:10px;right:10px;background:#0ea5e9;">
+          ✏️
+        </button>
+
         <div class="badge">${item.type}</div>
 
         <h3>${item.title}</h3>
@@ -250,6 +255,18 @@ function render(){
     `;
   });
 }
+  function editItem(id){
+  const item = data.find(i => i.id === id);
+
+  document.getElementById("type").value = item.type;
+  document.getElementById("title").value = item.title;
+  document.getElementById("link").value = item.link;
+  document.getElementById("desc").value = item.desc;
+
+  // نحذف القديم ونستبدله
+  deleteItem(id);
+}
+  render();
 </script>
 
 </body>
