@@ -9,83 +9,130 @@
 body{
   margin:0;
   font-family:Tajawal;
-  background:#f8fafc;
+  background:#f1f5f9;
+  display:flex;
 }
 
-
-  .main-content{
-  margin-right:240px; /* نفس عرض الناف */
-  padding:20px;
-}
-  
-input,textarea{width:100%;padding:10px;margin:5px 0}
-  
-button{padding:10px 15px;
-       background:#1d4ed8;
-       color:#fff;border:none; 
-       border-radius:8px;
-       cursor:pointer}
-
-  
-.card{background:#fff;
-      padding:15px;
-      margin-top:10px;
-      border-radius:10px}
-  
-  
-/* NAVBAR عمودي */
-.side-nav {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 220px;
-  height: 100vh;
-  background: linear-gradient(180deg, #1a237e, #3949ab);
-  padding: 25px 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  z-index: 999;
+/* SIDEBAR */
+.side-nav{
+  position:fixed;
+  top:0;
+  right:0;
+  width:240px;
+  height:100vh;
+  background:linear-gradient(180deg,#1e3a8a,#1d4ed8);
+  padding:25px 15px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  color:#fff;
+  box-shadow:-10px 0 30px rgba(0,0,0,0.1);
 }
 
-/* اللوجو */
-.side-nav .logo {
-  color: #fff;
-  text-align: center;
-  margin-bottom: 20px;
+.side-nav .logo{
+  text-align:center;
+  font-size:20px;
+  margin-bottom:20px;
 }
 
-/* اللينكات */
-.side-nav a {
-  text-decoration: none;
-  color: #fff;
-  padding: 12px;
-  border-radius: 10px;
-  transition: 0.3s;
-  font-size: 15px;
+.side-nav a{
+  color:#fff;
+  text-decoration:none;
+  padding:12px;
+  border-radius:10px;
+  transition:0.3s;
+  font-size:15px;
 }
 
-/* hover */
-.side-nav a:hover {
-  background: rgba(255,255,255,0.15);
-  transform: translateX(-5px);
+.side-nav a:hover{
+  background:rgba(255,255,255,0.15);
 }
 
-/* الصفحة الحالية */
-.side-nav a.active {
-  background: #fff;
-  color: #1a237e;
-  font-weight: bold;
+/* MAIN */
+.main-content{
+  margin-right:240px;
+  padding:25px;
+  width:100%;
 }
 
-/* disabled */
-.side-nav a.disabled {
-  opacity: 0.5;
-  pointer-events: none;
+/* FORM */
+input,textarea,select{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #e2e8f0;
+  outline:none;
+  font-size:14px;
 }
 
+button{
+  padding:12px 18px;
+  background:#1d4ed8;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  background:#2563eb;
+}
+
+/* GRID */
+#list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:15px;
+  margin-top:15px;
+}
+
+/* CARD */
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:15px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.06);
+  transition:0.3s;
+  position:relative;
+}
+
+.card:hover{
+  transform:translateY(-5px);
+}
+
+/* TYPE BADGE */
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  font-size:12px;
+  border-radius:20px;
+  background:#e0f2fe;
+  color:#0369a1;
+  margin-bottom:8px;
+}
+
+/* DELETE */
+.del-btn{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:#ef4444;
+  border:none;
+  color:#fff;
+  border-radius:8px;
+  padding:5px 8px;
+  cursor:pointer;
+}
       
 </style>
+
+
+
+
+  
 </head>
 
 <body>
@@ -129,10 +176,10 @@ button{padding:10px 15px;
 <button onclick="addItem()">إضافة</button>
 
 <h2>المحتوى الحالي</h2>
-<div id="list"></div>
+  <div id="list">  <div id="list"></div>
 
  </div>   
-
+</div>
 <script>
 let data = JSON.parse(localStorage.getItem("clinicData")) || [];
 
@@ -166,15 +213,37 @@ function render(){
   data.forEach(item=>{
     list.innerHTML += `
       <div class="card">
-        <b>${item.title}</b> (${item.type})
-        <br>
-        <button onclick="deleteItem(${item.id})">حذف</button>
+      
+        <button class="del-btn" onclick="deleteItem(${item.id})">×</button>
+
+        <div class="badge">${item.type}</div>
+
+        <h3>${item.title}</h3>
+
+        ${
+          item.type === "image"
+          ? `<img src="${item.link}" style="width:100%;border-radius:10px;margin-top:10px">`
+          : ""
+        }
+
+        ${
+          item.type === "video"
+          ? `<video controls style="width:100%;border-radius:10px;margin-top:10px">
+               <source src="${item.link}">
+             </video>`
+          : ""
+        }
+
+        ${
+          item.desc
+          ? `<p style="color:#64748b;margin-top:10px">${item.desc}</p>`
+          : ""
+        }
+
       </div>
     `;
   });
 }
-
-render();
 </script>
 
 </body>
