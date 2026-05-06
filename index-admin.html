@@ -116,20 +116,25 @@ label{
             } 
 
           /* الكارت */
-           .card{
-            background: linear-gradient(180deg,#ffffff,#f8fafc);
-            padding:20px;
-            border-radius:20px;
-            border:1px solid #eef2f7;
-            box-shadow:
-    0 4px 10px rgba(0,0,0,0.03),
-    0 15px 35px rgba(0,0,0,0.06);
+          .card{
+  background:#ffffff;
+  padding:22px;
 
-            transition: all 0.3s ease;
-            position:relative;
-            overflow:hidden;
-                }
+  border-radius:18px;
 
+  border:1px solid rgba(0,0,0,0.04);
+
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 8px 20px rgba(0,0,0,0.06);
+
+  transition: all 0.25s ease;
+  position:relative;
+
+  backdrop-filter: blur(6px);
+}
+
+     
 /* خط لامع فوق */
 .card::before{
   content:"";
@@ -144,16 +149,17 @@ label{
 }
 
 /* Hover */
-.card:hover{
-  transform:translateY(-10px) scale(1.01);
+     .card:hover{
+  transform: translateY(-6px);
+
   box-shadow:
-    0 10px 25px rgba(0,0,0,0.06),
+    0 10px 25px rgba(0,0,0,0.08),
     0 25px 50px rgba(0,0,0,0.10);
-}
 
 .card:hover::before{
   opacity:1;
 }
+          
 
 /* العنوان */
 .card h3{
@@ -176,6 +182,19 @@ label{
   width:100%;
   border-radius:14px;
   margin-top:12px;
+  transition:0.3s;
+}
+          
+.card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  right:0;
+  width:100%;
+  height:2px;
+
+  background:linear-gradient(90deg,#1d4ed8,#60a5fa);
+  opacity:0;
   transition:0.3s;
 }
 
