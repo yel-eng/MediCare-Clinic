@@ -186,6 +186,19 @@ button:hover{
 
  </div>   
 </div>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 <script>
 let editingId = null;
 let data = JSON.parse(localStorage.getItem("clinicData")) || [];
@@ -278,17 +291,71 @@ function render(){
     `;
   });
 }
-  function editItem(id){
+ function editItem(id){
   const item = data.find(i => i.id === id);
 
-  document.getElementById("type").value = item.type;
-  document.getElementById("title").value = item.title;
-  document.getElementById("link").value = item.link;
-  document.getElementById("desc").value = item.desc;
+  type.value = item.type;
+  title.value = item.title;
+  link.value = item.link;
+  desc.value = item.desc;
 
-  editingId = id; // نحفظ انه تعديل مش إضافة
+  editingId = id;
 }
   render();
+    async function addItem(){
+
+  const item = {
+    type: type.value,
+    title: title.value,
+    link: link.value,
+    desc: desc.value
+  };
+
+  if(editingId){
+    // تعديل
+    await updateDoc(doc(db, "content", editingId), item);
+    editingId = null;
+  }else{
+    // إضافة
+    await addDoc(collection(db, "content"), item);
+  }
+
+  loadData();
+}
+
+    async function addItem(){
+
+  const item = {
+    type: type.value,
+    title: title.value,
+    link: link.value,
+    desc: desc.value
+  };
+
+  if(editingId){
+    // تعديل
+    await updateDoc(doc(db, "content", editingId), item);
+    editingId = null;
+  }else{
+    // إضافة
+    await addDoc(collection(db, "content"), item);
+  }
+
+  loadData();
+}
+
+    async function loadData(){
+  const querySnapshot = await getDocs(collection(db, "content"));
+
+  data = [];
+
+  querySnapshot.forEach(docSnap=>{
+    data.push({ id: docSnap.id, ...docSnap.data() });
+  });
+
+  render();
+}
+    loadData();
 </script>
 
 </body>
