@@ -5,8 +5,20 @@
 <title>نظام العيادة المستقر</title>
 
 <style>
-:root { --main: #1a237e; --bg: #f4f7f6; }
-body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; overflow-x:hidden;}
+:root { --main: #1a237e; 
+        --bg: #f4f7f6;
+      }
+  
+body { 
+        font-family: 'Segoe UI', 
+        sans-serif; background: 
+        var(--bg);
+        margin: 0; 
+        padding: 20px; 
+        overflow-x:hidden;
+        margin-right: 220px;
+       }
+  
 /* NAVBAR عمودي */
 .side-nav {
   position: fixed;
@@ -20,13 +32,27 @@ body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; pa
   flex-direction: column;
   gap: 15px;
   z-index: 999;
+  display:flex;
+  flex-direction:column;
 }
-
+  
 /* اللوجو */
 .side-nav .logo {
   color: #fff;
   text-align: center;
   margin-bottom: 20px;
+}
+  /* الصفحة الحالية */
+.side-nav a.active {
+  background: #fff;
+  color: #1a237e;
+  font-weight: bold;
+}
+
+/* disabled */
+.side-nav a.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* اللينكات */
@@ -45,34 +71,52 @@ body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; pa
   transform: translateX(-5px);
 }
 
-/* الصفحة الحالية */
-.side-nav a.active {
-  background: #fff;
-  color: #1a237e;
-  font-weight: bold;
-}
 
-/* disabled */
-.side-nav a.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
 
-/* عشان المحتوى ما يتغطّيش */
-body {
-  margin-right: 220px;
-}
-.admin-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
 
-.card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+.admin-grid { 
+            display: grid; 
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            }
 
-.days-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+.card { 
+         background: white;
+         padding: 20px; 
+         border-radius: 15px; 
+         box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+         margin-bottom: 20px; 
+       }
 
-.day-col { background: white; border: 1px solid #ddd; border-radius: 12px; }
+.days-row { 
+           display: grid; 
+           grid-template-columns: 
+           repeat(auto-fill, 
+           minmax(280px, 1fr)); gap: 15px; 
+          }
 
-.day-head { background: var(--main); color: white; padding: 12px; text-align: center; border-radius: 12px 12px 0 0; position: relative; }
+.day-col { 
+          background: white; 
+          border: 1px solid #ddd;
+          border-radius: 12px; 
+         }
 
-.day-money { background:#fff3e0; padding:6px; text-align:center; font-weight:bold; }
+.day-head {
+          background: var(--main);
+          color: white; 
+          padding: 12px; 
+          text-align: center;
+          border-radius: 12px 12px 0 0;
+          position: relative; 
+          }
+  
+
+.day-money { 
+          background:#fff3e0; 
+          padding:6px; 
+          text-align:center; 
+          font-weight:bold; 
+            }
 
 .total-box{
 background:#c8e6c9;
@@ -83,44 +127,70 @@ font-weight:bold;
 border-radius:10px;
 }
 
-.slot-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+.slot-item { padding: 12px; 
+            border-bottom: 1px solid #eee; 
+            cursor: pointer;
+           }
 
 .slot-item:hover { background: #f0f7ff; }
 
 .booked { border-right: 5px solid #2e7d32; }
+  
 .cancel { border-right: 5px solid red; }
 
-.del-btn { position:absolute; left:10px; top:10px; cursor:pointer; color:red; }
+.del-btn { 
+         position:absolute; 
+         left:10px; 
+         top:10px; 
+         cursor:pointer;
+         color:red;
+          }
 
-input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; }
+input, textarea, select {
+         width: 100%; 
+         padding: 10px; 
+         margin: 8px 0; 
+         border: 1px solid #ccc; 
+         border-radius: 8px; 
+}
 
-.btn { background: var(--main); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; }
+.btn { background: var(--main); 
+       color: white;
+       border: none; 
+       padding: 12px;
+       width: 100%; 
+       border-radius: 8px;
+       cursor: pointer; 
+     }
 
-.whatsapp { background:#25d366; color:white; padding:6px 10px; border-radius:6px; display:inline-block; margin-top:5px; text-decoration:none;}
+.whatsapp { background:#25d366;
+            color:white; 
+             padding:6px 10px; 
+             border-radius:6px; 
+             display:inline-block; 
+             margin-top:5px;
+             text-decoration:none;}
 
 .now-slot{
-background:#fff9c4 !important;
-border-right:5px solid #fbc02d !important;
+          background:#fff9c4 !important;
+          border-right:5px solid #fbc02d !important;
 }
 
 .patient-history{
-background:#e3f2fd;
-padding:8px;
-border-radius:8px;
-margin-top:5px;
-font-size:13px;
-display:none;
-}
+          background:#e3f2fd;
+          padding:8px;
+          border-radius:8px;
+          margin-top:5px;
+          font-size:13px;
+          display:none;
+          }
 
 .pending-slot{
-background:#ffe0b2 !important;
-border-right:5px solid #ff9800 !important;
+            background:#ffe0b2 !important;
+            border-right:5px solid #ff9800 !important;
 }
 
-.side-nav{
-  display:flex;
-  flex-direction:column;
-}
+
 </style>
 </head>
 <script type="module">
