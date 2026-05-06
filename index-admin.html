@@ -29,6 +29,10 @@ body{
   box-shadow:-10px 0 30px rgba(0,0,0,0.1);
 }
 
+.side-nav{
+  backdrop-filter: blur(10px);
+}
+  
 .side-nav .logo{
   text-align:center;
   font-size:20px;
@@ -42,15 +46,15 @@ body{
   border-radius:10px;
   transition:0.3s;
   font-size:15px;
+   font-weight:500;
 }
 
 .side-nav a:hover{
   background:rgba(255,255,255,0.15);
+  transform:translateX(-5px);
 }
-  
-
-  
-/* MAIN */
+    
+  MAIN */
 .main-content{
   margin-right:227px;
   padding:25px;
@@ -58,26 +62,30 @@ body{
 }
 
 /* FORM */
-input,textarea,select{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  border-radius:10px;
-  border:1px solid #e2e8f0;
-  outline:none;
-  font-size:14px;
+
+  input, textarea, select{
+  background:#fff;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  border:1px solid #e5e7eb;
+  transition:0.3s;
+}
+
+input:focus, textarea:focus, select:focus{
+  border-color:#1d4ed8;
+  box-shadow:0 0 0 3px rgba(29,78,216,0.1);
 }
 
 button{
   background:#1d4ed8;
   padding:12px 18px;
-  c#1d4ed8;
   border:none;
   border-radius:10px;
   cursor:pointer;
   transition:0.3s;
+  width:100%;
+  font-weight:bold;
+  letter-spacing:0.5px;
 }
-
 button:hover{
   transform:translateY(-2px);
   background:#2563eb;
@@ -93,18 +101,21 @@ button:hover{
 
 /* CARD */
 .card{
-  background:#fff;
+  background:white;;
   padding:15px;
-  border-radius:15px;
+  border-radius:18px;
   box-shadow:0 10px 25px rgba(0,0,0,0.06);
   transition:0.3s;
   position:relative;
+   border:1px solid #eef2f7;
 }
 
 .card:hover{
-  transform:translateY(-5px);
+  transform:translateY(-6px);
+  box-shadow:0 15px 30px rgba(0,0,0,0.08);
 }
 
+  
 /* TYPE BADGE */
 .badge{
   display:inline-block;
@@ -127,6 +138,10 @@ button:hover{
   border-radius:8px;
   padding:5px 8px;
   cursor:pointer;
+}
+  .main-content{
+  background:#f8fafc;
+  min-height:100vh;
 }
       
 </style>
