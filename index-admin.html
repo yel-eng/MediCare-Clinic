@@ -114,7 +114,10 @@ window.addItem = async function(){
   }else{
     await addDoc(collection(db, "content"), item);
   }
-
+  const type = document.getElementById("type");
+const title = document.getElementById("title");
+const link = document.getElementById("link");
+const desc = document.getElementById("desc");
   loadData();
 }
 
