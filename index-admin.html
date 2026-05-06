@@ -187,6 +187,7 @@ button:hover{
  </div>   
 </div>
 <script>
+let editingId = null;
 let data = JSON.parse(localStorage.getItem("clinicData")) || [];
 
 function save(){
@@ -195,15 +196,37 @@ function save(){
 }
 
 function addItem(){
-  const item = {
-    id: Date.now(),
-    type: document.getElementById("type").value,
-    title: document.getElementById("title").value,
-    link: document.getElementById("link").value,
-    desc: document.getElementById("desc").value
-  };
 
-  data.push(item);
+  if(editingId){
+    // ✏️ تعديل
+    data = data.map(item => {
+      if(item.id === editingId){
+        return {
+          ...item,
+          type: document.getElementById("type").value,
+          title: document.getElementById("title").value,
+          link: document.getElementById("link").value,
+          desc: document.getElementById("desc").value
+        };
+      }
+      return item;
+    });
+
+    editingId = null;
+
+  }else{
+    // ➕ إضافة جديدة
+    const item = {
+      id: Date.now(),
+      type: document.getElementById("type").value,
+      title: document.getElementById("title").value,
+      link: document.getElementById("link").value,
+      desc: document.getElementById("desc").value
+    };
+
+    data.push(item);
+  }
+
   save();
 }
 
@@ -263,8 +286,7 @@ function render(){
   document.getElementById("link").value = item.link;
   document.getElementById("desc").value = item.desc;
 
-  // نحذف القديم ونستبدله
-  deleteItem(id);
+  editingId = id; // نحفظ انه تعديل مش إضافة
 }
   render();
 </script>
