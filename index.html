@@ -656,9 +656,7 @@ const imagesContainer = document.getElementById("imagesContainer");
 const videosContainer = document.getElementById("videosContainer");
 const articlesContainer = document.getElementById("articlesContainer");
 
-// load data
-async function loadData(){
-
+async function loadData() {
   const snapshot = await getDocs(collection(db, "content"));
 
   imagesContainer.innerHTML = "";
@@ -666,11 +664,9 @@ async function loadData(){
   articlesContainer.innerHTML = "";
 
   snapshot.forEach((docSnap) => {
-
     const item = docSnap.data();
 
-    // صور
-    if(item.type === "image"){
+    if (item.type === "image") {
       imagesContainer.innerHTML += `
         <div class="card">
           <img src="${item.link}" style="width:100%;border-radius:10px">
@@ -678,8 +674,7 @@ async function loadData(){
       `;
     }
 
-    // فيديو
-    if(item.type === "video"){
+    if (item.type === "video") {
       videosContainer.innerHTML += `
         <div class="card">
           <video controls style="width:100%">
@@ -689,8 +684,7 @@ async function loadData(){
       `;
     }
 
-    // مقال
-    if(item.type === "article"){
+    if (item.type === "article") {
       articlesContainer.innerHTML += `
         <div class="card">
           <h3>${item.title}</h3>
@@ -698,9 +692,7 @@ async function loadData(){
         </div>
       `;
     }
-
   });
-
 }
 
 loadData();
