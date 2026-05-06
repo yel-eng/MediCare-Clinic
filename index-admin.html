@@ -37,14 +37,60 @@ body {
      
       
       /* FORM */
-      input,textarea,select{
-                   width:100%; padding:12px; 
-                   margin:8px 0;
-                   border-radius:10px; 
-                   border:1px solid #e2e8f0;
-                   outline:none; 
-                   font-size:14px;  
-                             } 
+     input, textarea, select{
+  width:100%;
+  padding:14px 16px;
+  margin:10px 0;
+
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+
+  background:#ffffff;
+
+  font-size:14px;
+  transition: all 0.25s ease;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+/* Hover */
+input:hover, textarea:hover, select:hover{
+  border-color:#cbd5f5;
+}
+
+/* Focus (أهم حاجة) */
+input:focus, textarea:focus, select:focus{
+  border-color:#1d4ed8;
+  box-shadow:0 0 0 4px rgba(29,78,216,0.12);
+}
+
+/* Placeholder */
+input::placeholder, textarea::placeholder{
+  color:#94a3b8;
+}
+
+/* Select arrow تحسين */
+select{
+  appearance:none;
+  background-image: url("data:image/svg+xml,%3Csvg fill='%2364748b' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:left 12px center;
+  background-size:18px;
+  padding-left:40px;
+}
+
+/* Textarea شكل أحلى */
+textarea{
+  min-height:100px;
+  resize:none;
+} 
+
+label{
+  font-size:13px;
+  color:#64748b;
+  display:block;
+  margin-top:10px;
+}
 
       
       button{
@@ -204,9 +250,12 @@ body {
   <option value="video">فيديو</option>
   <option value="image">صورة</option>
 </select>
-
+        
+ <label>العنوان</label>
 <input id="title" placeholder="العنوان">
+        <label>العنوان</label>
 <input id="link" placeholder="لينك الصورة أو الفيديو">
+        <label>العنوان</label>
 <textarea id="desc" placeholder="الوصف (اختياري)"></textarea>
 
 <button onclick="addItem()">إضافة</button>
