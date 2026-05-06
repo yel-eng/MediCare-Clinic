@@ -6,7 +6,40 @@
 
 <style>
 
-body{ margin:0; font-family:Tajawal; background:#f1f5f9; } /* SIDEBAR */ .side-nav{ position:fixed; top:0; right:0; width:220px; height:100vh; background:linear-gradient(180deg,#1e3a8a,#1d4ed8); padding:25px 15px; display:flex; flex-direction:column; gap:12px; color:#fff; box-shadow:-10px 0 30px rgba(0,0,0,0.1); backdrop-filter: blur(10px); } ackdrop-filter: blur(10px); } .side-nav .logo{ text-align:center; font-size:20px; margin-bottom:20px; } .side-nav a{ color:#fff; text-decoration:none; padding:12px; border-radius:10px; transition:0.3s; font-size:15px; font-weight:500; } .side-nav a:hover{ background:rgba(255,255,255,0.15); transform:translateX(-5px); } /* MAIN */ .main-content{ margin-right:255px; padding:25px; width:calc(100% - 240px); background:#f8fafc; min-height:100vh; } /* FORM */ input, textarea, select{ background:#fff; box-shadow:0 5px 15px rgba(0,0,0,0.05); border:1px solid #e5e7eb; transition:0.3s; } input:focus, textarea:focus, select:focus{ border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.1); } button{ background:#1d4ed8; padding:12px 18px; border:none; border-radius:10px; cursor:pointer; transition:0.3s; font-weight:bold; letter-spacing:0.5px; } button:hover{ transform:translateY(-2px); background:#2563eb; } /* GRID */ #list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:15px; margin-top:15px; } /* CARD */ .card{ background:white;; padding:15px; border-radius:18px; box-shadow:0 10px 25px rgba(0,0,0,0.06); transition:0.3s; position:relative; border:1px solid #eef2f7; } .card:hover{ transform:translateY(-6px); box-shadow:0 15px 30px rgba(0,0,0,0.08); } /* TYPE BADGE */ .badge{ display:inline-block; padding:4px 10px; font-size:12px; border-radius:20px; background:#e0f2fe; color:#0369a1; margin-bottom:8px; } /* DELETE */ .del-btn{ position:absolute; top:10px; left:10px; background:#ef4444; border:none; color:#fff; border-radius:8px; padding:5px 8px; cursor:pointer; } .main-content{ background:#f8fafc; min-height:100vh; }
+body{ margin:0; font-family:Tajawal; background:#f1f5f9; }
+
+
+  /* SIDEBAR */ 
+  .side-nav{ position:fixed; top:0; right:0; width:220px; height:100vh; 
+            background:linear-gradient(180deg,#1e3a8a,#1d4ed8); 
+            padding:25px 15px; display:flex; flex-direction:column; gap:12px; color:#fff;
+            box-shadow:-10px 0 30px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
+  
+  ackdrop-filter: blur(10px); } 
+  .side-nav .logo{ text-align:center; font-size:20px; margin-bottom:20px; } 
+  
+  .side-nav a{ color:#fff; text-decoration:none; padding:12px; border-radius:10px; transition:0.3s; font-size:15px; font-weight:500; }
+  
+  .side-nav a:hover{ background:rgba(255,255,255,0.15); transform:translateX(-5px); }
+  /* MAIN */ .main-content{ margin-right:280px; padding:25px; width:calc(100% - 240px); background:#f8fafc; min-height:100vh; }
+  
+  /* FORM */ input, textarea, select{ background:#fff; box-shadow:0 5px 15px rgba(0,0,0,0.05); border:1px solid #e5e7eb; transition:0.3s; }
+             input:focus, textarea:focus, select:focus{ border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,0.1); } 
+             button{ background:#1d4ed8; padding:12px 18px; border:none; border-radius:10px; cursor:pointer; transition:0.3s; font-weight:bold; letter-spacing:0.5px; }
+  
+  button:hover{ transform:translateY(-2px); background:#2563eb; }
+  
+  /* GRID */ #list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:15px; margin-top:15px; } 
+  
+  /* CARD */ .card{ background:white;; padding:15px; border-radius:18px; box-shadow:0 10px 25px rgba(0,0,0,0.06); transition:0.3s; position:relative; border:1px solid #eef2f7; } 
+  
+  .card:hover{ transform:translateY(-6px); box-shadow:0 15px 30px rgba(0,0,0,0.08); }
+  
+  /* TYPE BADGE */ .badge{ display:inline-block; padding:4px 10px; font-size:12px; border-radius:20px; background:#e0f2fe; color:#0369a1; margin-bottom:8px; }
+  
+  /* DELETE */ .del-btn{ position:absolute; top:10px; left:10px; background:#ef4444; border:none; color:#fff; border-radius:8px; padding:5px 8px; cursor:pointer; }
+  
+  .main-content{ background:#f8fafc; min-height:100vh; }
   
  
       
