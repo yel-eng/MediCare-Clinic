@@ -5,8 +5,13 @@
 <title>لوحة التحكم</title>
 
 <style>
-body{font-family:Tajawal;background:#f8fafc;padding:20px}
-input,textarea{width:100%;padding:10px;margin:5px 0}
+body{
+  font-family:Tajawal;
+  background:#f8fafc;
+  padding:20px;
+  margin-right:220px; /* أهم سطر */
+}
+  input,textarea{width:100%;padding:10px;margin:5px 0}
 button{padding:10px 15px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;cursor:pointer}
 .card{background:#fff;padding:15px;margin-top:10px;border-radius:10px}
 /* NAVBAR عمودي */
@@ -69,6 +74,9 @@ body {
 </head>
 
 <body>
+  <div class="main-content">
+  
+
   <div class="side-nav">
 
   <h2 class="logo">Admin</h2>
@@ -103,6 +111,8 @@ body {
 
 <h2>المحتوى الحالي</h2>
 <div id="list"></div>
+
+ </div>   
 
 <script>
 let data = JSON.parse(localStorage.getItem("clinicData")) || [];
