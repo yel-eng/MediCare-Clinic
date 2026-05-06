@@ -216,10 +216,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔒 حماية الصفحة
+// 👇 السطر المهم جدًا
+window.db = db;
+        
+        // 🔒 حماية الصفحة
 let checked = false;
 
 onAuthStateChanged(auth, (user) => {
