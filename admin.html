@@ -193,6 +193,11 @@ input, textarea, select {
 
 </style>
 </head>
+
+
+
+
+        
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } 
@@ -234,6 +239,17 @@ window.logout = function () {
   });
 };
 </script>
+
+
+
+
+
+
+
+
+
+
+        
 <body>
   <div class="side-nav">
 
@@ -332,7 +348,10 @@ window.logout = function () {
 <input type="date" id="slotDate">
 <input type="time" id="startTime" value="17:00">
 <input type="time" id="endTime" value="22:00">
+<label>مدة كل ميعاد (بالدقايق)</label>
+<input type="number" id="slotDuration" value="30">
 
+        
 <button class="btn" onclick="setAvailability()">توليد</button>
 </div>
 
@@ -359,8 +378,6 @@ apiKey: "AIza...",
 authDomain: "mydoctor-clinic.firebaseapp.com",
 projectId: "mydoctor-clinic"
 };
-
-
 
 let activeId=null;
 let cache=[];
@@ -418,6 +435,10 @@ notes:pNotes.value
 alert("تم الحفظ");
 }
 
+
+
+
+        
 window.setAvailability = function () {
 let date=slotDate.value;
 let s=new Date(`${date}T${startTime.value}`);
@@ -432,10 +453,16 @@ status:"حجز",
 paid:0,
 patient:{name:"",phone:"",notes:""}
 });
-s.setMinutes(s.getMinutes()+30);
+let duration = Number(document.getElementById("slotDuration").value);
+
+s.setMinutes(s.getMinutes() + duration);
 }
 }
 
+
+
+
+        
 function deleteSlot(id){
 db.collection("slots").doc(id).delete();
 }
