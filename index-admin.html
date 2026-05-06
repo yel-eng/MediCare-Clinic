@@ -8,11 +8,84 @@
 body{font-family:Tajawal;background:#f8fafc;padding:20px}
 input,textarea{width:100%;padding:10px;margin:5px 0}
 button{padding:10px 15px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;cursor:pointer}
-.card{background:#fff;padding:15px;margin-top:10px;border-radius:10px}
+.card{background:#fff;padding:15px;margin-top:10px;border-radius:10px
+/* NAVBAR عمودي */
+.side-nav {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 220px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1a237e, #3949ab);
+  padding: 25px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 999;
+}
+
+/* اللوجو */
+.side-nav .logo {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* اللينكات */
+.side-nav a {
+  text-decoration: none;
+  color: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  transition: 0.3s;
+  font-size: 15px;
+}
+
+/* hover */
+.side-nav a:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateX(-5px);
+}
+
+/* الصفحة الحالية */
+.side-nav a.active {
+  background: #fff;
+  color: #1a237e;
+  font-weight: bold;
+}
+
+/* disabled */
+.side-nav a.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* عشان المحتوى ما يتغطّيش */
+body {
+  margin-right: 220px;
+}
+      
 </style>
 </head>
 
 <body>
+  <div class="side-nav">
+
+  <h2 class="logo">Admin</h2>
+
+  <a href="https://yel-eng.github.io/MediCare-Clinic/admin.html">
+    🏠 لوحة التحكم
+  </a>
+
+  <a href="https://yel-eng.github.io/MediCare-Clinic/index-admin.html">
+    📂 إدارة المحتوى
+  </a>
+
+  <a href="#" class="disabled">
+    🚧 قريباً
+  </a>
+
+</div>
 
 <h2>إضافة محتوى</h2>
 
