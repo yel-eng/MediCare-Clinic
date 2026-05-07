@@ -502,7 +502,7 @@ function deleteDay(date){
     .get()
     .then(snap=>{
 
-      let batch = db.batch();
+let batch = window.db.batch();
 
       snap.forEach(doc=>{
         batch.delete(doc.ref);
