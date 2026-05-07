@@ -647,8 +647,8 @@ ${x.time === "REQUEST" ? "📩 طلب حجز" : x.time}
   }
         window.assignRequest = async function (id) {
 
-  let date = document.getElementById("slotDate").value;
-  let time = document.getElementById("startTime").value;
+  let date = document.getElementById("assignDate").value;
+let time = document.getElementById("assignTime").value;
 
   if (!date || !time) {
     alert("اختار التاريخ والوقت الأول من لوحة إضافة يوم");
