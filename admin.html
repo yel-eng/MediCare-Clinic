@@ -319,10 +319,12 @@ window.logout = function () {
 
 <input id="pName" placeholder="الاسم">
 <div id="historyBox" class="patient-history"></div>
-
+<input type="date" id="slotDate">
+<input type="time" id="startTime">
 <input id="pPhone" placeholder="الهاتف">
 <textarea id="pNotes" placeholder="ملاحظات"></textarea>
 <input id="pPaid" type="number" placeholder="المبلغ">
+<button class="btn" onclick="assignRequest()">تحديد ميعاد للطلب</button>
 
 <select id="pStatus">
 <option value="حجز">حجز</option>
@@ -569,9 +571,8 @@ function renderSlots() {
     let phone = d.patient.phone || "";
 
     if (searchVal && !name.includes(searchVal) && !phone.includes(searchVal)) return;
-    if (filter === "booked" && !d.booked) return;
+    if (filter === "booked" && !d.booked && d.status !== "pending") return;
     if (filter === "free" && d.booked) return;
-
     if (!days[d.date]) days[d.date] = [];
     days[d.date].push(d);
   });
@@ -582,11 +583,11 @@ function renderSlots() {
 
   let total = 0;
 
-  days[d].sort((a,b)=>{
-    if(a.time === "REQUEST") return -1;
-    if(b.time === "REQUEST") return 1;
-    return a.time.localeCompare(b.time);
-  });
+  days[d].sort((a, b) => {
+  if (a.status === "pending") return -1;
+  if (b.status === "pending") return 1;
+  return a.time.localeCompare(b.time);
+});
 
   days[d].forEach((x) => {
       if (x.status === "كشف") {
@@ -616,19 +617,56 @@ onclick="selectSlot('${x.id}')">
 <b>
 ${x.time === "REQUEST" ? "📩 طلب حجز" : x.time}
 </b>
-- ${x.booked ? x.patient.name : "متاح"} (${x.status})
-
+<b>${x.time === "REQUEST" ? "📩 طلب جديد" : x.time}</b> 
+- ${x.patient?.name || "بدون اسم"} 
+(${x.status})
           ${x.patient.phone ? `
             <br><a class="whatsapp" target="_blank"
             href="https://wa.me/2${x.patient.phone}">
             واتساب 📱
             </a>` : ""}
         </div>
+        ${x.status === "pending" ? `
+  <button onclick="assignRequest('${x.id}')" 
+  style="
+    margin-top:8px;
+    padding:6px;
+    width:100%;
+    background:#ff9800;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+  ">
+  📌 تحويل لموعد
+  </button>
+` : ""}
       `).join("")}
     `;
 
     daysGrid.appendChild(col);
   }
+        window.assignRequest = async function (id) {
+
+  let date = document.getElementById("slotDate").value;
+  let time = document.getElementById("startTime").value;
+
+  if (!date || !time) {
+    alert("اختار التاريخ والوقت الأول من لوحة إضافة يوم");
+    return;
+  }
+
+  const ref = doc(db, "slots", id);
+
+  await updateDoc(ref, {
+    date: date,
+    time: time,
+    status: "حجز",
+    booked: true
+  });
+
+  alert("تم تحويل الطلب لموعد ✔️");
+};
 
   document.getElementById("globalTotal").innerText =
     "💰 إجمالي العيادة: " + totalGlobal + " جنيه";
