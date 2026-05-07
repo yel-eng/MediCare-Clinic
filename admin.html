@@ -218,8 +218,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 👇 السطر المهم جدًا
-window.db = db;
         
         // 🔒 حماية الصفحة
 let checked = false;
@@ -377,8 +375,8 @@ window.logout = function () {
 
 
 
-<script>
-const firebaseConfig = {
+<script type="module">
+  const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
   projectId: "mydoctor-clinic"
