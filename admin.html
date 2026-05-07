@@ -582,10 +582,20 @@ function renderSlots() {
 
   let total = 0;
 
-  days[d].sort((a, b) => {
-  if (a.status === "pending") return -1;
-  if (b.status === "pending") return 1;
+ days[d].sort((a, b) => {
+
+  // الطلبات أولاً
+  if (a.status === "pending" && b.status !== "pending") {
+    return -1;
+  }
+
+  if (b.status === "pending" && a.status !== "pending") {
+    return 1;
+  }
+
+  // ترتيب الوقت الطبيعي
   return a.time.localeCompare(b.time);
+
 });
 
   days[d].forEach((x) => {
@@ -645,28 +655,98 @@ ${x.time === "REQUEST" ? "📩 طلب حجز" : x.time}
 
     daysGrid.appendChild(col);
   }
-        window.assignRequest = async function (id) {
+      window.assignRequest = async function (id) {
 
   let date = document.getElementById("assignDate").value;
-let time = document.getElementById("assignTime").value;
+  let time = document.getElementById("assignTime").value;
 
   if (!date || !time) {
-    alert("اختار التاريخ والوقت الأول من لوحة إضافة يوم");
+    return alert("اختار التاريخ والوقت");
+  }
+
+  // الطلب الحالي
+  const requestRef = doc(db, "slots", id);
+
+  const requestSnap = await getDoc(requestRef);
+
+  if (!requestSnap.exists()) {
+    return alert("الطلب غير موجود");
+  }
+
+  const requestData = requestSnap.data();
+
+  // البحث عن ميعاد متاح بنفس التاريخ والوقت
+  const q = query(
+    slotsRef,
+    where("date", "==", date),
+    where("time", "==", time)
+  );
+
+  const snap = await getDocs(q);
+
+  let foundSlot = null;
+
+  snap.forEach((d) => {
+    const data = d.data();
+
+    if (!data.booked) {
+      foundSlot = {
+        id: d.id,
+        ...data
+      };
+    }
+  });
+
+  // =========================
+  // لو الميعاد موجود وفاضي
+  // =========================
+  if (foundSlot) {
+
+    await updateDoc(doc(db, "slots", foundSlot.id), {
+
+      booked: true,
+
+      status: "حجز",
+
+      patient: requestData.patient || {},
+
+      paid: requestData.paid || 0
+
+    });
+
+    // حذف الطلب القديم
+    await deleteDoc(requestRef);
+
+    alert("تم تحويل الطلب لموعد موجود ✔️");
+
     return;
   }
 
-  const ref = doc(db, "slots", id);
+  // =========================
+  // لو الميعاد غير موجود
+  // ينشئ Slot جديد
+  // =========================
+  await addDoc(slotsRef, {
 
-  await updateDoc(ref, {
     date: date,
+
     time: time,
+
+    booked: true,
+
     status: "حجز",
-    booked: true
+
+    paid: requestData.paid || 0,
+
+    patient: requestData.patient || {}
+
   });
 
-  alert("تم تحويل الطلب لموعد ✔️");
-};
+  // حذف الطلب القديم
+  await deleteDoc(requestRef);
 
+  alert("تم إنشاء ميعاد جديد وتحويل الطلب ✔️");
+};
   document.getElementById("globalTotal").innerText =
     "💰 إجمالي العيادة: " + totalGlobal + " جنيه";
 }
