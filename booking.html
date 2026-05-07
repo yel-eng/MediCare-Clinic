@@ -150,155 +150,152 @@ button:active{
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  addDoc,
+  runTransaction,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
-  projectId: "mydoctor-clinic"
+  projectId: "mydoctor-clinic",
 };
 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ========================= */
 
 let selectedDate = "";
 let availableSlots = [];
 
-// ==========================
-// check day + smart loading
-// ==========================
-async function checkDay(){
+/* elements */
+const msg = document.getElementById("msg");
+const btn = document.getElementById("btn");
+const timeSelect = document.getElementById("timeSelect");
+const dateInput = document.getElementById("dateInput");
+
+window.checkDay = async function () {
 
   selectedDate = dateInput.value;
+
   msg.innerHTML = "⏳ جاري تحميل المواعيد...";
 
-  let snap = await db.collection("slots")
-    .where("date","==",selectedDate)
-    .get();
+  const q = query(
+    collection(db, "slots"),
+    where("date", "==", selectedDate)
+  );
+
+  const snap = await getDocs(q);
 
   availableSlots = [];
 
-  snap.forEach(doc=>{
-    let d = doc.data();
-    if(!d.booked) availableSlots.push({id:doc.id, ...d});
+  snap.forEach(d => {
+    const data = d.data();
+    if (!data.booked) {
+      availableSlots.push({ id: d.id, ...data });
+    }
   });
 
-  if(availableSlots.length === 0){
-
-    msg.innerHTML = "❌ لا يوجد مواعيد متاحة — سيتم تسجيل طلبك";
-
+  if (availableSlots.length === 0) {
+    msg.innerHTML = "❌ لا يوجد مواعيد متاحة";
     timeSelect.style.display = "none";
     return;
   }
-
-  msg.innerHTML = "";
 
   timeSelect.style.display = "block";
   timeSelect.innerHTML = `<option value="">اختر الوقت</option>`;
 
   availableSlots.sort((a,b)=>a.time.localeCompare(b.time));
 
-  availableSlots.forEach(s=>{
-    timeSelect.innerHTML += `<option value="${s.id}">${s.time}</option>`;
+  availableSlots.forEach(s => {
+    timeSelect.innerHTML += `
+      <option value="${s.id}">${s.time}</option>
+    `;
   });
-}
 
+  msg.innerHTML = "";
+};
 
-// ==========================
-// SMART fallback (nearest slot)
-// ==========================
-function findNearestSlot(){
+/* ========================= */
 
-  if(availableSlots.length === 0) return null;
-
-  return availableSlots[0]; // أبسط intelligent fallback
-}
-
-
-// ==========================
-// booking with transaction
-// ==========================
-async function book(){
+window.book = async function () {
 
   let name = document.getElementById("name").value.trim();
   let phone = document.getElementById("phone").value.trim();
-  let slotId = document.getElementById("timeSelect").value;
+  let slotId = timeSelect.value;
 
-  if(!name || !phone){
+  if (!name || !phone) {
     msg.innerHTML = "⚠️ املأ البيانات";
     return;
   }
 
   btn.classList.add("loading");
-  msg.innerHTML = "⏳ جاري تأكيد الحجز...";
+  msg.innerHTML = "⏳ جاري الحجز...";
 
-  try{
+  try {
 
-    // ======================
-    // CASE 1: no slots → queue system
-    // ======================
-    if(!slotId){
+    /* لو مفيش اختيار */
+    if (!slotId) {
 
-     await db.collection("slots").add({
-  date: selectedDate,
-  time: "REQUEST",
-  booked: true,
-  status: "pending",
-  patient:{
-    name,
-    phone,
-    notes:"تواصل مع العميل لتحديد ميعاد"
-  },
-  createdAt: firebase.firestore.Timestamp.now()
-});4
+      await addDoc(collection(db, "slots"), {
+        date: selectedDate,
+        time: "REQUEST",
+        booked: true,
+        status: "pending",
+        patient: { name, phone, notes: "" },
+        createdAt: serverTimestamp()
+      });
 
-      msg.innerHTML = "📩 تم تسجيل طلبك وسنتواصل معك";
-      btn.classList.remove("loading");
+      msg.innerHTML = "📩 تم تسجيل طلبك";
       return;
     }
 
-    // ======================
-    // CASE 2: transaction booking (ANTI DOUBLE BOOKING)
-    // ======================
-    await db.runTransaction(async (transaction)=>{
+    /* Transaction */
+    await runTransaction(db, async (transaction) => {
 
-      let ref = db.collection("slots").doc(slotId);
-      let doc = await transaction.get(ref);
+      const ref = doc(db, "slots", slotId);
+      const snap = await transaction.get(ref);
 
-      if(!doc.exists) throw "Slot not found";
+      if (!snap.exists()) throw "Slot not found";
 
-      let data = doc.data();
+      const data = snap.data();
 
-      if(data.booked){
-        throw "هذا الموعد محجوز بالفعل";
-      }
+      if (data.booked) throw "الموعد محجوز بالفعل";
 
-      transaction.update(ref,{
-        booked:true,
-        status:"confirmed",
-        patient:{
-          name,
-          phone,
-          notes:""
-        }
+      transaction.update(ref, {
+        booked: true,
+        status: "confirmed",
+        patient: { name, phone, notes: "" }
       });
 
     });
 
     msg.innerHTML = "✅ تم الحجز بنجاح";
-    msg.className = "msg ok";
+    msg.classList.add("ok");
 
     checkDay();
 
-  }catch(err){
+  } catch (err) {
 
-    console.error(err);
-    msg.innerHTML = "❌ حدث خطأ: " + err;
+    msg.innerHTML = "❌ " + err;
 
-  }finally{
+  } finally {
     btn.classList.remove("loading");
   }
+};
 
-}
-
+</script>
 </script>
 
 </body>
