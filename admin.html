@@ -198,7 +198,7 @@ input, textarea, select {
 
 
         
-<script>
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -380,7 +380,7 @@ window.logout = function () {
 
 
 
-<script >
+<script type="module">
   const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -392,7 +392,7 @@ window.logout = function () {
 let activeId=null;
 let cache=[];
 
-db.collection("slots").onSnapshot(snap=>{
+window.db.collection("slots").onSnapshot(snap=>{
 cache=[];
 snap.forEach(doc=>{
 let d=doc.data();
@@ -414,7 +414,7 @@ function safeLoad(){ renderSlots(); }
 function selectSlot(id){
 activeId = id;
 
-db.collection("slots").doc(id).get().then(doc=>{
+window.db.collection("slots").doc(id).get().then(doc=>{
 let d = doc.data();
 
 pName.value = d.patient?.name || "";
@@ -431,7 +431,7 @@ document.getElementById("targetTime").innerText =
 function updateSlot(){
 if(!activeId) return alert("اختاري ميعاد");
 
-db.collection("slots").doc(activeId).update({
+window.db.collection("slots").doc(activeId).update({
 booked: pName.value.trim() !== "",
 status: pStatus.value,
 paid: Number(pPaid.value || 0),
@@ -489,7 +489,7 @@ window.db.collection("slots").add({
 
         
 function deleteSlot(id){
-db.collection("slots").doc(id).delete();
+window.db.collection("slots").doc(id).delete();
 }
 
 /* ✔️ NEW FUNCTION (DELETE DAY) */
@@ -497,7 +497,7 @@ function deleteDay(date){
 
   if(!confirm("هل تريد حذف كل مواعيد هذا اليوم؟")) return;
 
-  db.collection("slots")
+  window.db.collection("slots")
     .where("date","==",date)
     .get()
     .then(snap=>{
