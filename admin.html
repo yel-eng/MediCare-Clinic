@@ -461,8 +461,8 @@ function setAvailability(){
 
   while(s < e){
 
-    db.collection("slots").add({
-      date: date,
+window.db.collection("slots").add({
+     date: date,
       time: s.toTimeString().slice(0,5),
       booked: false,
       status: "حجز",
