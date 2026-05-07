@@ -579,11 +579,16 @@ function renderSlots() {
   daysGrid.innerHTML = "";
 
   for (let d in days) {
-    let total = 0;
 
-    days[d].sort((a, b) => a.time.localeCompare(b.time));
+  let total = 0;
 
-    days[d].forEach((x) => {
+  days[d].sort((a,b)=>{
+    if(a.time === "REQUEST") return -1;
+    if(b.time === "REQUEST") return 1;
+    return a.time.localeCompare(b.time);
+  });
+
+  days[d].forEach((x) => {
       if (x.status === "كشف") {
         total += Number(x.paid || 0);
         totalGlobal += Number(x.paid || 0);
@@ -602,10 +607,16 @@ function renderSlots() {
       <div class="day-money">💰 ${total} جنيه</div>
 
       ${days[d].map(x => `
-        <div class="slot-item ${x.booked ? "booked" : ""} ${x.status == "ملغي" ? "cancel" : ""}"
-             onclick="selectSlot('${x.id}')">
+<div class="slot-item 
+${x.booked ? "booked" : ""} 
+${x.status == "ملغي" ? "cancel" : ""} 
+${x.status == "pending" ? "pending-slot" : ""}"
+onclick="selectSlot('${x.id}')">
 
-          <b>${x.time}</b> - ${x.booked ? x.patient.name : "متاح"} (${x.status})
+<b>
+${x.time === "REQUEST" ? "📩 طلب حجز" : x.time}
+</b>
+- ${x.booked ? x.patient.name : "متاح"} (${x.status})
 
           ${x.patient.phone ? `
             <br><a class="whatsapp" target="_blank"
