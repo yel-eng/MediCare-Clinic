@@ -3,335 +3,98 @@
 <head>
 <meta charset="UTF-8">
 <title>نظام العيادة المستقر</title>
-
 <style>
-:root { --main: #1a237e; 
-        --bg: #f4f7f6;
-      }
-  
-body { 
-        font-family: 'Segoe UI', 
-        sans-serif; background: 
-        var(--bg);
-        margin: 0; 
-        padding: 20px; 
-        overflow-x:hidden;
-        margin-right: 220px;
-       }
-  
-/* NAVBAR عمودي */
-.side-nav {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 220px;
-  height: 100vh;
-  background: linear-gradient(180deg, #1a237e, #3949ab);
-  padding: 25px 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  z-index: 999;
-  display:flex;
-  flex-direction:column;
-}
-  
-/* اللوجو */
-.side-nav .logo {
-  color: #fff;
-  text-align: center;
-  margin-bottom: 20px;
-}
-  /* الصفحة الحالية */
-.side-nav a.active {
-  background: #fff;
-  color: #1a237e;
-  font-weight: bold;
-}
-
-/* disabled */
-.side-nav a.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* اللينكات */
-.side-nav a {
-  text-decoration: none;
-  color: #fff;
-  padding: 12px;
-  border-radius: 10px;
-  transition: 0.3s;
-  font-size: 15px;
-}
-
-/* hover */
-.side-nav a:hover {
-  background: rgba(255,255,255,0.15);
-  transform: translateX(-5px);
-}
-
-
-.admin-grid { 
-            display: grid; 
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-            }
-
-.card { 
-         background: white;
-         padding: 20px; 
-         border-radius: 15px; 
-         box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-         margin-bottom: 20px; 
-       }
-    
-.days-row { 
-           display: grid; 
-           grid-template-columns: 
-           repeat(auto-fill, 
-           minmax(280px, 1fr)); gap: 15px; 
-          }
-
-.day-col { 
-          background: white; 
-          border: 1px solid #ddd;
-          border-radius: 12px; 
-         }
-
-.day-head {
-          background: var(--main);
-          color: white; 
-          padding: 12px; 
-          text-align: center;
-          border-radius: 12px 12px 0 0;
-          position: relative; 
-          }
-  
-
-.day-money { 
-          background:#fff3e0; 
-          padding:6px; 
-          text-align:center; 
-          font-weight:bold; 
-            }
-
-.total-box{
-background:#c8e6c9;
-padding:10px;
-margin-bottom:15px;
-text-align:center;
-font-weight:bold;
-border-radius:10px;
-}
-
-.slot-item { padding: 12px; 
-            border-bottom: 1px solid #eee; 
-            cursor: pointer;
-           }
-
+:root { --main: #1a237e; --bg: #f4f7f6; }
+body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; overflow-x:hidden; margin-right: 220px; }
+.side-nav { position: fixed; top: 0; right: 0; width: 220px; height: 100vh; background: linear-gradient(180deg, #1a237e, #3949ab); padding: 25px 15px; display: flex; flex-direction: column; gap: 15px; z-index: 999; }
+.side-nav .logo { color: #fff; text-align: center; margin-bottom: 20px; }
+.side-nav a.active { background: #fff; color: #1a237e; font-weight: bold; }
+.side-nav a.disabled { opacity: 0.5; pointer-events: none; }
+.side-nav a { text-decoration: none; color: #fff; padding: 12px; border-radius: 10px; transition: 0.3s; font-size: 15px; }
+.side-nav a:hover { background: rgba(255,255,255,0.15); transform: translateX(-5px); }
+.admin-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+.card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+.days-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+.day-col { background: white; border: 1px solid #ddd; border-radius: 12px; }
+.day-head { background: var(--main); color: white; padding: 12px; text-align: center; border-radius: 12px 12px 0 0; position: relative; }
+.day-money { background:#fff3e0; padding:6px; text-align:center; font-weight:bold; }
+.total-box { background:#c8e6c9; padding:10px; margin-bottom:15px; text-align:center; font-weight:bold; border-radius:10px; }
+.slot-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; position: relative; }
 .slot-item:hover { background: #f0f7ff; }
-
 .booked { border-right: 5px solid #2e7d32; }
-  
 .cancel { border-right: 5px solid red; }
-
-.del-btn { 
-         position:absolute; 
-         left:10px; 
-         top:10px; 
-         cursor:pointer;
-         color:red;
-          }
-
-input, textarea, select {
-         width: 100%; 
-         padding: 10px; 
-         margin: 8px 0; 
-         border: 1px solid #ccc; 
-         border-radius: 8px; 
-}
-
-.btn { background: var(--main); 
-       color: white;
-       border: none; 
-       padding: 12px;
-       width: 100%; 
-       border-radius: 8px;
-       cursor: pointer; 
-     }
-
-.whatsapp { background:#25d366;
-            color:white; 
-             padding:6px 10px; 
-             border-radius:6px; 
-             display:inline-block; 
-             margin-top:5px;
-             text-decoration:none;}
-
-.now-slot{
-          background:#fff9c4 !important;
-          border-right:5px solid #fbc02d !important;
-}
-
-.patient-history{
-          background:#e3f2fd;
-          padding:8px;
-          border-radius:8px;
-          margin-top:5px;
-          font-size:13px;
-          display:none;
-          }
-
-.pending-slot{
-            background:#ffe0b2 !important;
-            border-right:5px solid #ff9800 !important;
-}
-
-
+.del-btn { position:absolute; left:10px; top:10px; cursor:pointer; color:red; font-size:18px; }
+input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+.btn { background: var(--main); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; margin-top:5px; }
+.whatsapp { background:#25d366; color:white; padding:6px 10px; border-radius:6px; display:inline-block; margin-top:5px; text-decoration:none; font-size:12px; }
+.now-slot { background:#fff9c4 !important; border-right:5px solid #fbc02d !important; }
+.patient-history { background:#e3f2fd; padding:8px; border-radius:8px; margin-top:5px; font-size:13px; display:none; }
+.pending-slot { background:#ffe0b2 !important; border-right:5px solid #ff9800 !important; }
+.action-buttons { margin-top:8px; display:flex; gap:5px; flex-wrap:wrap; }
+.action-buttons button { background:#25d366; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; }
+.action-buttons button:nth-child(2) { background:#ff9800; }
+.action-buttons button:nth-child(3) { background:#f44336; }
 </style>
 </head>
-        
 <body>
-  <div class="side-nav">
 
+<div class="side-nav">
   <h2 class="logo">Admin</h2>
-
-  <a href="https://yel-eng.github.io/MediCare-Clinic/admin.html">
-    🏠 لوحة التحكم
-  </a>
-
-  <a href="https://yel-eng.github.io/MediCare-Clinic/index-admin.html">
-    📂 إدارة المحتوى
-  </a>
-
-  <a href="#" class="disabled">
-    🚧 قريباً
-  </a>
-
-</div>
- <button onclick="logout()" style="
-  margin-top:auto;
-  background: linear-gradient(180deg, #1a237e, #3949ab);
-  color:#fff;
-  border:none;
-  padding:12px;
-  border-radius:10px;
-  cursor:pointer;
-   margin-top:auto;
-">
-  🚪 تسجيل خروج
-</button>
-  
-  <a href="https://yel-eng.github.io/MediCare-Clinic/admin.html"
-   style="
-     position: fixed;
-     top: 20px;
-     left: 20px;
-     text-decoration: none;
-     color: #fff;
-     background: linear-gradient(135deg,#1a237e,#3949ab);
-     padding: 12px 18px;
-     border-radius: 10px;
-     font-size: 15px;
-     z-index: 9999;
-     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-   ">
-  🏠 لوحة التحكم
-</a>
-
+  <a href="admin.html" class="active">🏠 لوحة التحكم</a>
+  <a href="index-admin.html">📂 إدارة المحتوى</a>
+  <a href="#" class="disabled">🚧 قريباً</a>
+  <button onclick="logout()" style="margin-top:auto;background:linear-gradient(180deg,#1a237e,#3949ab);color:#fff;border:none;padding:12px;border-radius:10px;cursor:pointer;">🚪 خروج</button>
 </div>
 
-</div>
+<a href="admin.html" style="position:fixed;top:20px;left:20px;text-decoration:none;color:#fff;background:linear-gradient(135deg,#1a237e,#3949ab);padding:12px 18px;border-radius:10px;font-size:15px;z-index:9999;box-shadow:0 8px 20px rgba(0,0,0,0.2);">🏠 الرئيسية</a>
+
 <div class="total-box" id="globalTotal">💰 إجمالي العيادة: 0</div>
 
 <div class="admin-grid">
+  <div class="side-panel">
+    <div class="card">
+      <h3>👤 بيانات الحجز</h3>
+      <p id="targetTime">اختر ميعاداً</p>
+      <input id="pName" placeholder="الاسم">
+      <div id="historyBox" class="patient-history"></div>
+      <select id="availableSlots"><option value="">اختر ميعاد متاح</option></select>
+      <input type="date" id="requestDate" onchange="loadAvailableSlots(this.value)">
+      <input id="pPhone" placeholder="الهاتف">
+      <textarea id="pNotes" placeholder="ملاحظات"></textarea>
+      <input id="pPaid" type="number" placeholder="المبلغ">
+      <select id="pStatus"><option value="حجز">حجز</option><option value="كشف">كشف</option><option value="ملغي">ملغي</option></select>
+      <button class="btn" onclick="updateSlot()">حفظ</button>
+      <button class="btn" style="background:#00897b" onclick="generateQR()">QR</button>
+      <img id="qrImg" width="120" style="display:none;margin-top:10px;">
+      <button class="btn" onclick="assignRequest()">تحديد ميعاد للطلب</button>
+      <input id="search" placeholder="بحث..." onkeyup="safeLoad()">
+      <select id="filter" onchange="safeLoad()"><option value="all">الكل</option><option value="booked">محجوز</option><option value="free">متاح</option></select>
+    </div>
+  </div>
 
-<div class="side-panel">
-
-<div class="card">
-<h3>👤 بيانات الحجز</h3>
-
-<p id="targetTime">اختر ميعاداً</p>
-
-<input id="pName" placeholder="الاسم">
-<div id="historyBox" class="patient-history"></div>
-        <select id="availableSlots">
-<option value="">اختر ميعاد متاح</option>
-        </select>
-  <input type="date" id="requestDate"
-onchange="loadAvailableSlots(this.value)">
-<input id="pPhone" placeholder="الهاتف">
-<textarea id="pNotes" placeholder="ملاحظات"></textarea>
-<input id="pPaid" type="number" placeholder="المبلغ">
-
-<select id="pStatus">
-<option value="حجز">حجز</option>
-<option value="كشف">كشف</option>
-<option value="ملغي">ملغي</option>
-</select>
-
-<button class="btn" onclick="updateSlot()">حفظ</button>
-<button class="btn" style="background:#00897b" onclick="generateQR()">QR</button>
-<img id="qrImg" width="120">
-<button class="btn" onclick="assignRequest()">تحديد ميعاد للطلب</button>
-
-<input id="search" placeholder="بحث..." onkeyup="safeLoad()">
-<select id="filter" onchange="safeLoad()">
-<option value="all">الكل</option>
-<option value="booked">محجوز</option>
-<option value="free">متاح</option>
-</select>
-
+  <div class="main-panel">
+    <div class="card">
+      <h3>📅 إضافة يوم</h3>
+      <input type="date" id="slotDate">
+      <input type="time" id="startTime" value="17:00">
+      <input type="time" id="endTime" value="22:00">
+      <label>مدة كل ميعاد (بالدقايق)</label>
+      <input type="number" id="slotDuration" value="30">
+      <button class="btn" onclick="createDaySlots()">توليد</button>
+      <button class="btn" style="background:#6a1b9a;margin-top:10px;" onclick="diagnoseBookingCompatibility()">🔍 فحص التوافق</button>
+    </div>
+    <div id="daysGrid" class="days-row"></div>
+  </div>
 </div>
 
-</div>
-
-<div class="main-panel">
-
-<div class="card">
-<h3>📅 إضافة يوم</h3>
-
-<input type="date" id="slotDate">
-<input type="time" id="startTime" value="17:00">
-<input type="time" id="endTime" value="22:00">
-<label>مدة كل ميعاد (بالدقايق)</label>
-<input type="number" id="slotDuration" value="30">
-
-        
-<button class="btn" onclick="createDaySlots()">توليد</button>
-</div>
-
-<div id="daysGrid" class="days-row"></div>
-
-</div>
-
-</div>
-
-
-    
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore,
-  collection,
-  onSnapshot,
-  doc,
-  getDoc,
-  updateDoc,
-  addDoc,
-  deleteDoc,
-  query,
-  where,
-  getDocs,
-  writeBatch,
-  serverTimestamp,
-        orderB
+  getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, addDoc, deleteDoc,
+  query, where, getDocs, writeBatch, serverTimestamp, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* ================= FIREBASE ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -345,779 +108,245 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-
 window.db = db;
-
-/* ================= STATE ================= */
 const $ = (id) => document.getElementById(id);
-
-let cache = [];
-let activeId = null;
-
+let cache = [], activeId = null;
 const slotsRef = collection(db, "slots");
 const requestsRef = collection(db, "requests");
 
-/* ================= LOGOUT ================= */
-window.logout = () => {
-  signOut(auth).then(() => location.href = "login.html");
-};
+window.logout = () => signOut(auth).then(() => location.href = "login.html");
 
-/* ================= REALTIME ================= */
 onSnapshot(slotsRef, (snap) => {
-
   cache = [];
-
-  snap.forEach(d => {
-    cache.push({
-      id: d.id,
-      ...d.data()
-    });
-  });
-
+  snap.forEach(d => cache.push({ id: d.id, ...d.data() }));
   renderSlots();
 });
 
-/* ================= SELECT SLOT ================= */
 window.selectSlot = async (id) => {
-
   activeId = id;
-
   const snap = await getDoc(doc(db, "slots", id));
   if (!snap.exists()) return;
-
   const d = snap.data();
-
   $("pName").value = d.patient?.name || "";
   $("pPhone").value = d.patient?.phone || "";
   $("pNotes").value = d.patient?.notes || "";
   $("pPaid").value = d.paid || 0;
   $("pStatus").value = d.status || "حجز";
-
   $("targetTime").innerText = `${d.date} - ${d.time}`;
 };
 
-/* ================= UPDATE SLOT ================= */
 window.updateSlot = async () => {
-
   if (!activeId) return alert("اختاري ميعاد أولاً");
-
   await updateDoc(doc(db, "slots", activeId), {
     booked: $("pName").value.trim() !== "",
     status: $("pStatus").value,
     paid: Number($("pPaid").value || 0),
-    patient: {
-      name: $("pName").value,
-      phone: $("pPhone").value,
-      notes: $("pNotes").value
-    },
+    patient: { name: $("pName").value, phone: $("pPhone").value, notes: $("pNotes").value },
     updatedAt: serverTimestamp()
   });
-
   activeId = null;
   alert("تم التعديل ✔️");
 };
 
-/* ================= CREATE DAY SLOTS ================= */
 window.createDaySlots = async () => {
-
-  const date = $("slotDate").value;
-  const start = $("startTime").value;
-  const end = $("endTime").value;
+  const date = $("slotDate").value, start = $("startTime").value, end = $("endTime").value;
   const duration = Number($("slotDuration").value);
-
-  if (!date || !start || !end) {
-    alert("اكمل البيانات");
-    return;
-  }
-
-  let time = new Date(`${date}T${start}`);
-  const endTime = new Date(`${date}T${end}`);
-
+  if (!date || !start || !end) return alert("اكمل البيانات");
+  let time = new Date(`${date}T${start}`), endTime = new Date(`${date}T${end}`), count = 0;
   while (time < endTime) {
-
     await addDoc(slotsRef, {
-      date,
-      time: time.toTimeString().slice(0,5),
-      booked: false,
-      status: "available",
-      patient: null,
-      createdAt: serverTimestamp()
+      date: String(date), time: time.toTimeString().slice(0,5), booked: false,
+      status: "available", patient: null, paid: 0, notes: "", createdAt: serverTimestamp()
     });
-
-    time.setMinutes(time.getMinutes() + duration);
+    time.setMinutes(time.getMinutes() + duration); count++;
   }
-
-  alert("تم إنشاء اليوم ✔️");
+  alert(`✅ تم إنشاء ${count} ميعاد ليوم ${date}`);
 };
 
-/* ================= CREATE REQUEST ================= */
 window.createRequest = async () => {
-
-  const name = $("pName").value;
-  const phone = $("pPhone").value;
-  const date = $("requestDate").value;
-
-  if (!name || !phone || !date) {
-    alert("اكمل البيانات");
-    return;
-  }
-
-  await addDoc(requestsRef, {
-    name,
-    phone,
-    date,
-    status: "pending",
-    createdAt: serverTimestamp()
-  });
-
+  const name = $("pName").value, phone = $("pPhone").value, date = $("requestDate").value;
+  if (!name || !phone || !date) return alert("اكمل البيانات");
+  await addDoc(requestsRef, { name, phone, date, status: "pending", createdAt: serverTimestamp() });
   alert("تم إرسال الطلب ✔️");
 };
 
-/* ================= CONVERT REQUEST ================= */
 window.convertRequest = async (requestId, date, time) => {
-
   const reqRef = doc(db, "requests", requestId);
   const reqSnap = await getDoc(reqRef);
-
   if (!reqSnap.exists()) return;
-
   const req = reqSnap.data();
-
-  await addDoc(slotsRef, {
-    date,
-    time,
-    booked: true,
-    status: "booked",
-    patient: {
-      name: req.name,
-      phone: req.phone
-    },
-    createdAt: serverTimestamp()
-  });
-
-  await updateDoc(reqRef, {
-    status: "converted"
-  });
-
+  await addDoc(slotsRef, { date, time, booked: true, status: "booked", patient: { name: req.name, phone: req.phone }, createdAt: serverTimestamp() });
+  await updateDoc(reqRef, { status: "converted" });
   alert("تم التحويل ✔️");
 };
 
-/* ================= DELETE DAY ================= */
 window.deleteDay = async (date) => {
-
   if (!confirm("حذف اليوم؟")) return;
-
   const q = query(slotsRef, where("date", "==", date));
   const snap = await getDocs(q);
-
   const batch = writeBatch(db);
-
   snap.forEach(d => batch.delete(d.ref));
-
   await batch.commit();
 };
 
-/* ================= RENDER ================= */
-function renderSlots() {
-
-  const grid = $("daysGrid");
-  const totalBox = $("globalTotal");
-
-  let days = {};
-  let total = 0;
-
-  cache.forEach(d => {
-
-    if (!d.date) return;
-
-    if (!days[d.date]) days[d.date] = [];
-    days[d.date].push(d);
-  });
-
-  grid.innerHTML = "";
-
-  Object.keys(days).sort().forEach(date => {
-
-    let dayTotal = 0;
-
-    days[date].forEach(s => {
-      if (s.status === "كشف") {
-        dayTotal += Number(s.paid || 0);
-        total += Number(s.paid || 0);
-      }
-    });
-
-    const col = document.createElement("div");
-    col.className = "day-col";
-
-    col.innerHTML = `
-      <div class="day-head">
-        ${date}
-        <span class="del-btn" onclick="deleteDay('${date}')">×</span>
-      </div>
-
-      <div class="day-money">💰 ${dayTotal} جنيه</div>
-
-      ${days[date]
-        .sort((a,b)=>a.time.localeCompare(b.time))
-        .map(x => `
-          <div class="slot-item ${x.booked ? "booked" : ""}"
-            onclick="selectSlot('${x.id}')">
-
-            <b>${x.time}</b> - ${x.patient?.name || "بدون اسم"} (${x.status})
-          </div>
-        `).join("")}
-    `;
-
-    grid.appendChild(col);
-  });
-
-  totalBox.innerText = "💰 إجمالي العيادة: " + total + " جنيه";
-}
-/* =======================================================
-   🔧 FIX: ضمان توافق بيانات المواعيد مع صفحة الحجز
-   (ضع هذا الكود في نهاية السكربت في admin.html فقط)
-   ======================================================= */
-
-// 1. استبدال دالة createDaySlots بنسخة تضمن التوافق 100%
-window.createDaySlots = async () => {
-  const dateInput = $("slotDate").value;
-  const start = $("startTime").value;
-  const end = $("endTime").value;
-  const duration = Number($("slotDuration").value);
-
-  if (!dateInput || !start || !end) {
-    alert("⚠️ أكمل جميع البيانات");
-    return;
-  }
-
-  // ✅ ضمان أن التاريخ بصيغة YYYY-MM-DD (نص)
-  const date = dateInput; // كما هو من input type="date"
-
-  let currentTime = new Date(`${date}T${start}`);
-  const endTime = new Date(`${date}T${end}`);
-  let createdCount = 0;
-
-  while (currentTime < endTime) {
-    // ✅ ضمان أن الوقت بصيغة HH:MM (نص)
-    const timeString = currentTime.toTimeString().slice(0, 5);
-
-    // ✅ إنشاء كائن الميعاد بالضبط كما تتوقعه booking.html
-    const slotData = {
-      date: String(date),           // نص: "2024-06-01"
-      time: String(timeString),     // نص: "17:00"
-      booked: false,                // بوليان: ليس نص!
-      status: "available",          // نص
-      patient: null,                // null صريح
-      paid: 0,                      // رقم افتراضي
-      notes: "",                    // نص فارغ
-      createdAt: serverTimestamp()  // طابع زمني
-    };
-
-    try {
-      await addDoc(slotsRef, slotData);
-      createdCount++;
-      console.log("✅ Slot created:", slotData);
-    } catch (err) {
-      console.error("❌ Failed to create slot:", err);
-    }
-
-    currentTime.setMinutes(currentTime.getMinutes() + duration);
-  }
-
-  alert(`✅ تم إنشاء ${createdCount} ميعاد ليوم ${date} بنجاح`);
-  console.log(`📊 Total slots created: ${createdCount}`);
-};
-
-// 2. دالة تشخيص: اختبر إن صفحة الحجز هتشوف المواعيد دي
-window.diagnoseBookingCompatibility = async () => {
-  console.log("🔍 Running booking.html compatibility check...");
-  
-  try {
-    // نجرب نجيب آخر ميعاد اتخلق
-    const q = query(slotsRef, orderBy("createdAt", "desc"), limit(1));
-    const snap = await getDocs(q);
-    
-    if (snap.empty) {
-      console.warn("⚠️ No slots found in Firestore");
-      alert("⚠️ مفيش مواعيد في قاعدة البيانات أصلاً");
-      return;
-    }
-    
-    const lastSlot = snap.docs[0].data();
-    console.log("📋 Last slot structure:", lastSlot);
-    
-    // نتأكد من الحقول الأساسية
-    const checks = {
-      "date is string": typeof lastSlot.date === "string",
-      "time is string": typeof lastSlot.time === "string", 
-      "booked is boolean": typeof lastSlot.booked === "boolean",
-      "date format YYYY-MM-DD": /^\d{4}-\d{2}-\d{2}$/.test(lastSlot.date),
-      "time format HH:MM": /^\d{2}:\d{2}$/.test(lastSlot.time)
-    };
-    
-    console.table(checks);
-    
-    const allPassed = Object.values(checks).every(v => v === true);
-    
-    if (allPassed) {
-      console.log("✅ All checks passed! booking.html should see these slots.");
-      alert("✅ جميع المواعيد مُنشأة بشكل صحيح متوافق مع صفحة الحجز");
-    } else {
-      console.error("❌ Some checks failed:", checks);
-      alert("⚠️ يوجد مشكلة في فورمات البيانات. راجع الكونسول للتفاصيل.");
-    }
-    
-  } catch (err) {
-    console.error("❌ Diagnosis failed:", err);
-    
-    // لو الخطأ متعلق بإنديكس
-    if (err.message?.includes("index")) {
-      alert("⚠️ فايربيس محتاج Composite Index.\n" + 
-            "افتح الكونسول (F12) وانسخ الرابط الأحمر لإنشائه.");
-    } else {
-      alert("❌ خطأ في قراءة البيانات: " + err.message);
-    }
-  }
-};
-
-// 3. إضافة زر تشخيص في الواجهة (يظهر فقط للأدمن)
-document.addEventListener("DOMContentLoaded", () => {
-  const diagBtn = document.createElement("button");
-  diagBtn.textContent = "🔍 فحص توافق المواعيد";
-  diagBtn.className = "btn";
-  diagBtn.style.background = "#6a1b9a";
-  diagBtn.style.marginTop = "10px";
-  diagBtn.onclick = () => window.diagnoseBookingCompatibility();
-  
-  // نضيفه بجانب زر "توليد"
-  const generateBtn = document.querySelector('button[onclick="createDaySlots()"]');
-  if (generateBtn?.parentElement) {
-    generateBtn.parentElement.appendChild(diagBtn);
-  }
-});
-
-console.log("🔧 Admin compatibility patch loaded");
-
-
-
-
-        /* =======================================================
-   🛠️ الدوال الناقصة لصفحة الأدمن (جاهزة للنسخ)
-   ضع هذا الكود في نهاية ملف admin.html قبل </script>
-   ======================================================= */
-
-// 1. توليد كود QR للميعاد الحالي
 window.generateQR = () => {
   const qrImg = $("qrImg");
-  if (!activeId) {
-    alert("⚠️ اختر ميعاداً أولاً لعرض الـ QR");
-    return;
-  }
-  
-  const name = $("pName").value || "بدون اسم";
-  const phone = $("pPhone").value || "";
+  if (!activeId) return alert("⚠️ اختر ميعاداً أولاً");
+  const name = $("pName").value || "بدون اسم", phone = $("pPhone").value || "";
   const timeInfo = $("targetTime").innerText;
-  
-  // نص الـ QR
   const qrData = `عيادة ميديكال\nمريض: ${name}\nتليفون: ${phone}\nموعد: ${timeInfo}`;
-  
-  // نستخدم API خارجي بسيط لتوليد الصورة
-  const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
-  
-  qrImg.src = qrURL;
+  qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
   qrImg.style.display = "block";
-  console.log("✅ QR Generated for:", name);
 };
 
-// 2. ربط طلب قادم (Request) بالموعد المحدد
 window.assignRequest = async () => {
-  if (!activeId) return alert("⚠️ اختر ميعاداً من الجدول أولاً");
-  
+  if (!activeId) return alert("⚠️ اختر ميعاداً أولاً");
   const phone = $("pPhone").value.trim();
-  if (!phone) return alert("⚠️ اكتب رقم هاتف المريض للبحث عن طلبه");
-  
+  if (!phone) return alert("⚠️ اكتب رقم الهاتف");
   try {
-    // نبحث عن طلب بهذا الرقم وحالته "pending"
-    const q = query(
-      collection(db, "requests"),
-      where("phone", "==", phone),
-      where("status", "==", "pending")
-    );
-    
+    const q = query(collection(db, "requests"), where("phone", "==", phone), where("status", "==", "pending"));
     const snap = await getDocs(q);
-    
-    if (snap.empty) {
-      return alert("❌ لم يتم العثور على طلب معلق بهذا الرقم");
-    }
-    
-    // نأخذ أول طلب مطابق
-    const reqDoc = snap.docs[0];
-    const reqData = reqDoc.data();
-    
-    // 1. نحدث الميعاد ببيانات المريض
+    if (snap.empty) return alert("❌ لا يوجد طلب معلق بهذا الرقم");
+    const reqDoc = snap.docs[0], reqData = reqDoc.data();
     await updateDoc(doc(db, "slots", activeId), {
-      booked: true,
-      status: "booked",
-      patient: {
-        name: reqData.name,
-        phone: reqData.phone,
-        notes: reqData.notes || ""
-      },
-      paid: 0,
-      updatedAt: serverTimestamp()
+      booked: true, status: "booked",
+      patient: { name: reqData.name, phone: reqData.phone, notes: reqData.notes || "" },
+      paid: 0, updatedAt: serverTimestamp()
     });
-    
-    // 2. نحدث حالة الطلب ليصبح "assigned"
-    await updateDoc(doc(db, "requests", reqDoc.id), {
-      status: "assigned",
-      slotId: activeId,
-      assignedAt: serverTimestamp()
-    });
-    
-    alert(`✅ تم ربط طلب ${reqData.name} بالموعد بنجاح`);
-    
-    // نعيد تعيين الحقول
-    activeId = null;
-    $("pName").value = "";
-    $("pPhone").value = "";
-    
+    await updateDoc(doc(db, "requests", reqDoc.id), { status: "assigned", slotId: activeId, assignedAt: serverTimestamp() });
+    alert(`✅ تم ربط طلب ${reqData.name}`);
+    activeId = null; $("pName").value = ""; $("pPhone").value = "";
   } catch (err) {
-    console.error("❌ Assign Error:", err);
-    
-    if (err.message?.includes("index")) {
-      alert("⚠️ هذا العملية تحتاج فهرس جديد في فايربيس.\nراجعي الكونسول للرابط.");
-    } else {
-      alert("❌ حدث خطأ أثناء الربط: " + err.message);
-    }
+    console.error(err);
+    alert(err.message?.includes("index") ? "⚠️ يحتاج فهرس جديد" : "❌ خطأ: " + err.message);
   }
 };
 
-// 3. فلترة وعرض المواعيد (للبحث والفلتر)
 window.safeLoad = () => {
-  const searchTerm = $("search").value.toLowerCase();
-  const filterValue = $("filter").value;
-  
-  // نفلتر الكاش المحلي (أسرع من عمل كويري جديد كل مرة)
+  const searchTerm = $("search").value.toLowerCase(), filterValue = $("filter").value;
   const filtered = cache.filter(slot => {
-    // 1. فلتر البحث (بالاسم أو الوقت)
-    const matchSearch = 
-      !searchTerm || 
-      (slot.patient?.name?.toLowerCase().includes(searchTerm)) ||
-      (slot.time.includes(searchTerm));
-    
-    // 2. فلتر الحالة
+    const matchSearch = !searchTerm || slot.patient?.name?.toLowerCase().includes(searchTerm) || slot.time.includes(searchTerm);
     let matchFilter = true;
-    if (filterValue === "booked") {
-      matchFilter = slot.booked === true;
-    } else if (filterValue === "free") {
-      matchFilter = slot.booked === false;
-    }
-    
+    if (filterValue === "booked") matchFilter = slot.booked === true;
+    else if (filterValue === "free") matchFilter = slot.booked === false;
     return matchSearch && matchFilter;
   });
-  
-  // نعيد رسم الجدول بالبيانات المفلترة (نسخة مبسطة من renderSlots)
-  const grid = $("daysGrid");
-  grid.innerHTML = "";
-  
+  const grid = $("daysGrid"); grid.innerHTML = "";
   let days = {};
-  filtered.forEach(d => {
-    if (!d.date) return;
-    if (!days[d.date]) days[d.date] = [];
-    days[d.date].push(d);
-  });
-  
+  filtered.forEach(d => { if (!d.date) return; if (!days[d.date]) days[d.date] = []; days[d.date].push(d); });
   Object.keys(days).sort().forEach(date => {
-    const col = document.createElement("div");
-    col.className = "day-col";
-    
-    col.innerHTML = `
-      <div class="day-head">${date}</div>
-      ${days[date]
-        .sort((a,b) => a.time.localeCompare(b.time))
-        .map(x => `
-          <div class="slot-item ${x.booked ? "booked" : ""}"
-            onclick="selectSlot('${x.id}')">
-            <b>${x.time}</b> - ${x.patient?.name || "متاح"} 
-            <span style="float:left;color:#666;font-size:12px">(${x.status})</span>
-          </div>
-        `).join("")}
-    `;
-    
+    const col = document.createElement("div"); col.className = "day-col";
+    col.innerHTML = `<div class="day-head">${date}</div>${days[date].sort((a,b)=>a.time.localeCompare(b.time)).map(x => `<div class="slot-item ${x.booked?"booked":""}" onclick="selectSlot('${x.id}')"><b>${x.time}</b> - ${x.patient?.name||"متاح"} (${x.status})</div>`).join("")}`;
     grid.appendChild(col);
   });
-  
-  console.log(`🔍 Search: "${searchTerm}" | Filter: ${filterValue} | Results: ${filtered.length}`);
 };
 
-// 4. تحميل المواعيد المتاحة لتاريخ معين في قائمة الـ Select
 window.loadAvailableSlots = async (date) => {
   const select = $("availableSlots");
   if (!select || !date) return;
-  
-  select.innerHTML = '<option value="">جاري التحميل...</option>';
-  select.disabled = true;
-  
+  select.innerHTML = '<option>جاري التحميل...</option>'; select.disabled = true;
   try {
-    // نجيب المواعيد في هذا التاريخ + اللي لسه فاضية
-    const q = query(
-      collection(db, "slots"),
-      where("date", "==", date),
-      where("booked", "==", false)
-    );
-    
+    const q = query(collection(db, "slots"), where("date", "==", date), where("booked", "==", false));
     const snap = await getDocs(q);
-    
     select.innerHTML = '<option value="">اختر ميعاد متاح</option>';
-    
-    if (snap.empty) {
-      select.innerHTML += '<option value="" disabled>❌ لا توجد مواعيد متاحة</option>';
-      select.disabled = true;
-      return;
-    }
-    
-    // نضيف كل ميعاد متاح كـ option
+    if (snap.empty) { select.innerHTML += '<option disabled>❌ لا توجد مواعيد</option>'; return; }
     snap.forEach(docSnap => {
       const slot = docSnap.data();
-      const option = document.createElement("option");
-      option.value = docSnap.id; // نخزن الـ ID عشان نستخدمه لاحقاً
-      option.textContent = `🕒 ${slot.time} - متاح`;
-      select.appendChild(option);
+      const opt = document.createElement("option");
+      opt.value = docSnap.id; opt.textContent = `🕒 ${slot.time} - متاح`;
+      select.appendChild(opt);
     });
-    
     select.disabled = false;
-    console.log(`✅ Loaded ${snap.size} available slots for ${date}`);
-    
-  } catch (err) {
-    console.error("❌ Load Slots Error:", err);
-    select.innerHTML = '<option value="">❌ فشل التحميل</option>';
-    
-    if (err.message?.includes("index")) {
-      console.warn("⚠️ Requires Composite Index. Check console for link.");
-    }
-  }
+  } catch (err) { console.error(err); select.innerHTML = '<option>❌ فشل التحميل</option>'; }
 };
 
-/* =======================================================
-   ✅ تأكيد أن كل الدوال متاحة عالمياً
-   ======================================================= */
-console.log("✅ All missing admin functions loaded:", {
-  generateQR: typeof window.generateQR,
-  assignRequest: typeof window.assignRequest,
-  safeLoad: typeof window.safeLoad,
-  loadAvailableSlots: typeof window.loadAvailableSlots
-});
-
-/* =======================================================
-   🛠️ ميزات إضافية لصفحة الأدمن (بدون تعديل HTML/CSS)
-   ضع هذا الكود في نهاية سكربت admin.html قبل </script>
-   ======================================================= */
-
-// 1. 💬 فتح واتساب مع المريض
 window.openWhatsApp = (phone) => {
-  if (!phone) return alert("⚠️ لا يوجد رقم هاتف مسجل");
-  
-  // تنسيق الرقم: إزالة الأصفار الأولى + إضافة كود مصر
-  let waPhone = phone.replace(/^0+/, "").replace(/\s+/g, "");
-  if (!waPhone.startsWith("20")) waPhone = "20" + waPhone;
-  
-  const message = encodeURIComponent(`مرحباً د/ حسني، بخصوص موعد المريض في العيادة...`);
-  window.open(`https://wa.me/${waPhone}?text=${message}`, "_blank");
-  console.log("📱 WhatsApp opened for:", phone);
+  if (!phone) return alert("⚠️ لا يوجد رقم مسجل");
+  let wa = phone.replace(/^0+/,"").replace(/\s+/g,"");
+  if (!wa.startsWith("20")) wa = "20" + wa;
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent("مرحباً د/ حسني، بخصوص موعد المريض...")}`, "_blank");
 };
 
-// 2. ✏️ بدء تعديل ميعاد (نقل المريض لميعاد آخر)
 window.startEditSlot = async (slotId) => {
   const slot = cache.find(s => s.id === slotId);
-  if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً أولاً");
-  
+  if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً");
   const patient = slot.patient;
-  if (!patient?.name) return alert("⚠️ لا توجد بيانات مريض لهذا الميعاد");
-  
-  // عرض المواعيد البديلة المتاحة (نفس اليوم أو أيام تانية)
-  const alternatives = cache.filter(s => 
-    !s.booked && 
-    s.status !== "cancelled" && 
-    s.id !== slotId
-  );
-  
-  if (alternatives.length === 0) {
-    return alert("❌ لا توجد مواعيد بديلة متاحة حالياً");
-  }
-  
-  // عرض خيارات بسيطة للمستخدم (يمكن تطويرها لنافذة منبثقة)
-  const options = alternatives.slice(0, 5).map((s, i) => 
-    `${i+1}. ${s.date} - ${s.time}`
-  ).join("\n");
-  
-  const choice = prompt(
-    `✏️ تعديل ميعاد: ${patient.name}\n` +
-    `الميعاد الحالي: ${slot.date} - ${slot.time}\n\n` +
-    `اختر ميعاداً بديلاً (اكتب الرقم):\n${options}\n\n` +
-    `أو اكتب "إلغاء" للخروج`
-  );
-  
-  if (!choice || choice.toLowerCase() === "إلغاء" || choice === "cancel") return;
-  
-  const index = parseInt(choice) - 1;
-  if (isNaN(index) || index < 0 || index >= alternatives.length) {
-    return alert("❌ اختيار غير صحيح");
-  }
-  
-  const newSlot = alternatives[index];
-  
-  if (!confirm(`✅ تأكيد التعديل:\n🔄 من: ${slot.date} ${slot.time}\n✅ إلى: ${newSlot.date} ${newSlot.time}\n\nالمريض: ${patient.name}`)) {
-    return;
-  }
-  
+  if (!patient?.name) return alert("⚠️ لا توجد بيانات مريض");
+  const alternatives = cache.filter(s => !s.booked && s.status !== "cancelled" && s.id !== slotId);
+  if (alternatives.length === 0) return alert("❌ لا توجد مواعيد بديلة");
+  const options = alternatives.slice(0,5).map((s,i)=>`${i+1}. ${s.date} - ${s.time}`).join("\n");
+  const choice = prompt(`✏️ تعديل: ${patient.name}\nالحالي: ${slot.date} ${slot.time}\n\nاختر بديل:\n${options}\n\nأو "إلغاء"`);
+  if (!choice || choice.toLowerCase()==="إلغاء") return;
+  const idx = parseInt(choice)-1;
+  if (isNaN(idx) || idx<0 || idx>=alternatives.length) return alert("❌ اختيار غير صحيح");
+  const newSlot = alternatives[idx];
+  if (!confirm(`✅ تأكيد:\nمن: ${slot.date} ${slot.time}\nإلى: ${newSlot.date} ${newSlot.time}\n\n${patient.name}`)) return;
   try {
-    // 1. تحرير الميعاد القديم
-    await updateDoc(doc(db, "slots", slotId), {
-      booked: false,
-      status: "available",
-      patient: null,
-      updatedAt: serverTimestamp()
-    });
-    
-    // 2. حجز الميعاد الجديد ببيانات نفس المريض
-    await updateDoc(doc(db, "slots", newSlot.id), {
-      booked: true,
-      status: "booked",
-      patient: patient,
-      paid: slot.paid || 0,
-      notes: slot.notes || "",
-      updatedAt: serverTimestamp()
-    });
-    
-    alert("✅ تم تعديل الميعاد بنجاح!");
-    console.log("✏️ Slot edited:", slotId, "→", newSlot.id);
-    
-  } catch (err) {
-    console.error("❌ Edit Error:", err);
-    alert("❌ حدث خطأ أثناء التعديل: " + err.message);
-  }
+    await updateDoc(doc(db,"slots",slotId), { booked:false, status:"available", patient:null, updatedAt:serverTimestamp() });
+    await updateDoc(doc(db,"slots",newSlot.id), { booked:true, status:"booked", patient, paid:slot.paid||0, notes:slot.notes||"", updatedAt:serverTimestamp() });
+    alert("✅ تم التعديل بنجاح!");
+  } catch (err) { alert("❌ خطأ: " + err.message); }
 };
 
-// 3. 🗑️ إلغاء/حذف حجز (مع تأكيد)
 window.cancelSlot = async (slotId) => {
   const slot = cache.find(s => s.id === slotId);
-  if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً أولاً");
-  
+  if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً");
   const patient = slot.patient;
-  const confirmMsg = `⚠️ تأكيد الإلغاء:\n📅 ${slot.date} - ${slot.time}\n👤 ${patient?.name || "بدون اسم"}\n📞 ${patient?.phone || ""}\n\nهل أنت متأكد؟`;
-  
-  if (!confirm(confirmMsg)) return;
-  
+  if (!confirm(`⚠️ تأكيد الإلغاء:\n${slot.date} ${slot.time}\n${patient?.name||""}\n${patient?.phone||""}\n\nمتأكد؟`)) return;
   try {
-    // نغير الحالة لـ "cancelled" بدلاً من الحذف النهائي (لحفظ السجل)
-    await updateDoc(doc(db, "slots", slotId), {
-      booked: false,
-      status: "cancelled",
-      patient: null,
-      paid: 0,
-      cancelledAt: serverTimestamp(),
-      cancelledBy: auth.currentUser?.uid || "admin"
-    });
-    
-    alert("✅ تم إلغاء الحجز بنجاح");
-    console.log("🗑️ Slot cancelled:", slotId);
-    
-  } catch (err) {
-    console.error("❌ Cancel Error:", err);
-    alert("❌ حدث خطأ أثناء الإلغاء: " + err.message);
-  }
+    await updateDoc(doc(db,"slots",slotId), { booked:false, status:"cancelled", patient:null, paid:0, cancelledAt:serverTimestamp() });
+    alert("✅ تم الإلغاء");
+  } catch (err) { alert("❌ خطأ: " + err.message); }
 };
 
-// 4. 🔄 تعديل دالة renderSlots() لإضافة الأزرار الجديدة (يتم استبدال الدالة القديمة)
-// ملاحظة: هذا الكود يعيد تعريف الدالة بنفس الاسم، فلا حاجة لحذف القديمة يدوياً
 window.renderSlots = function() {
-  const grid = $("daysGrid");
-  const totalBox = $("globalTotal");
-
-  let days = {};
-  let total = 0;
-
-  cache.forEach(d => {
-    if (!d.date) return;
-    if (!days[d.date]) days[d.date] = [];
-    days[d.date].push(d);
-  });
-
+  const grid = $("daysGrid"), totalBox = $("globalTotal");
+  let days = {}, total = 0;
+  cache.forEach(d => { if (!d.date) return; if (!days[d.date]) days[d.date] = []; days[d.date].push(d); });
   grid.innerHTML = "";
-
   Object.keys(days).sort().forEach(date => {
     let dayTotal = 0;
-    days[date].forEach(s => {
-      if (s.status === "كشف") {
-        dayTotal += Number(s.paid || 0);
-        total += Number(s.paid || 0);
-      }
-    });
-
-    const col = document.createElement("div");
-    col.className = "day-col";
-
-    // بناء قائمة المواعيد مع الأزرار الجديدة
-    const slotsHTML = days[date]
-      .sort((a,b) => a.time.localeCompare(b.time))
-      .map(x => {
-        const isBooked = x.booked && x.status !== "cancelled";
-        const patientName = x.patient?.name || "بدون اسم";
-        const phone = x.patient?.phone || "";
-        
-        // أزرار الإجراءات (تظهر فقط للمحجوز)
-        const actionButtons = isBooked ? `
-          <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap">
-            <button onclick="event.stopPropagation(); openWhatsApp('${phone}')" 
-              style="background:#25d366;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer">
-              💬 واتساب
-            </button>
-            <button onclick="event.stopPropagation(); startEditSlot('${x.id}')" 
-              style="background:#ff9800;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer">
-              ✏️ تعديل
-            </button>
-            <button onclick="event.stopPropagation(); cancelSlot('${x.id}')" 
-              style="background:#f44336;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer">
-              🗑️ إلغاء
-            </button>
-          </div>
-        ` : "";
-        
-        // ستايل مختلف للملغي
-        const slotClass = x.status === "cancelled" ? "cancel" : (isBooked ? "booked" : "");
-        const statusLabel = x.status === "cancelled" ? "❌ ملغي" : (isBooked ? "✅ محجوز" : "⭕ متاح");
-        
-        return `
-          <div class="slot-item ${slotClass}" onclick="selectSlot('${x.id}')">
-            <b>${x.time}</b> - ${patientName} 
-            <span style="float:left;font-size:11px;color:#666">(${statusLabel})</span>
-            ${actionButtons}
-          </div>
-        `;
-      }).join("");
-
-    col.innerHTML = `
-      <div class="day-head">
-        ${date}
-        <span class="del-btn" onclick="deleteDay('${date}')">×</span>
-      </div>
-      <div class="day-money">💰 ${dayTotal} جنيه</div>
-      ${slotsHTML}
-    `;
+    days[date].forEach(s => { if (s.status === "كشف") { dayTotal += Number(s.paid||0); total += Number(s.paid||0); } });
+    const col = document.createElement("div"); col.className = "day-col";
+    const slotsHTML = days[date].sort((a,b)=>a.time.localeCompare(b.time)).map(x => {
+      const isBooked = x.booked && x.status !== "cancelled";
+      const pname = x.patient?.name || "بدون اسم", phone = x.patient?.phone || "";
+      const actions = isBooked ? `<div class="action-buttons">
+        <button onclick="event.stopPropagation();openWhatsApp('${phone}')">💬 واتساب</button>
+        <button onclick="event.stopPropagation();startEditSlot('${x.id}')">✏️ تعديل</button>
+        <button onclick="event.stopPropagation();cancelSlot('${x.id}')">🗑️ إلغاء</button>
+      </div>` : "";
+      const cls = x.status==="cancelled"?"cancel":(isBooked?"booked":"");
+      const lbl = x.status==="cancelled"?"❌ ملغي":(isBooked?"✅ محجوز":"⭕ متاح");
+      return `<div class="slot-item ${cls}" onclick="selectSlot('${x.id}')"><b>${x.time}</b> - ${pname} <span style="float:left;font-size:11px;color:#666">(${lbl})</span>${actions}</div>`;
+    }).join("");
+    col.innerHTML = `<div class="day-head">${date}<span class="del-btn" onclick="deleteDay('${date}')">×</span></div><div class="day-money">💰 ${dayTotal} جنيه</div>${slotsHTML}`;
     grid.appendChild(col);
   });
-
   totalBox.innerText = "💰 إجمالي العيادة: " + total + " جنيه";
 };
 
-// 5. ✅ تأكيد أن كل الدوال متاحة عالمياً
-console.log("✅ Admin extra features loaded:", {
-  openWhatsApp: typeof window.openWhatsApp,
-  startEditSlot: typeof window.startEditSlot,
-  cancelSlot: typeof window.cancelSlot,
-  renderSlots: typeof window.renderSlots
-});
+window.diagnoseBookingCompatibility = async () => {
+  try {
+    const q = query(slotsRef, orderBy("createdAt", "desc"), query.limit(1));
+    const snap = await getDocs(q);
+    if (snap.empty) return alert("⚠️ مفيش مواعيد في القاعدة");
+    const slot = snap.docs[0].data();
+    const checks = {
+      "date string": typeof slot.date==="string",
+      "time string": typeof slot.time==="string",
+      "booked boolean": typeof slot.booked==="boolean",
+      "date format": /^\d{4}-\d{2}-\d{2}$/.test(slot.date),
+      "time format": /^\d{2}:\d{2}$/.test(slot.time)
+    };
+    console.table(checks);
+    alert(Object.values(checks).every(v=>v) ? "✅ متوافق مع booking.html" : "⚠️ فيه مشكلة في الفورمات - راجع الكونسول");
+  } catch (err) {
+    alert(err.message?.includes("index") ? "⚠️ محتاج إنديكس - راجع الكونسول" : "❌ خطأ: " + err.message);
+  }
+};
+
+console.log("✅ Admin Loaded - All Features Active");
 </script>
 </body>
 </html>
