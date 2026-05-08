@@ -321,6 +321,7 @@ input, textarea, select {
 
 
 <script type="module">
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -367,25 +368,31 @@ let activeId = null;
 
 const slotsRef = collection(db, "slots");
 
-/* realtime */
+/* =========================
+   DOM SAFE ACCESS
+========================= */
+const $ = (id) => document.getElementById(id);
+
+/* =========================
+   REALTIME FIREBASE
+========================= */
 onSnapshot(slotsRef, (snap) => {
   cache = [];
+
   snap.forEach((d) => {
-    const data = d.data();
     cache.push({
       id: d.id,
-      ...data,
-      status: data.status || "حجز"
+      ...d.data(),
+      status: d.data().status || "حجز"
     });
   });
 
   renderSlots();
 });
 
-/* helpers */
-window.safeLoad = () => renderSlots();
-
-/* select */
+/* =========================
+   SELECT SLOT
+========================= */
 window.selectSlot = async (id) => {
   activeId = id;
 
@@ -394,67 +401,77 @@ window.selectSlot = async (id) => {
 
   const d = snap.data();
 
-  pName.value = d.patient?.name || "";
-  pPhone.value = d.patient?.phone || "";
-  pNotes.value = d.patient?.notes || "";
-  pPaid.value = d.paid || 0;
-  pStatus.value = d.status || "حجز";
+  $("pName").value = d.patient?.name || "";
+  $("pPhone").value = d.patient?.phone || "";
+  $("pNotes").value = d.patient?.notes || "";
+  $("pPaid").value = d.paid || 0;
+  $("pStatus").value = d.status || "حجز";
 
-  targetTime.innerText = `${d.date} - ${d.time}`;
+  $("targetTime").innerText = `${d.date} - ${d.time}`;
 };
 
-/* update */
+/* =========================
+   UPDATE SLOT
+========================= */
 window.updateSlot = async () => {
   if (!activeId) return alert("اختاري ميعاد أولاً");
 
-  const ref = doc(db, "slots", activeId);
-
-  await updateDoc(ref, {
-    booked: pName.value.trim() !== "",
-    status: pStatus.value,
-    paid: Number(pPaid.value || 0),
+  await updateDoc(doc(db, "slots", activeId), {
+    booked: $("pName").value.trim() !== "",
+    status: $("pStatus").value,
+    paid: Number($("pPaid").value || 0),
     patient: {
-      name: pName.value,
-      phone: pPhone.value,
-      notes: pNotes.value
+      name: $("pName").value,
+      phone: $("pPhone").value,
+      notes: $("pNotes").value
     }
   });
 
-  activeId = null; // مهم جدًا
+  activeId = null;
   alert("تم التعديل ✔️");
 };
 
-
-        // 🔥 منع تضارب + اقتراح ميعاد بديل
-if (isSlotTaken(assignDate.value, assignTime.value)) {
-
-  let suggested = findNearestFreeSlot(
-    assignDate.value,
-    assignTime.value
+/* =========================
+   CHECK SLOT CONFLICT
+========================= */
+function isSlotTaken(date, time) {
+  return cache.some(s =>
+    s.date === date &&
+    s.time === time &&
+    s.booked === true &&
+    s.id !== activeId
   );
-
-  if (suggested) {
-    alert(
-      `❗ الميعاد مش متاح\n\n✔️ أقرب ميعاد فاضي: ${suggested.date} - ${suggested.time}`
-    );
-  } else {
-    alert("❌ مفيش مواعيد فاضية حالياً");
-  }
-
-  return;
 }
 
-/* generate slots */
+/* =========================
+   FIND FREE SLOT
+========================= */
+function findNearestFreeSlot(date) {
+  return cache
+    .filter(s => s.date === date && !s.booked)
+    .sort((a, b) => a.time.localeCompare(b.time))[0] || null;
+}
+
+/* =========================
+   GENERATE SLOTS
+========================= */
 window.setAvailability = async () => {
-  let date = slotDate.value;
-  let start = startTime.value;
-  let end = endTime.value;
-  let duration = Number(slotDuration.value);
+
+  let date = $("slotDate").value;
+  let start = $("startTime").value;
+  let end = $("endTime").value;
+  let duration = Number($("slotDuration").value);
+
+  if (!date || !start || !end) {
+    alert("اكمل البيانات");
+    return;
+  }
 
   let s = new Date(`${date}T${start}`);
   let e = new Date(`${date}T${end}`);
 
   while (s < e) {
+
     await addDoc(slotsRef, {
       date,
       time: s.toTimeString().slice(0, 5),
@@ -470,302 +487,82 @@ window.setAvailability = async () => {
   alert("تم التوليد ✔️");
 };
 
-/* delete */
+/* =========================
+   SAFE LOAD
+========================= */
+window.safeLoad = () => renderSlots();
+
+/* =========================
+   DELETE DAY
+========================= */
 window.deleteDay = async (date) => {
+
   if (!confirm("حذف اليوم؟")) return;
 
   const q = query(slotsRef, where("date", "==", date));
   const snap = await getDocs(q);
 
   const batch = writeBatch(db);
-
   snap.forEach((d) => batch.delete(d.ref));
 
   await batch.commit();
 };
 
-/* assign request */
-window.assignRequest = async () => {
-
-  if (!activeId) {
-    alert("اختاري ميعاد أو طلب");
-    return;
-  }
-
-  let newDate = assignDate.value;
-  let newTime = assignTime.value;
-
-  if (!newDate || !newTime) {
-    alert("اختار التاريخ والوقت");
-    return;
-  }
-
-  const currentRef = doc(db, "slots", activeId);
-  const currentSnap = await getDoc(currentRef);
-
-  if (!currentSnap.exists()) {
-    alert("العنصر غير موجود");
-    return;
-  }
-
-  const currentData = currentSnap.data();
-
-  /* نفس الميعاد */
-  if (
-    currentData.date === newDate &&
-    currentData.time === newTime
-  ) {
-    alert("هذا هو نفس الميعاد الحالي");
-    return;
-  }
-
-  /* البحث عن الميعاد الجديد */
-  const q = query(
-    slotsRef,
-    where("date", "==", newDate),
-    where("time", "==", newTime)
-  );
-
-  const res = await getDocs(q);
-
-  let freeSlot = null;
-  let bookedSlot = null;
-
-  res.forEach((d) => {
-
-    if (d.id === activeId) return;
-
-    if (!d.data().booked) {
-      freeSlot = d;
-    } else {
-      bookedSlot = d;
-    }
-
-  });
-
-  /* =========================
-     لو فيه ميعاد فاضي
-  ========================= */
-
-  if (freeSlot) {
-
-    await updateDoc(doc(db, "slots", freeSlot.id), {
-      booked: true,
-      status: "حجز",
-      patient: currentData.patient || {},
-      paid: currentData.paid || 0
-    });
-
-    /* تفريغ القديم بدل حذفه */
-    await updateDoc(currentRef, {
-      booked: false,
-      status: "حجز",
-      patient: {},
-      paid: 0
-    });
-
-    alert("تم تغيير الميعاد ✔️");
-    return;
-  }
-
-  
-
- /* =========================
-   لو الميعاد محجوز
+/* =========================
+   RENDER
 ========================= */
-
-if (bookedSlot) {
-
-  const sameDayExtra = confirm(
-    `الميعاد ${newTime} محجوز بالفعل\n\nOK = إنشاء ميعاد إضافي بنفس الوقت\nCancel = اختيار ميعاد آخر`
-  );
-
-  /* إنشاء ميعاد إضافي */
-  if (sameDayExtra) {
-
-    await addDoc(slotsRef, {
-      date: newDate,
-      time: newTime,
-      booked: true,
-      status: "حجز",
-      paid: currentData.paid || 0,
-      patient: currentData.patient || {}
-    });
-
-    /* تفريغ القديم */
-    await updateDoc(currentRef, {
-      booked: false,
-      status: "حجز",
-      patient: {},
-      paid: 0
-    });
-
-    alert("تم إنشاء ميعاد إضافي ✔️");
-
-    return;
-  }
-
-  /* اختيار ميعاد آخر */
-  alert("اختاري ميعاد آخر متاح");
-
-  return;
-}
-  /* =========================
-     اليوم غير موجود
-  ========================= */
-
-  const createDay = confirm(
-    `هذا اليوم لا يحتوي على جدول\n\nهل تريد إنشاء الموعد؟`
-  );
-
-  if (!createDay) return;
-
-  await addDoc(slotsRef, {
-    date: newDate,
-    time: newTime,
-    booked: true,
-    status: "حجز",
-    paid: currentData.paid || 0,
-    patient: currentData.patient || {}
-  });
-
-  /* تفريغ القديم */
-  await updateDoc(currentRef, {
-    booked: false,
-    status: "حجز",
-    patient: {},
-    paid: 0
-  });
-
-  alert("تم نقل الميعاد ✔️");
-
-};
-/* render */
 function renderSlots() {
 
   let days = {};
   let totalGlobal = 0;
 
   cache.forEach((d) => {
-    if (!days[d.date]) {
-      days[d.date] = [];
-    }
+    if (!days[d.date]) days[d.date] = [];
     days[d.date].push(d);
   });
 
-  daysGrid.innerHTML = "";
+  $("daysGrid").innerHTML = "";
 
-  let filter = document.getElementById("filter")?.value || "all";
-
-  for (let d in days) {
+  for (let date in days) {
 
     let total = 0;
 
-    days[d].forEach((x) => {
+    days[date].forEach(x => {
       if (x.status === "كشف") {
         total += Number(x.paid || 0);
         totalGlobal += Number(x.paid || 0);
       }
     });
 
-    // فلترة المواعيد
-    let filtered = days[d].filter(x => {
-      if (filter === "all") return true;
-      if (filter === "booked") return x.booked;
-      if (filter === "free") return !x.booked;
-      return true;
-    });
-
     let col = document.createElement("div");
-
-    /* 🔥 إضافة Drag & Drop على اليوم */
     col.className = "day-col";
-    col.setAttribute("ondragover", "allowDrop(event)");
-    col.setAttribute("ondrop", `dropSlot(event,'${d}','')`);
 
     col.innerHTML = `
-
       <div class="day-head">
-        ${d}
-        <span class="del-btn" onclick="deleteDay('${d}')">×</span>
+        ${date}
+        <span class="del-btn" onclick="deleteDay('${date}')">×</span>
       </div>
 
-      <div class="day-money">
-        💰 ${total} جنيه
-      </div>
+      <div class="day-money">💰 ${total} جنيه</div>
 
-      ${filtered
-        .sort((a, b) => {
+      ${days[date].map(x => `
+        <div class="slot-item ${x.booked ? "booked" : ""}"
+          onclick="selectSlot('${x.id}')">
 
-          if (a.status === "pending") return -1;
-          if (b.status === "pending") return 1;
+          <b>${x.time}</b> - ${x.patient?.name || "بدون اسم"} (${x.status})
 
-          return a.time.localeCompare(b.time);
-
-        })
-
-        .map(x => `
-
-         <div class="
-  slot-item
-  ${x.booked ? "booked" : ""}
-  ${x.status === "ملغي" ? "cancel" : ""}
-  ${x.status === "pending" ? "pending-slot" : ""}
-"
-draggable="true"
-ondragstart="dragStart(event,'${x.id}')"
-
-          onclick="selectSlot('${x.id}')"
-          draggable="true"
-          ondragstart="dragStart(event,'${x.id}')">
-
-            <b>
-              ${x.status === "pending"
-                ? "📩 طلب تحديد موعد"
-                : x.time}
-            </b>
-
-            - ${x.patient?.name || "بدون اسم"}
-
-            (${x.status})
-
-            ${x.patient?.phone ? `
-              <br>
-              <a
-                class="whatsapp"
-                target="_blank"
-                href="https://wa.me/2${x.patient.phone}"
-              >
-                واتساب 📱
-              </a>
-            ` : ""}
-
-            <!-- ✅ زر إلغاء الحجز -->
-            ${x.booked ? `
-              <button onclick="cancelBooking('${x.id}')" style="background:red;color:white;border:none;padding:5px;margin-top:5px;border-radius:5px;width:100%;">
-                إلغاء الحجز
-              </button>
-
-              <!-- 🗑 زر حذف الميعاد -->
-              <button onclick="deleteSlot('${x.id}')" style="background:black;color:white;border:none;padding:5px;margin-top:5px;border-radius:5px;width:100%;">
-                حذف الميعاد
-              </button>
-            ` : ""}
-
-          </div>
-
-        `).join("")}
-
+        </div>
+      `).join("")}
     `;
 
-    daysGrid.appendChild(col);
-
+    $("daysGrid").appendChild(col);
   }
 
-  globalTotal.innerText =
+  $("globalTotal").innerText =
     "💰 إجمالي العيادة: " + totalGlobal + " جنيه";
-
 }
+
+</script>
         /*إلغاء هذا الحجزr */
 
         window.cancelBooking = async (id) => {
