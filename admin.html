@@ -620,8 +620,7 @@ if (bookedSlot) {
   alert("تم نقل الميعاد ✔️");
 
 };
-
-        /* render */
+/* render */
 function renderSlots() {
 
   let days = {};
@@ -658,7 +657,11 @@ function renderSlots() {
     });
 
     let col = document.createElement("div");
+
+    /* 🔥 إضافة Drag & Drop على اليوم */
     col.className = "day-col";
+    col.setAttribute("ondragover", "allowDrop(event)");
+    col.setAttribute("ondrop", `dropSlot(event,'${d}','')`);
 
     col.innerHTML = `
 
@@ -690,7 +693,9 @@ function renderSlots() {
             ${x.status === "pending" ? "pending-slot" : ""}
           "
 
-          onclick="selectSlot('${x.id}')">
+          onclick="selectSlot('${x.id}')"
+          draggable="true"
+          ondragstart="dragStart(event,'${x.id}')">
 
             <b>
               ${x.status === "pending"
@@ -769,6 +774,82 @@ function renderSlots() {
   alert("تم حذف الميعاد 🗑");
 };
 
+
+        /* =========================
+   🔥 منع تضارب المواعيد
+========================= */
+function isSlotTaken(date, time) {
+  return cache.some(s =>
+    s.date === date &&
+    s.time === time &&
+    s.booked === true &&
+    s.id !== activeId
+  );
+}
+
+/* =========================
+   🔥 اقتراح أقرب ميعاد فاضي
+========================= */
+function findNearestFreeSlot(date, time) {
+
+  let sameDay = cache
+    .filter(s => s.date === date && !s.booked)
+    .sort((a, b) => a.time.localeCompare(b.time));
+
+  if (sameDay.length) return sameDay[0];
+
+  // لو مفيش في نفس اليوم
+  let allFree = cache
+    .filter(s => !s.booked)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return allFree[0] || null;
+}
+
+/* =========================
+   🔥 Drag Start
+========================= */
+window.dragStart = (e, id) => {
+  e.dataTransfer.setData("slotId", id);
+};
+
+/* =========================
+   🔥 Allow Drop
+========================= */
+window.allowDrop = (e) => {
+  e.preventDefault();
+};
+
+/* =========================
+   🔥 Drop (تغيير ميعاد)
+========================= */
+window.dropSlot = async (e, newDate, newTime) => {
+
+  e.preventDefault();
+
+  let id = e.dataTransfer.getData("slotId");
+  if (!id) return;
+
+  const ref = doc(db, "slots", id);
+
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  // منع تضارب
+  if (isSlotTaken(newDate, newTime)) {
+    alert("❌ الميعاد محجوز بالفعل");
+    return;
+  }
+
+  await updateDoc(ref, {
+    date: newDate,
+    time: newTime
+  });
+
+  alert("تم نقل الميعاد ✔️");
+};
         
 </script>
 
