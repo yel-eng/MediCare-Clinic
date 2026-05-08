@@ -150,126 +150,216 @@ button:active{
 
 
 <script type="module">
-// auth.js (AUTH CORE SYSTEM)
-
-import { auth, db } from "./firebase.js";
-
-import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+import { db } from "./firebase.js";
 
 import {
+  collection,
+  query,
+  where,
+  getDocs,
   doc,
-  getDoc
+  getDoc,
+  updateDoc,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* =========================
-   GLOBAL STATE (NON-REACTIVE BUT SAFE)
+   STATE
 ========================= */
 
-let currentUser = null;
+let selectedDate = "";
+let selectedSlot = null;
+let slotsCache = [];
 
 /* =========================
-   GET CURRENT USER (SAFE ACCESS)
+   AUTH GUARD
 ========================= */
 
-function getCurrentUser() {
-  return currentUser;
-}
+window.addEventListener("load", () => {
 
-/* =========================
-   LOGIN
-========================= */
-
-window.login = async function () {
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  try {
-
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-
-    const uid = cred.user.uid;
-
-    const userSnap = await getDoc(doc(db, "users", uid));
-
-    const role = userSnap.exists() ? (userSnap.data().role || "user") : "user";
-
-    currentUser = {
-      uid,
-      email: cred.user.email,
-      role
-    };
-
-    console.log("Logged in:", currentUser);
-
-    window.location.href = "booking.html";
-
-  } catch (e) {
-    alert("Login failed: " + e.message);
-  }
-};
-
-/* =========================
-   LOGOUT
-========================= */
-
-window.logout = async function () {
-  await signOut(auth);
-  currentUser = null;
-  window.location.href = "login.html";
-};
-
-/* =========================
-   AUTH STATE LISTENER (REAL SOURCE OF TRUTH)
-========================= */
-
-onAuthStateChanged(auth, async (user) => {
+  const user = window.getCurrentUser?.();
 
   if (!user) {
-    currentUser = null;
-    return;
+    window.location.href = "login.html";
   }
-
-  const userSnap = await getDoc(doc(db, "users", user.uid));
-
-  const role = userSnap.exists() ? (userSnap.data().role || "user") : "user";
-
-  currentUser = {
-    uid: user.uid,
-    email: user.email,
-    role
-  };
-
-  console.log("Auth Updated:", currentUser);
 });
 
 /* =========================
-   GUARDS
+   DATE CHANGE HANDLER (FIXED)
 ========================= */
 
-function requireAuth() {
-  if (!currentUser) {
-    window.location.href = "login.html";
-  }
-}
+window.checkDay = async function () {
 
-function requireAdmin() {
-  if (!currentUser || currentUser.role !== "admin") {
-    window.location.href = "booking.html";
+  const date = document.getElementById("dateInput").value;
+
+  if (!date) return;
+
+  selectedDate = date;
+
+  await loadSlots(date);
+};
+
+/* =========================
+   LOAD SLOTS
+========================= */
+
+window.loadSlots = async function (date) {
+
+  const q = query(
+    collection(db, "slots"),
+    where("date", "==", date)
+  );
+
+  const snap = await getDocs(q);
+
+  slotsCache = [];
+
+  snap.forEach(d => {
+    slotsCache.push({ id: d.id, ...d.data() });
+  });
+
+  renderSlots();
+};
+
+/* =========================
+   RENDER SLOTS (FIXED MISSING UI)
+========================= */
+
+function renderSlots() {
+
+  let container = document.getElementById("slotsContainer");
+
+  if (!container) {
+
+    container = document.createElement("div");
+    container.id = "slotsContainer";
+    container.style.marginTop = "15px";
+
+    document.querySelector(".box").appendChild(container);
   }
+
+  container.innerHTML = "";
+
+  if (slotsCache.length === 0) {
+    container.innerHTML = `
+      <p style="text-align:center;color:#c62828;">
+        ❌ لا يوجد مواعيد متاحة
+      </p>
+
+      <button onclick="createRequest()">
+        إرسال طلب حجز
+      </button>
+    `;
+    return;
+  }
+
+  const available = slotsCache.filter(s => !s.booked);
+
+  if (available.length === 0) {
+    container.innerHTML = `
+      <p style="text-align:center;">
+        ⚠️ كل المواعيد محجوزة
+      </p>
+
+      <button onclick="createRequest()">
+        طلب موعد
+      </button>
+    `;
+    return;
+  }
+
+  available.forEach(slot => {
+
+    const div = document.createElement("div");
+
+    div.style.padding = "10px";
+    div.style.margin = "8px 0";
+    div.style.background = "#f1f5f9";
+    div.style.borderRadius = "10px";
+    div.style.cursor = "pointer";
+
+    div.innerText = "🕒 " + slot.time;
+
+    div.onclick = () => {
+      selectedSlot = slot;
+      book(slot.id);
+    };
+
+    container.appendChild(div);
+  });
 }
 
 /* =========================
-   GLOBAL EXPORT (IMPORTANT)
+   BOOK SLOT (FIXED BOOK FUNCTION)
 ========================= */
 
-window.getCurrentUser = getCurrentUser;
-window.requireAuth = requireAuth;
-window.requireAdmin = requireAdmin;
+window.book = async function (slotId) {
+
+  const user = window.getCurrentUser?.();
+
+  if (!user) return alert("Login required");
+
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+
+  if (!name || !phone) {
+    return alert("املأ البيانات أولاً");
+  }
+
+  const ref = doc(db, "slots", slotId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return alert("Slot not found");
+
+  const data = snap.data();
+
+  if (data.booked) return alert("محجوز بالفعل");
+
+  await updateDoc(ref, {
+    booked: true,
+    status: "booked",
+    patient: {
+      uid: user.uid,
+      name,
+      phone
+    },
+    updatedAt: serverTimestamp()
+  });
+
+  alert("تم الحجز ✔️");
+
+  loadSlots(selectedDate);
+};
+
+/* =========================
+   REQUEST FLOW
+========================= */
+
+window.createRequest = async function () {
+
+  const user = window.getCurrentUser?.();
+
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+
+  if (!user || !selectedDate) {
+    return alert("Missing data");
+  }
+
+  await addDoc(collection(db, "requests"), {
+    uid: user.uid,
+    name,
+    phone,
+    date: selectedDate,
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
+
+  alert("تم إرسال الطلب ✔️");
+};
+</script>
 </script>
 
 </body>
