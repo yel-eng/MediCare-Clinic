@@ -549,13 +549,18 @@ window.assignRequest = async () => {
      لو الميعاد محجوز
   ========================= */
 
-  if (bookedSlot) {
+ /* =========================
+   لو الميعاد محجوز
+========================= */
 
-    const ok = confirm(
-      `يوجد حجز بالفعل الساعة ${newTime}\n\nهل تريد إنشاء ميعاد إضافي؟`
-    );
+if (bookedSlot) {
 
-    if (!ok) return;
+  const sameDayExtra = confirm(
+    `الميعاد ${newTime} محجوز بالفعل\n\nOK = إنشاء ميعاد إضافي بنفس الوقت\nCancel = اختيار ميعاد آخر`
+  );
+
+  /* إنشاء ميعاد إضافي */
+  if (sameDayExtra) {
 
     await addDoc(slotsRef, {
       date: newDate,
@@ -575,9 +580,15 @@ window.assignRequest = async () => {
     });
 
     alert("تم إنشاء ميعاد إضافي ✔️");
+
     return;
   }
 
+  /* اختيار ميعاد آخر */
+  alert("اختاري ميعاد آخر متاح");
+
+  return;
+}
   /* =========================
      اليوم غير موجود
   ========================= */
