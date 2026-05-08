@@ -84,11 +84,9 @@ import {
   getDoc,
   updateDoc,
   addDoc,
-  deleteDoc,
   query,
   where,
   getDocs,
-  writeBatch,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -99,9 +97,6 @@ const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
   projectId: "mydoctor-clinic",
-  storageBucket: "mydoctor-clinic.firebasestorage.app",
-  messagingSenderId: "996532645974",
-  appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -113,192 +108,183 @@ window.db = db;
 /* ================= STATE ================= */
 const $ = (id) => document.getElementById(id);
 
-let cache = [];
-let activeId = null;
+let slotsCache = [];
+let requestsCache = [];
+let selectedRequest = null;
 
+/* ================= COLLECTIONS ================= */
 const slotsRef = collection(db, "slots");
-
-/* ================= LOGOUT ================= */
-window.logout = () => {
-  signOut(auth).then(() => location.href = "login.html");
-};
+const requestsRef = collection(db, "requests");
 
 /* ================= REALTIME ================= */
-onSnapshot(slotsRef, (snap) => {
-
-  cache = [];
-
-  snap.forEach(d => {
-    cache.push({
-      id: d.id,
-      ...d.data()
-    });
-  });
-
+onSnapshot(slotsRef, snap => {
+  slotsCache = [];
+  snap.forEach(d => slotsCache.push({ id: d.id, ...d.data() }));
   renderSlots();
 });
 
-/* ================= SELECT ================= */
-window.selectSlot = async (id) => {
+onSnapshot(requestsRef, snap => {
+  requestsCache = [];
+  snap.forEach(d => requestsCache.push({ id: d.id, ...d.data() }));
+  renderRequests();
+});
 
-  activeId = id;
+/* ================= LOGOUT ================= */
+window.logout = () => signOut(auth).then(()=>location.href="login.html");
 
-  const snap = await getDoc(doc(db, "slots", id));
-  if (!snap.exists()) return;
-
-  const d = snap.data();
-
-  $("pName").value = d.patient?.name || "";
-  $("pPhone").value = d.patient?.phone || "";
-  $("pNotes").value = d.patient?.notes || "";
-  $("pPaid").value = d.paid || 0;
-  $("pStatus").value = d.status || "حجز";
-
-  $("targetTime").innerText = `${d.date} - ${d.time}`;
-};
-
-/* ================= UPDATE ================= */
-window.updateSlot = async () => {
-
-  if (!activeId) return alert("اختاري ميعاد أولاً");
-
-  await updateDoc(doc(db, "slots", activeId), {
-    booked: $("pName").value.trim() !== "",
-    status: $("pStatus").value,
-    paid: Number($("pPaid").value || 0),
-    patient: {
-      name: $("pName").value,
-      phone: $("pPhone").value,
-      notes: $("pNotes").value
-    },
-    updatedAt: serverTimestamp()
-  });
-
-  activeId = null;
-  alert("تم الحفظ ✔️");
-};
-
-/* ================= CREATE SLOTS ================= */
-window.setAvailability = async () => {
-
-  const date = $("slotDate").value;
-  const start = $("startTime").value;
-  const end = $("endTime").value;
-  const duration = Number($("slotDuration").value);
-
-  let t = new Date(`${date}T${start}`);
-  const endT = new Date(`${date}T${end}`);
-
-  while (t < endT) {
-
-    await addDoc(slotsRef, {
-      date,
-      time: t.toTimeString().slice(0,5),
-      booked: false,
-      status: "حجز",
-      patient: {},
-      createdAt: serverTimestamp()
-    });
-
-    t.setMinutes(t.getMinutes() + duration);
-  }
-
-  alert("تم إنشاء المواعيد ✔️");
-};
-
-/* ================= DELETE DAY ================= */
-window.deleteDay = async (date) => {
-
-  const q = query(slotsRef, where("date", "==", date));
-  const snap = await getDocs(q);
-
-  const batch = writeBatch(db);
-  snap.forEach(d => batch.delete(d.ref));
-  await batch.commit();
-
-  alert("تم الحذف ✔️");
-};
-
-/* ================= ✏️ EDIT SLOT (NEW) ================= */
+/* ================= EDIT SLOT ================= */
 window.editSlot = async (id) => {
 
   const ref = doc(db, "slots", id);
   const snap = await getDoc(ref);
-
   if (!snap.exists()) return;
 
   const d = snap.data();
 
-  const newTime = prompt("الوقت:", d.time);
-  const newStatus = prompt("الحالة (حجز / كشف / ملغي):", d.status);
-  const newName = prompt("اسم المريض:", d.patient?.name || "");
-  const newPhone = prompt("الهاتف:", d.patient?.phone || "");
+  const time = prompt("الوقت:", d.time);
+  const status = prompt("الحالة:", d.status);
 
   await updateDoc(ref, {
-    time: newTime || d.time,
-    status: newStatus || d.status,
+    time: time || d.time,
+    status: status || d.status
+  });
+
+  alert("تم تعديل الميعاد ✔️");
+};
+
+/* ================= OPEN REQUEST ================= */
+window.openRequest = (id) => {
+  selectedRequest = id;
+  alert("اختار ميعاد للمريض الآن");
+};
+
+/* ================= ASSIGN REQUEST ================= */
+window.assignToSlot = async (slotId) => {
+
+  if (!selectedRequest) {
+    alert("اختار Request الأول");
+    return;
+  }
+
+  const reqRef = doc(db, "requests", selectedRequest);
+  const reqSnap = await getDoc(reqRef);
+
+  if (!reqSnap.exists()) return;
+
+  const req = reqSnap.data();
+
+  await updateDoc(doc(db,"slots",slotId), {
+    booked: true,
+    status: "booked",
     patient: {
-      name: newName,
-      phone: newPhone
+      name: req.name,
+      phone: req.phone
     }
   });
 
-  alert("تم التعديل ✔️");
-};
-
-/* ================= RENDER ================= */
-function renderSlots() {
-
-  const grid = $("daysGrid");
-  const totalBox = $("globalTotal");
-
-  let days = {};
-  let total = 0;
-
-  cache.forEach(d => {
-    if (!days[d.date]) days[d.date] = [];
-    days[d.date].push(d);
+  await updateDoc(reqRef, {
+    status: "assigned"
   });
 
+  selectedRequest = null;
+  alert("تم الحجز ✔️");
+};
+
+/* ================= ADD SLOT ================= */
+window.addSlot = async (date) => {
+
+  const time = prompt("اكتب الوقت الجديد");
+
+  if (!time) return;
+
+  await addDoc(slotsRef, {
+    date,
+    time,
+    booked: false,
+    status: "available",
+    patient: null,
+    createdAt: serverTimestamp()
+  });
+
+  alert("تم إضافة ميعاد ✔️");
+};
+
+/* ================= AUTO CREATE DAY ================= */
+async function getOrCreateDay(date){
+
+  const q = query(slotsRef, where("date","==",date));
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+
+    await addDoc(slotsRef, {
+      date,
+      time: "05:00 PM",
+      booked: false,
+      status: "available",
+      patient: null,
+      createdAt: serverTimestamp()
+    });
+  }
+}
+
+/* ================= RENDER SLOTS ================= */
+function renderSlots(){
+
+  const grid = document.getElementById("daysGrid");
   grid.innerHTML = "";
 
-  Object.keys(days).sort().forEach(date => {
+  let days = {};
 
-    let dayTotal = 0;
+  slotsCache.forEach(s => {
+    if (!days[s.date]) days[s.date] = [];
+    days[s.date].push(s);
+  });
+
+  Object.keys(days).forEach(date => {
 
     const col = document.createElement("div");
-    col.className = "day-col";
-
     col.innerHTML = `
-      <div class="day-head">
-        ${date}
-        <span class="del-btn" onclick="deleteDay('${date}')">×</span>
-      </div>
+      <h3>${date}</h3>
+      <button onclick="addSlot('${date}')">+ ميعاد</button>
 
-      <div class="day-money">💰 ${dayTotal} جنيه</div>
+      ${days[date].map(s => `
+        <div style="padding:8px;border:1px solid #ccc;margin:5px;cursor:pointer"
+          onclick="editSlot('${s.id}')">
 
-      ${days[date]
-        .sort((a,b)=>a.time.localeCompare(b.time))
-        .map(x => `
-          <div class="slot-item ${x.booked ? "booked" : ""}"
-            onclick="selectSlot('${x.id}')">
+          🕒 ${s.time} - ${s.status}
 
-            <b>${x.time}</b> - ${x.patient?.name || "بدون اسم"} (${x.status})
+          <button onclick="event.stopPropagation(); assignToSlot('${s.id}')">
+            حجز
+          </button>
 
-            <button onclick="event.stopPropagation(); editSlot('${x.id}')"
-              style="float:left;background:#fff;border:none;padding:4px;border-radius:6px;cursor:pointer;">
-              ✏️
-            </button>
-
-          </div>
-        `).join("")}
+        </div>
+      `).join("")}
     `;
 
     grid.appendChild(col);
   });
-
-  totalBox.innerText = "💰 إجمالي العيادة: " + total + " جنيه";
 }
+
+/* ================= RENDER REQUESTS ================= */
+function renderRequests(){
+
+  const box = document.getElementById("requestsBox");
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  requestsCache.forEach(r => {
+
+    box.innerHTML += `
+      <div style="padding:10px;border:1px solid #ddd;margin:5px">
+        👤 ${r.name} - 📞 ${r.phone}
+        <button onclick="openRequest('${r.id}')">تحديد ميعاد</button>
+      </div>
+    `;
+  });
+}
+
 </script>
 
 </body>
