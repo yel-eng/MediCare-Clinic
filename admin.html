@@ -424,6 +424,26 @@ window.updateSlot = async () => {
   alert("تم التعديل ✔️");
 };
 
+
+        // 🔥 منع تضارب + اقتراح ميعاد بديل
+if (isSlotTaken(assignDate.value, assignTime.value)) {
+
+  let suggested = findNearestFreeSlot(
+    assignDate.value,
+    assignTime.value
+  );
+
+  if (suggested) {
+    alert(
+      `❗ الميعاد مش متاح\n\n✔️ أقرب ميعاد فاضي: ${suggested.date} - ${suggested.time}`
+    );
+  } else {
+    alert("❌ مفيش مواعيد فاضية حالياً");
+  }
+
+  return;
+}
+
 /* generate slots */
 window.setAvailability = async () => {
   let date = slotDate.value;
