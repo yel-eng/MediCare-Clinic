@@ -139,17 +139,44 @@ function renderSlots(){
   const container = document.getElementById("slotsContainer");
   container.innerHTML = "";
 
-  const available = slotsCache.filter(s=>!s.booked);
+  const available = slotsCache.filter(s => !s.booked);
+  const totalSlots = slotsCache.length;
+
+  /* =========================
+     CASE 1: NO SLOTS AT ALL
+  ========================= */
+
+  if(totalSlots === 0){
+
+    container.innerHTML = `
+      <p>❌ لا يوجد مواعيد لهذا اليوم</p>
+
+      <button onclick="createRequest()">
+        طلب موعد
+      </button>
+    `;
+    return;
+  }
+
+  /* =========================
+     CASE 2: ALL BOOKED
+  ========================= */
 
   if(available.length === 0){
 
     container.innerHTML = `
-      <p>❌ لا يوجد مواعيد</p>
-      <button onclick="createRequest()">طلب موعد</button>
-    `;
+      <p>⚠️ كل المواعيد محجوزة</p>
 
+      <button onclick="createRequest()">
+        طلب موعد
+      </button>
+    `;
     return;
   }
+
+  /* =========================
+     CASE 3: AVAILABLE SLOTS
+  ========================= */
 
   available.forEach(slot=>{
 
@@ -170,7 +197,6 @@ function renderSlots(){
     container.appendChild(div);
   });
 }
-
 /* =========================
    BOOK SLOT
 ========================= */
