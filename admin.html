@@ -619,6 +619,113 @@ if (bookedSlot) {
   alert("تم نقل الميعاد ✔️");
 
 };
+
+        /* render */
+function renderSlots() {
+
+  let days = {};
+  let totalGlobal = 0;
+
+  cache.forEach((d) => {
+
+    if (!days[d.date]) {
+      days[d.date] = [];
+    }
+
+    days[d.date].push(d);
+
+  });
+
+  daysGrid.innerHTML = "";
+
+  for (let d in days) {
+
+    let total = 0;
+
+    days[d].forEach((x) => {
+
+      if (x.status === "كشف") {
+        total += Number(x.paid || 0);
+        totalGlobal += Number(x.paid || 0);
+      }
+
+    });
+
+    let col = document.createElement("div");
+
+    col.className = "day-col";
+
+    col.innerHTML = `
+
+      <div class="day-head">
+        ${d}
+        <span class="del-btn" onclick="deleteDay('${d}')">×</span>
+      </div>
+
+      <div class="day-money">
+        💰 ${total} جنيه
+      </div>
+
+      ${days[d]
+
+        .sort((a,b)=>{
+
+          if(a.status === "pending") return -1;
+          if(b.status === "pending") return 1;
+
+          return a.time.localeCompare(b.time);
+
+        })
+
+        .map(x => `
+
+          <div class="
+            slot-item
+            ${x.booked ? "booked" : ""}
+            ${x.status === "ملغي" ? "cancel" : ""}
+            ${x.status === "pending" ? "pending-slot" : ""}
+          "
+
+          onclick="selectSlot('${x.id}')">
+
+            <b>
+              ${x.status === "pending"
+                ? "📩 طلب تحديد موعد"
+                : x.time}
+            </b>
+
+            - ${x.patient?.name || "بدون اسم"}
+
+            (${x.status})
+
+            ${x.patient?.phone ? `
+
+              <br>
+
+              <a
+                class="whatsapp"
+                target="_blank"
+                href="https://wa.me/2${x.patient.phone}"
+              >
+                واتساب 📱
+              </a>
+
+            ` : ""}
+
+          </div>
+
+        `).join("")}
+
+    `;
+
+    daysGrid.appendChild(col);
+
+  }
+
+  globalTotal.innerText =
+    "💰 إجمالي العيادة: " + totalGlobal + " جنيه";
+
+}
 </script>
 
 </body>
