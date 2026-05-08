@@ -5,29 +5,31 @@
 <title>نظام حجز احترافي</title>
 
 <style>
+
 body{
-  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-  background: linear-gradient(135deg, #e9f0ff, #f5f7fb);
-  margin: 0;
-  padding: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif;
+  background:linear-gradient(135deg,#e9f0ff,#f5f7fb);
+  margin:0;
+  padding:30px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
 }
 
 .box{
-  width: 100%;
-  max-width: 520px;
-  background: #fff;
-  padding: 30px;
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  width:100%;
+  max-width:520px;
+  background:#fff;
+  padding:30px;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
 
-h2{
+.box h2{
   text-align:center;
   color:#1a237e;
+  margin-bottom:20px;
 }
 
 input{
@@ -36,21 +38,48 @@ input{
   margin:10px 0;
   border-radius:10px;
   border:1px solid #ddd;
+  box-sizing:border-box;
 }
 
 button{
   width:100%;
-  padding:12px;
-  background:#1b5e20;
-  color:#fff;
+  padding:13px;
+  margin-top:10px;
   border:none;
   border-radius:10px;
+  background:#1b5e20;
+  color:#fff;
+  font-size:15px;
   cursor:pointer;
 }
 
-#slotsContainer{
-  margin-top:15px;
+button:hover{
+  opacity:.95;
 }
+
+.slot{
+  padding:12px;
+  margin:8px 0;
+  background:#f1f5f9;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.slot:hover{
+  background:#dbeafe;
+}
+
+.selected{
+  background:#1d4ed8 !important;
+  color:#fff;
+}
+
+.msg{
+  margin-top:15px;
+  text-align:center;
+}
+
 </style>
 </head>
 
@@ -61,13 +90,18 @@ button{
 <h2>📅 احجز موعدك</h2>
 
 <input id="name" placeholder="الاسم">
+
 <input id="phone" placeholder="رقم الهاتف">
 
 <input type="date" id="dateInput">
 
 <div id="slotsContainer"></div>
 
-<button onclick="book()">تأكيد الحجز</button>
+<div class="msg" id="msg"></div>
+
+<button onclick="book()">
+تأكيد الحجز
+</button>
 
 </div>
 
@@ -92,23 +126,21 @@ import {
 ========================= */
 
 let selectedDate = "";
+let selectedSlotId = null;
 let slotsCache = [];
 
 /* =========================
-   AUTH CHECK
+   DATE CHANGE
 ========================= */
 
-window.addEventListener("load", () => {
-  const user = window.getCurrentUser?.();
-  if (!user) window.location.href = "login.html";
-});
+document
+.getElementById("dateInput")
+.addEventListener("change", async (e) => {
 
-/* =========================
-   DATE HANDLER
-========================= */
-
-document.getElementById("dateInput").addEventListener("change", async (e) => {
   selectedDate = e.target.value;
+
+  selectedSlotId = null;
+
   await loadSlots(selectedDate);
 });
 
@@ -116,52 +148,79 @@ document.getElementById("dateInput").addEventListener("change", async (e) => {
    LOAD SLOTS
 ========================= */
 
-async function loadSlots(date) {
+async function loadSlots(date){
 
-  const q = query(collection(db, "slots"), where("date", "==", date));
+  const q = query(
+    collection(db,"slots"),
+    where("date","==",date)
+  );
+
   const snap = await getDocs(q);
 
   slotsCache = [];
 
   snap.forEach(d => {
-    slotsCache.push({ id: d.id, ...d.data() });
+    slotsCache.push({
+      id:d.id,
+      ...d.data()
+    });
   });
 
   renderSlots();
 }
 
 /* =========================
-   RENDER
+   RENDER SLOTS
 ========================= */
 
-function renderSlots() {
+function renderSlots(){
 
-  const container = document.getElementById("slotsContainer");
+  const container =
+    document.getElementById("slotsContainer");
+
   container.innerHTML = "";
 
-  const available = slotsCache.filter(s => !s.booked);
+  const availableSlots = slotsCache
+    .filter(slot => slot.booked !== true)
+    .sort((a,b)=>a.time.localeCompare(b.time));
 
-  if (available.length === 0) {
+  /* NO SLOTS */
+
+  if(availableSlots.length === 0){
+
     container.innerHTML = `
-      <p>❌ لا يوجد مواعيد</p>
-      <button onclick="createRequest()">طلب موعد</button>
+      <div class="msg">
+        ❌ لا توجد مواعيد متاحة لهذا اليوم
+      </div>
+
+      <button onclick="createRequest()">
+        إرسال طلب موعد
+      </button>
     `;
+
     return;
   }
 
-  available.forEach(slot => {
+  /* AVAILABLE SLOTS */
+
+  availableSlots.forEach(slot => {
 
     const div = document.createElement("div");
 
-    div.style.padding = "10px";
-    div.style.margin = "8px 0";
-    div.style.background = "#f1f5f9";
-    div.style.borderRadius = "10px";
-    div.style.cursor = "pointer";
+    div.className = "slot";
 
-    div.innerText = "🕒 " + slot.time;
+    div.innerHTML = `🕒 ${slot.time}`;
 
-    div.onclick = () => book(slot.id);
+    div.onclick = () => {
+
+      selectedSlotId = slot.id;
+
+      document
+        .querySelectorAll(".slot")
+        .forEach(el => el.classList.remove("selected"));
+
+      div.classList.add("selected");
+    };
 
     container.appendChild(div);
   });
@@ -171,57 +230,105 @@ function renderSlots() {
    BOOK SLOT
 ========================= */
 
-window.book = async function (slotId) {
+window.book = async function(){
 
-  const user = window.getCurrentUser?.();
+  const name =
+    document.getElementById("name").value.trim();
 
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
+  const phone =
+    document.getElementById("phone").value.trim();
 
-  if (!name || !phone) return alert("املأ البيانات");
+  if(!name || !phone || !selectedDate){
 
-  const ref = doc(db, "slots", slotId);
+    alert("من فضلك أكمل البيانات");
+
+    return;
+  }
+
+  /* لو مفيش slot مختار */
+  if(!selectedSlotId){
+
+    alert("اختر موعد أولاً");
+
+    return;
+  }
+
+  const ref = doc(db,"slots",selectedSlotId);
+
   const snap = await getDoc(ref);
 
-  if (!snap.exists()) return;
+  if(!snap.exists()){
+
+    alert("الموعد غير موجود");
+
+    return;
+  }
 
   const data = snap.data();
 
-  if (data.booked) return alert("محجوز");
+  /* DOUBLE BOOKING PROTECTION */
 
-  await updateDoc(ref, {
-    booked: true,
-    status: "booked",
-    patient: { uid: user.uid, name, phone },
-    updatedAt: serverTimestamp()
+  if(data.booked === true){
+
+    alert("هذا الموعد تم حجزه بالفعل");
+
+    await loadSlots(selectedDate);
+
+    return;
+  }
+
+  await updateDoc(ref,{
+
+    booked:true,
+
+    status:"booked",
+
+    patient:{
+      name,
+      phone
+    },
+
+    updatedAt:serverTimestamp()
   });
 
-  alert("تم الحجز ✔️");
+  alert("تم الحجز بنجاح ✔️");
 
-  loadSlots(selectedDate);
+  selectedSlotId = null;
+
+  await loadSlots(selectedDate);
 };
 
 /* =========================
-   REQUEST
+   REQUEST FLOW
 ========================= */
 
-window.createRequest = async function () {
+window.createRequest = async function(){
 
-  const user = window.getCurrentUser?.();
+  const name =
+    document.getElementById("name").value.trim();
 
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
+  const phone =
+    document.getElementById("phone").value.trim();
 
-  await addDoc(collection(db, "requests"), {
-    uid: user.uid,
+  if(!name || !phone || !selectedDate){
+
+    alert("من فضلك أكمل البيانات");
+
+    return;
+  }
+
+  await addDoc(collection(db,"requests"),{
+
     name,
     phone,
-    date: selectedDate,
-    status: "pending",
-    createdAt: serverTimestamp()
+    date:selectedDate,
+
+    status:"pending",
+
+    createdAt:serverTimestamp()
   });
 
-  alert("تم إرسال الطلب ✔️");
+  alert("تم إرسال طلب الموعد ✔️");
 };
 
 </script>
