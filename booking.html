@@ -253,40 +253,100 @@ window.book = async function(){
    REQUEST
 ========================= */
 
-window.createRequest = async function(){
+window.createRequest = async function () {
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
 
-  if(!name || !phone || !selectedDate){
-    alert("أكمل البيانات");
+  if (!name || !phone || !selectedDate) {
+    alert("اكمل البيانات");
     return;
   }
 
-  await addDoc(collection(db,"slots"),{
+  // 1️⃣ نجيب كل المواعيد في اليوم
+  const q = query(collection(db, "slots"), where("date", "==", selectedDate));
+  const snap = await getDocs(q);
 
-    date: selectedDate,
+  let slots = [];
 
-    time: "طلب جديد",
-
-    booked: false,
-
-    status: "pending",
-
-    paid: 0,
-
-    patient:{
-      name,
-      phone,
-      notes:""
-    },
-
-    createdAt: serverTimestamp()
+  snap.forEach(d => {
+    slots.push({ id: d.id, ...d.data() });
   });
 
-  alert("تم إرسال الطلب ✔️");
-};
+  // 2️⃣ نشوف فيه slots فاضية؟
+  let freeSlot = slots.find(s => !s.booked);
 
+  // ==============================
+  // CASE A: فيه slot فاضي
+  // ==============================
+  if (freeSlot) {
+
+    await updateDoc(doc(db, "slots", freeSlot.id), {
+      booked: true,
+      status: "booked",
+      patient: { name, phone },
+      updatedAt: serverTimestamp()
+    });
+
+    alert("تم الحجز في أقرب ميعاد متاح ✔️");
+    return;
+  }
+
+  // ==============================
+  // CASE B: مفيش slots خالص
+  // ==============================
+  if (slots.length === 0) {
+
+    const newSlot = await addDoc(collection(db, "slots"), {
+      date: selectedDate,
+      time: "10:00", // وقت افتراضي
+      booked: true,
+      status: "booked",
+      patient: { name, phone },
+      createdAt: serverTimestamp()
+    });
+
+    alert("تم إنشاء ميعاد وحجزه تلقائيًا ✔️");
+
+    // 🔔 تنبيه للأدمن (future)
+    console.log("NEW AUTO SLOT CREATED", newSlot.id);
+
+    return;
+  }
+
+  // ==============================
+  // CASE C: كله محجوز → نبحث أقرب يوم
+  // ==============================
+  const nextQ = query(collection(db, "slots"));
+  const nextSnap = await getDocs(nextQ);
+
+  let nextFree = null;
+
+  nextSnap.forEach(d => {
+    const s = d.data();
+    if (!s.booked && !nextFree) {
+      nextFree = { id: d.id, ...s };
+    }
+  });
+
+  if (nextFree) {
+
+    await updateDoc(doc(db, "slots", nextFree.id), {
+      booked: true,
+      status: "booked",
+      patient: { name, phone },
+      updatedAt: serverTimestamp()
+    });
+
+    alert("تم نقل الحجز لأقرب ميعاد متاح ✔️");
+    return;
+  }
+
+  // ==============================
+  // fallback
+  // ==============================
+  alert("لا يوجد أي مواعيد متاحة حاليًا، تم تسجيل طلبك");
+};
 </script>
 
 </body>
