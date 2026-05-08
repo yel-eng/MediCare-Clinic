@@ -263,12 +263,25 @@ window.createRequest = async function(){
     return;
   }
 
-  await addDoc(collection(db,"requests"),{
-    name,
-    phone,
-    date:selectedDate,
-    status:"pending",
-    createdAt:serverTimestamp()
+  await addDoc(collection(db,"slots"),{
+
+    date: selectedDate,
+
+    time: "طلب جديد",
+
+    booked: false,
+
+    status: "pending",
+
+    paid: 0,
+
+    patient:{
+      name,
+      phone,
+      notes:""
+    },
+
+    createdAt: serverTimestamp()
   });
 
   alert("تم إرسال الطلب ✔️");
