@@ -493,10 +493,14 @@ function renderSlots() {
   let totalGlobal = 0;
 
   cache.forEach(d => {
-    if (!d.date) return;
-    if (!days[d.date]) days[d.date] = [];
-    days[d.date].push(d);
-  });
+
+  // 🔴 إخفاء الطلبات اللي اتحولت (محذوفة/محولة)
+  if (d.status === "محول") return;
+
+  if (!d.date) return;
+  if (!days[d.date]) days[d.date] = [];
+  days[d.date].push(d);
+});
 
   grid.innerHTML = "";
 
