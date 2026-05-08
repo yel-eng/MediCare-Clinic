@@ -310,20 +310,6 @@ onchange="loadAvailableSlots(this.value)">
 
 </div>
 
-
-
-
-
-
-
-
-
-
-        
-
-
-
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -339,10 +325,11 @@ import {
   query,
   where,
   getDocs,
-  writeBatch
+  writeBatch,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ================= Firebase ================= */
+/* ================= FIREBASE ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -360,7 +347,7 @@ const db = getFirestore(app);
 window.db = db;
 window.auth = auth;
 
-/* ================= Helpers ================= */
+/* ================= STATE ================= */
 const $ = (id) => document.getElementById(id);
 
 let cache = [];
@@ -368,35 +355,29 @@ let activeId = null;
 
 const slotsRef = collection(db, "slots");
 
-/* ================= Logout ================= */
+/* ================= LOGOUT ================= */
 window.logout = () => {
-  signOut(auth).then(() => (location.href = "login.html"));
+  signOut(auth).then(() => location.href = "login.html");
 };
 
-/* ================= Realtime ================= */
+/* ================= REALTIME LOAD ================= */
 onSnapshot(slotsRef, (snap) => {
+
   cache = [];
 
-  snap.forEach((d) => {
-    const data = d.data();
-    if (!data) return;
-
+  snap.forEach(d => {
     cache.push({
       id: d.id,
-      ...data,
-      status: data.status || "حجز"
+      ...d.data()
     });
   });
 
-  try {
-    renderSlots();
-  } catch (e) {
-    console.error("Render Error:", e);
-  }
+  renderSlots();
 });
 
-/* ================= Select Slot ================= */
+/* ================= SELECT SLOT ================= */
 window.selectSlot = async (id) => {
+
   activeId = id;
 
   const snap = await getDoc(doc(db, "slots", id));
@@ -413,8 +394,9 @@ window.selectSlot = async (id) => {
   $("targetTime").innerText = `${d.date} - ${d.time}`;
 };
 
-/* ================= Update Slot ================= */
+/* ================= UPDATE SLOT ================= */
 window.updateSlot = async () => {
+
   if (!activeId) return alert("اختاري ميعاد أولاً");
 
   await updateDoc(doc(db, "slots", activeId), {
@@ -425,25 +407,17 @@ window.updateSlot = async () => {
       name: $("pName").value,
       phone: $("pPhone").value,
       notes: $("pNotes").value
-    }
+    },
+    updatedAt: serverTimestamp()
   });
 
   activeId = null;
   alert("تم التعديل ✔️");
 };
 
-/* ================= Check Slot ================= */
-function isSlotTaken(date, time) {
-  return cache.some(s =>
-    s.date === date &&
-    s.time === time &&
-    s.booked === true &&
-    s.id !== activeId
-  );
-}
-
-/* ================= Generate Slots ================= */
+/* ================= GENERATE SLOTS ================= */
 window.setAvailability = async () => {
+
   const date = $("slotDate").value;
   const start = $("startTime").value;
   const end = $("endTime").value;
@@ -458,48 +432,49 @@ window.setAvailability = async () => {
   const e = new Date(`${date}T${end}`);
 
   while (s < e) {
+
     await addDoc(slotsRef, {
       date,
       time: s.toTimeString().slice(0, 5),
       booked: false,
       status: "حجز",
       paid: 0,
-      patient: {}
+      patient: {},
+      createdAt: serverTimestamp()
     });
 
     s.setMinutes(s.getMinutes() + duration);
   }
 
-  alert("تم التوليد ✔️");
+  alert("تم إنشاء المواعيد ✔️");
 };
 
-        
-
-/* ================= Delete Day ================= */
+/* ================= DELETE DAY ================= */
 window.deleteDay = async (date) => {
+
   if (!confirm("حذف اليوم؟")) return;
 
   const q = query(slotsRef, where("date", "==", date));
   const snap = await getDocs(q);
 
   const batch = writeBatch(db);
-  snap.forEach((d) => batch.delete(d.ref));
+
+  snap.forEach(d => batch.delete(d.ref));
 
   await batch.commit();
 };
 
-/* ================= Render ================= */
+/* ================= RENDER ================= */
 function renderSlots() {
+
   const grid = $("daysGrid");
   const totalBox = $("globalTotal");
 
-  if (!grid || !totalBox) return;
-
   let days = {};
-  let totalGlobal = 0;
+  let total = 0;
 
   cache.forEach(d => {
-    if (d.status === "محول") return;
+
     if (!d.date) return;
 
     if (!days[d.date]) days[d.date] = [];
@@ -510,12 +485,12 @@ function renderSlots() {
 
   Object.keys(days).sort().forEach(date => {
 
-    let total = 0;
+    let dayTotal = 0;
 
-    days[date].forEach(x => {
-      if (x.status === "كشف") {
-        total += Number(x.paid || 0);
-        totalGlobal += Number(x.paid || 0);
+    days[date].forEach(s => {
+      if (s.status === "كشف") {
+        dayTotal += Number(s.paid || 0);
+        total += Number(s.paid || 0);
       }
     });
 
@@ -528,14 +503,13 @@ function renderSlots() {
         <span class="del-btn" onclick="deleteDay('${date}')">×</span>
       </div>
 
-      <div class="day-money">💰 ${total} جنيه</div>
+      <div class="day-money">💰 ${dayTotal} جنيه</div>
 
       ${days[date]
-        .sort((a,b) => (a.time || "").localeCompare(b.time || ""))
+        .sort((a,b)=> (a.time || "").localeCompare(b.time || ""))
         .map(x => `
           <div class="slot-item ${x.booked ? "booked" : ""}"
             onclick="selectSlot('${x.id}')">
-
             <b>${x.time}</b> - ${x.patient?.name || "بدون اسم"} (${x.status})
           </div>
         `).join("")}
@@ -544,197 +518,9 @@ function renderSlots() {
     grid.appendChild(col);
   });
 
-  totalBox.innerText = "💰 إجمالي العيادة: " + totalGlobal + " جنيه";
+  totalBox.innerText = "💰 إجمالي العيادة: " + total + " جنيه";
 }
 
-
-/* ================= assignRequest (FIXED) ================= */
-window.assignRequest = async () => {
-
-  if (!activeId) {
-    alert("اختاري ميعاد أو طلب أولاً");
-    return;
-  }
-
-  const newDate = $("assignDate").value;
-  const newTime = $("assignTime").value;
-
-  if (!newDate || !newTime) {
-    alert("اختار التاريخ والوقت");
-    return;
-  }
-
-  const currentRef = doc(db, "slots", activeId);
-  const currentSnap = await getDoc(currentRef);
-
-  if (!currentSnap.exists()) {
-    alert("العنصر غير موجود");
-    return;
-  }
-
-  const currentData = currentSnap.data();
-
-  if (currentData.date === newDate && currentData.time === newTime) {
-    alert("هذا هو نفس الميعاد الحالي");
-    return;
-  }
-
-  const q = query(
-    slotsRef,
-    where("date", "==", newDate),
-    where("time", "==", newTime)
-  );
-
-  const res = await getDocs(q);
-
-  let freeSlot = null;
-
-  res.forEach((d) => {
-    if (!d.data().booked) freeSlot = d;
-  });
-
-  if (freeSlot) {
-
-    await updateDoc(doc(db, "slots", freeSlot.id), {
-      booked: true,
-      status: "حجز",
-      patient: currentData.patient || {},
-      paid: currentData.paid || 0
-    });
-
-    await updateDoc(currentRef, {
-      booked: false,
-      status: "محول",
-      patient: {},
-      paid: 0
-    });
-
-    alert("تم نقل الميعاد ✔️");
-    return;
-  }
-
-  await addDoc(slotsRef, {
-    date: newDate,
-    time: newTime,
-    booked: true,
-    status: "حجز",
-    paid: currentData.paid || 0,
-    patient: currentData.patient || {}
-  });
-
-  await updateDoc(currentRef, {
-    booked: false,
-    status: "محول",
-    patient: {},
-    paid: 0
-  });
-
-  alert("تم إنشاء ميعاد جديد ✔️");
-};
-
-
-        
-
-        window.loadAvailableSlots = async (date) => {
-
-  const select = $("availableSlots");
-
-  select.innerHTML =
-    '<option value="">اختر ميعاد متاح</option>';
-
-  const q = query(
-    slotsRef,
-    where("date", "==", date)
-  );
-
-  const snap = await getDocs(q);
-
-  snap.forEach(docu => {
-
-    const d = docu.data();
-
-    if (!d.booked) {
-
-      select.innerHTML += `
-        <option value="${docu.id}">
-          ${d.time}
-        </option>
-      `;
-    }
-  });
-};
-
-
-        
-/* =========================
-   PROCESS PENDING REQUESTS
-========================= */
-
-window.processPendingRequests = async (date) => {
-
-  const pendingQ = query(
-    collection(db, "requests"),
-    where("status", "==", "pending"),
-    where("requestedDate", "==", date)
-  );
-
-  const pendingSnap = await getDocs(pendingQ);
-
-  for (const reqDoc of pendingSnap.docs) {
-
-    const req = reqDoc.data();
-
-    // 1. نجيب كل slots لليوم
-    const slotsQ = query(
-      collection(db, "slots"),
-      where("date", "==", date)
-    );
-
-    const slotsSnap = await getDocs(slotsQ);
-
-    let freeSlot = null;
-
-    slotsSnap.forEach(s => {
-      const data = s.data();
-      if (!data.booked && !freeSlot) {
-        freeSlot = s;
-      }
-    });
-
-    // 2. لو فيه slot فاضي
-    if (freeSlot) {
-
-      await updateDoc(doc(db, "slots", freeSlot.id), {
-        booked: true,
-        status: "حجز",
-        patient: req.patient || {},
-        paid: 0
-      });
-
-      await updateDoc(doc(db, "requests", reqDoc.id), {
-        status: "converted"
-      });
-
-    } else {
-
-      // 3. لو مفيش slot → نعمل واحد جديد
-      const newSlot = await addDoc(collection(db, "slots"), {
-        date,
-        time: "09:00", // ممكن تخليه auto later
-        booked: true,
-        status: "حجز",
-        patient: req.patient || {},
-        paid: 0
-      });
-
-      await updateDoc(doc(db, "requests", reqDoc.id), {
-        status: "converted"
-      });
-    }
-  }
-
-  alert("تم معالجة الطلبات ✔️");
-};        
 </script>
 
 </body>
