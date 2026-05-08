@@ -713,6 +713,18 @@ function renderSlots() {
               </a>
             ` : ""}
 
+            <!-- ✅ زر إلغاء الحجز -->
+            ${x.booked ? `
+              <button onclick="cancelBooking('${x.id}')" style="background:red;color:white;border:none;padding:5px;margin-top:5px;border-radius:5px;width:100%;">
+                إلغاء الحجز
+              </button>
+
+              <!-- 🗑 زر حذف الميعاد -->
+              <button onclick="deleteSlot('${x.id}')" style="background:black;color:white;border:none;padding:5px;margin-top:5px;border-radius:5px;width:100%;">
+                حذف الميعاد
+              </button>
+            ` : ""}
+
           </div>
 
         `).join("")}
@@ -727,6 +739,37 @@ function renderSlots() {
     "💰 إجمالي العيادة: " + totalGlobal + " جنيه";
 
 }
+        /*إلغاء هذا الحجزr */
+
+        window.cancelBooking = async (id) => {
+
+  const ok = confirm("هل تريد إلغاء هذا الحجز؟");
+
+  if (!ok) return;
+
+  await updateDoc(doc(db, "slots", id), {
+    booked: false,
+    status: "حجز",
+    patient: {},
+    paid: 0
+  });
+                
+  alert("تم إلغاء الحجز ✔️");
+};
+
+       /*حذف الميعاد نفائي */
+        window.deleteSlot = async (id) => {
+
+  const ok = confirm("حذف الميعاد نهائيًا؟");
+
+  if (!ok) return;
+
+  await deleteDoc(doc(db, "slots", id));
+
+  alert("تم حذف الميعاد 🗑");
+};
+
+        
 </script>
 
 </body>
