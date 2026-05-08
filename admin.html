@@ -493,14 +493,12 @@ function renderSlots() {
   let totalGlobal = 0;
 
   cache.forEach(d => {
+    if (d.status === "محول") return;
+    if (!d.date) return;
 
-  // 🔴 إخفاء الطلبات اللي اتحولت (محذوفة/محولة)
-  if (d.status === "محول") return;
-
-  if (!d.date) return;
-  if (!days[d.date]) days[d.date] = [];
-  days[d.date].push(d);
-});
+    if (!days[d.date]) days[d.date] = [];
+    days[d.date].push(d);
+  });
 
   grid.innerHTML = "";
 
@@ -544,6 +542,7 @@ function renderSlots() {
 }
 
 
+/* ================= assignRequest (FIXED) ================= */
 window.assignRequest = async () => {
 
   if (!activeId) {
@@ -569,13 +568,11 @@ window.assignRequest = async () => {
 
   const currentData = currentSnap.data();
 
-  // لو نفس الميعاد
   if (currentData.date === newDate && currentData.time === newTime) {
     alert("هذا هو نفس الميعاد الحالي");
     return;
   }
 
-  // البحث عن ميعاد موجود
   const q = query(
     slotsRef,
     where("date", "==", newDate),
@@ -587,12 +584,9 @@ window.assignRequest = async () => {
   let freeSlot = null;
 
   res.forEach((d) => {
-    if (!d.data().booked) {
-      freeSlot = d;
-    }
+    if (!d.data().booked) freeSlot = d;
   });
 
-  // لو فيه ميعاد فاضي
   if (freeSlot) {
 
     await updateDoc(doc(db, "slots", freeSlot.id), {
@@ -604,7 +598,7 @@ window.assignRequest = async () => {
 
     await updateDoc(currentRef, {
       booked: false,
-      status: "حجز",
+      status: "محول",
       patient: {},
       paid: 0
     });
@@ -613,7 +607,6 @@ window.assignRequest = async () => {
     return;
   }
 
-  // لو مفيش ميعاد فاضي → إنشاء جديد
   await addDoc(slotsRef, {
     date: newDate,
     time: newTime,
@@ -625,7 +618,7 @@ window.assignRequest = async () => {
 
   await updateDoc(currentRef, {
     booked: false,
-    status: "حجز",
+    status: "محول",
     patient: {},
     paid: 0
   });
@@ -633,96 +626,7 @@ window.assignRequest = async () => {
   alert("تم إنشاء ميعاد جديد ✔️");
 };
 
-
-window.assignRequest = async () => {
-
-  if (!activeId) {
-    alert("اختاري ميعاد أو طلب أولاً");
-    return;
-  }
-
-  const newDate = $("assignDate").value;
-  const newTime = $("assignTime").value;
-
-  if (!newDate || !newTime) {
-    alert("اختار التاريخ والوقت");
-    return;
-  }
-
-  const currentRef = doc(db, "slots", activeId);
-  const currentSnap = await getDoc(currentRef);
-
-  if (!currentSnap.exists()) {
-    alert("العنصر غير موجود");
-    return;
-  }
-
-  const currentData = currentSnap.data();
-
-  // لو نفس الميعاد
-  if (currentData.date === newDate && currentData.time === newTime) {
-    alert("هذا هو نفس الميعاد الحالي");
-    return;
-  }
-
-  // البحث عن ميعاد موجود
-  const q = query(
-    slotsRef,
-    where("date", "==", newDate),
-    where("time", "==", newTime)
-  );
-
-  const res = await getDocs(q);
-
-  let freeSlot = null;
-
-  res.forEach((d) => {
-    if (!d.data().booked) {
-      freeSlot = d;
-    }
-  });
-
-  // لو فيه ميعاد فاضي
-  if (freeSlot) {
-
-    await updateDoc(doc(db, "slots", freeSlot.id), {
-      booked: true,
-      status: "حجز",
-      patient: currentData.patient || {},
-      paid: currentData.paid || 0
-    });
-
-    await updateDoc(currentRef, {
-      booked: false,
-      status: "حجز",
-      patient: {},
-      paid: 0
-    });
-
-    alert("تم نقل الميعاد ✔️");
-    return;
-  }
-
-  // لو مفيش ميعاد فاضي → إنشاء جديد
-  await addDoc(slotsRef, {
-    date: newDate,
-    time: newTime,
-    booked: true,
-    status: "حجز",
-    paid: currentData.paid || 0,
-    patient: currentData.patient || {}
-  });
-
-  await updateDoc(currentRef, {
-    booked: false,
-    status: "حجز",
-    patient: {},
-    paid: 0
-  });
-
-  alert("تم إنشاء ميعاد جديد ✔️");
-};
-
+</script>
         
 </script>
 
