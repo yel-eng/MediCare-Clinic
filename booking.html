@@ -348,7 +348,112 @@ function renderRequests(){
     `;
   });
 }
+/* =======================================================
+   🔄 نظام عرض ديناميكي حسب اليوم المختار (JS فقط)
+   ضع هذا الكود في نهاية سكربت booking.html
+   ======================================================= */
 
+let selectedSlotId = null;
+
+// 1. دالة العرض: تظهر مواعيد اليوم المختار فقط
+window.renderSlotsByDate = (date) => {
+  const container = document.getElementById("slotsContainer");
+  container.innerHTML = "";
+  selectedSlotId = null; // إعادة تعيين الاختيار
+
+  if (!date) return;
+
+  // فلترة من الكاش محلياً (أسرع وأضمن)
+  const available = slotsCache.filter(s => s.date === date && !s.booked);
+
+  if (available.length > 0) {
+    // ترتيب زمني دقيق
+    available.sort((a, b) => a.time.localeCompare(b.time));
+    
+    available.forEach(slot => {
+      const div = document.createElement("div");
+      div.className = "slot";
+      div.innerText = `🕒 ${slot.time}`;
+      // عند الضغط على ميعاد
+      div.onclick = () => {
+        document.querySelectorAll(".slot").forEach(el => el.classList.remove("selected"));
+        div.classList.add("selected");
+        selectedSlotId = slot.id;
+      };
+      container.appendChild(div);
+    });
+  } else {
+    // حالة عدم وجود مواعيد
+    const anySlots = slotsCache.some(s => s.date === date);
+    if (!anySlots) {
+      container.innerHTML = `
+        <p style="color:#666; margin:10px 0;">لا توجد مواعيد مضافة لهذا اليوم</p>
+        <button onclick="window.sendBookingRequest('${date}')" style="background:#ff9800; color:#fff; padding:10px; border:none; border-radius:8px; width:100%; cursor:pointer;">
+          📝 إرسال طلب حجز
+        </button>
+      `;
+    } else {
+      container.innerHTML = `<p style="color:#d32f2f; margin:10px 0;">جميع مواعيد هذا اليوم محجوزة</p>`;
+    }
+  }
+};
+
+// 2. ربط حقل اختيار التاريخ بالدالة تلقائياً
+document.addEventListener("DOMContentLoaded", () => {
+  const dateInput = document.getElementById("dateInput");
+  if (dateInput) {
+    dateInput.addEventListener("change", (e) => renderSlotsByDate(e.target.value));
+  }
+});
+
+// 3. تحديث دالة الحجز لتعتمد على الاختيار اليدوي
+window.book = async () => {
+  if (!selectedSlotId) return alert("⚠️ اختر ميعاداً من القائمة أولاً");
+  
+  const name = $("name").value.trim();
+  const phone = $("phone").value.trim();
+  if (!name || !phone) return alert("⚠️ اكمل البيانات");
+
+  try {
+    await updateDoc(doc(db, "slots", selectedSlotId), {
+      booked: true,
+      status: "booked",
+      patient: { name, phone },
+      updatedAt: serverTimestamp()
+    });
+
+    alert("✅ تم الحجز بنجاح");
+    selectedSlotId = null;
+    $("name").value = "";
+    $("phone").value = "";
+    // إعادة عرض المواعيد بعد الحجز
+    renderSlotsByDate(document.getElementById("dateInput").value);
+  } catch (err) {
+    alert("❌ حدث خطأ أثناء الحجز");
+    console.error(err);
+  }
+};
+
+// 4. دالة إرسال الطلب (تظهر فقط لو اليوم مفيهوش جدول)
+window.sendBookingRequest = async (date) => {
+  const name = $("name").value.trim();
+  const phone = $("phone").value.trim();
+  if (!name || !phone) return alert("⚠️ اكتب الاسم والهاتف أولاً");
+
+  try {
+    await addDoc(requestsRef, {
+      name, phone, date, status: "pending",
+      createdAt: serverTimestamp(),
+      source: "booking_request"
+    });
+    alert("📝 تم إرسال طلبك للإدارة، هنتواصل معاك لتحديد الميعاد");
+    $("name").value = ""; $("phone").value = "";
+  } catch (err) {
+    alert("❌ فشل إرسال الطلب");
+  }
+};
+
+console.log("✅ Dynamic Date Slot Filter Loaded");
 </script>
 
 </body>
