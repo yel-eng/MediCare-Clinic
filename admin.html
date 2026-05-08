@@ -321,7 +321,6 @@ input, textarea, select {
 
 
 <script type="module">
-<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -512,19 +511,20 @@ window.deleteDay = async (date) => {
    RENDER
 ========================= */
 function renderSlots() {
+  if (!$("daysGrid")) return; // حماية
 
   let days = {};
   let totalGlobal = 0;
 
-  cache.forEach((d) => {
+  cache.forEach(d => {
     if (!days[d.date]) days[d.date] = [];
     days[d.date].push(d);
   });
 
-  $("daysGrid").innerHTML = "";
+  const grid = $("daysGrid");
+  grid.innerHTML = "";
 
   for (let date in days) {
-
     let total = 0;
 
     days[date].forEach(x => {
@@ -534,7 +534,7 @@ function renderSlots() {
       }
     });
 
-    let col = document.createElement("div");
+    const col = document.createElement("div");
     col.className = "day-col";
 
     col.innerHTML = `
@@ -548,21 +548,16 @@ function renderSlots() {
       ${days[date].map(x => `
         <div class="slot-item ${x.booked ? "booked" : ""}"
           onclick="selectSlot('${x.id}')">
-
           <b>${x.time}</b> - ${x.patient?.name || "بدون اسم"} (${x.status})
-
         </div>
       `).join("")}
     `;
 
-    $("daysGrid").appendChild(col);
+    grid.appendChild(col);
   }
 
-  $("globalTotal").innerText =
-    "💰 إجمالي العيادة: " + totalGlobal + " جنيه";
+  $("globalTotal").innerText = "💰 إجمالي العيادة: " + totalGlobal;
 }
-
-</script>
         /*إلغاء هذا الحجزr */
 
         window.cancelBooking = async (id) => {
