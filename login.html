@@ -68,37 +68,185 @@ button:hover {
   <input type="password" id="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { db } from "./firebase.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
-  authDomain: "mydoctor-clinic.firebaseapp.com",
-  projectId: "mydoctor-clinic",
-  storageBucket: "mydoctor-clinic.firebasestorage.app",
-  messagingSenderId: "996532645974",
-  appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7",
-  measurementId: "G-33CQLHP3WP"
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  updateDoc,
+  addDoc,
+  serverTimestamp
+} from "firebase/firestore";
+
+/* =========================
+   GLOBAL STATE
+========================= */
+
+let selectedDate = "";
+let slotsCache = [];
+
+/* =========================
+   1) LOAD SLOTS BY DATE
+========================= */
+
+window.loadSlots = async function (date) {
+
+  selectedDate = date;
+
+  const q = query(
+    collection(db, "slots"),
+    where("date", "==", date)
+  );
+
+  const snap = await getDocs(q);
+
+  slotsCache = [];
+
+  snap.forEach(d => {
+    slotsCache.push({ id: d.id, ...d.data() });
+  });
+
+  renderSlots();
 };
 
+/* =========================
+   2) BOOK SLOT (USER FLOW)
+========================= */
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+window.bookSlot = async function (slotId) {
 
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
 
-window.login = function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  if (!name || !phone) {
+    alert("من فضلك املأ البيانات");
+    return;
+  }
 
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      window.location.href = "admin.html";
-    })
-    .catch(err => alert(err.message));
+  const ref = doc(db, "slots", slotId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    alert("الموعد غير موجود");
+    return;
+  }
+
+  const data = snap.data();
+
+  /* منع الحجز المكرر */
+  if (data.booked) {
+    alert("هذا الموعد محجوز بالفعل");
+    return;
+  }
+
+  await updateDoc(ref, {
+    booked: true,
+    status: "booked",
+    patient: {
+      name,
+      phone
+    },
+    updatedAt: serverTimestamp()
+  });
+
+  alert("تم الحجز بنجاح ✔️");
+
+  loadSlots(selectedDate);
 };
-  import { setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-setPersistence(auth, browserSessionPersistence);
-</script>
+/* =========================
+   3) CREATE REQUEST (NO SLOTS CASE)
+========================= */
+
+window.createRequest = async function () {
+
+  const name = document.getElementById("name").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+
+  if (!name || !phone || !selectedDate) {
+    alert("من فضلك املأ البيانات");
+    return;
+  }
+
+  await addDoc(collection(db, "requests"), {
+
+    name,
+    phone,
+    date: selectedDate,
+
+    status: "pending",
+
+    createdAt: serverTimestamp()
+
+  });
+
+  alert("تم إرسال طلبك ✔️ وسيتم تحديد موعد قريبًا");
+};
+
+/* =========================
+   4) RENDER UI LOGIC
+========================= */
+
+function renderSlots() {
+
+  const container = document.getElementById("slotsContainer");
+
+  container.innerHTML = "";
+
+  /* لا يوجد slots */
+  if (slotsCache.length === 0) {
+
+    container.innerHTML = `
+      <div style="text-align:center;padding:20px;">
+        <p>❌ لا يوجد مواعيد متاحة لهذا اليوم</p>
+
+        <button onclick="createRequest()"
+          style="
+            background:#1d4ed8;
+            color:#fff;
+            padding:10px 20px;
+            border:none;
+            border-radius:10px;
+            cursor:pointer;
+          ">
+          إرسال طلب حجز
+        </button>
+      </div>
+    `;
+
+    return;
+  }
+
+  /* يوجد slots */
+  slotsCache
+    .filter(slot => !slot.booked)
+    .sort((a, b) => a.time.localeCompare(b.time))
+    .forEach(slot => {
+
+      container.innerHTML += `
+        <div onclick="bookSlot('${slot.id}')"
+          style="
+            padding:12px;
+            margin:8px 0;
+            background:#f1f5f9;
+            border-radius:10px;
+            cursor:pointer;
+          ">
+          🕒 ${slot.time}
+        </div>
+      `;
+    });
+}
+
+/* =========================
+   5) HELPER (OPTIONAL)
+========================= */
+
+window.getSelectedDate = function () {
+  return selectedDate;
+};
+
