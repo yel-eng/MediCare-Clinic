@@ -258,7 +258,7 @@ input, textarea, select {
 <div id="historyBox" class="patient-history"></div>
         <select id="availableSlots">
 <option value="">اختر ميعاد متاح</option>
-</select
+        </select>
   <input type="date" id="requestDate"
 onchange="loadAvailableSlots(this.value)">
 <input id="pPhone" placeholder="الهاتف">
@@ -325,7 +325,8 @@ import {
   where,
   getDocs,
   writeBatch,
-  serverTimestamp
+  serverTimestamp,
+        orderB
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
