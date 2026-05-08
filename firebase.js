@@ -1,8 +1,1 @@
-const firebaseConfig = {
-  apiKey: "XXXX",
-  authDomain: "mydoctor-clinic.firebaseapp.com",
-  projectId: "mydoctor-clinic"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+const firebaseConfig = { apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o", authDomain: "mydoctor-clinic.firebaseapp.com", projectId: "mydoctor-clinic", }; const app = initializeApp(firebaseConfig); const db = getFirestore(app);
