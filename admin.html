@@ -573,7 +573,130 @@ function renderSlots() {
 
   totalBox.innerText = "💰 إجمالي العيادة: " + total + " جنيه";
 }
+/* =======================================================
+   🔧 FIX: ضمان توافق بيانات المواعيد مع صفحة الحجز
+   (ضع هذا الكود في نهاية السكربت في admin.html فقط)
+   ======================================================= */
 
+// 1. استبدال دالة createDaySlots بنسخة تضمن التوافق 100%
+window.createDaySlots = async () => {
+  const dateInput = $("slotDate").value;
+  const start = $("startTime").value;
+  const end = $("endTime").value;
+  const duration = Number($("slotDuration").value);
+
+  if (!dateInput || !start || !end) {
+    alert("⚠️ أكمل جميع البيانات");
+    return;
+  }
+
+  // ✅ ضمان أن التاريخ بصيغة YYYY-MM-DD (نص)
+  const date = dateInput; // كما هو من input type="date"
+
+  let currentTime = new Date(`${date}T${start}`);
+  const endTime = new Date(`${date}T${end}`);
+  let createdCount = 0;
+
+  while (currentTime < endTime) {
+    // ✅ ضمان أن الوقت بصيغة HH:MM (نص)
+    const timeString = currentTime.toTimeString().slice(0, 5);
+
+    // ✅ إنشاء كائن الميعاد بالضبط كما تتوقعه booking.html
+    const slotData = {
+      date: String(date),           // نص: "2024-06-01"
+      time: String(timeString),     // نص: "17:00"
+      booked: false,                // بوليان: ليس نص!
+      status: "available",          // نص
+      patient: null,                // null صريح
+      paid: 0,                      // رقم افتراضي
+      notes: "",                    // نص فارغ
+      createdAt: serverTimestamp()  // طابع زمني
+    };
+
+    try {
+      await addDoc(slotsRef, slotData);
+      createdCount++;
+      console.log("✅ Slot created:", slotData);
+    } catch (err) {
+      console.error("❌ Failed to create slot:", err);
+    }
+
+    currentTime.setMinutes(currentTime.getMinutes() + duration);
+  }
+
+  alert(`✅ تم إنشاء ${createdCount} ميعاد ليوم ${date} بنجاح`);
+  console.log(`📊 Total slots created: ${createdCount}`);
+};
+
+// 2. دالة تشخيص: اختبر إن صفحة الحجز هتشوف المواعيد دي
+window.diagnoseBookingCompatibility = async () => {
+  console.log("🔍 Running booking.html compatibility check...");
+  
+  try {
+    // نجرب نجيب آخر ميعاد اتخلق
+    const q = query(slotsRef, orderBy("createdAt", "desc"), limit(1));
+    const snap = await getDocs(q);
+    
+    if (snap.empty) {
+      console.warn("⚠️ No slots found in Firestore");
+      alert("⚠️ مفيش مواعيد في قاعدة البيانات أصلاً");
+      return;
+    }
+    
+    const lastSlot = snap.docs[0].data();
+    console.log("📋 Last slot structure:", lastSlot);
+    
+    // نتأكد من الحقول الأساسية
+    const checks = {
+      "date is string": typeof lastSlot.date === "string",
+      "time is string": typeof lastSlot.time === "string", 
+      "booked is boolean": typeof lastSlot.booked === "boolean",
+      "date format YYYY-MM-DD": /^\d{4}-\d{2}-\d{2}$/.test(lastSlot.date),
+      "time format HH:MM": /^\d{2}:\d{2}$/.test(lastSlot.time)
+    };
+    
+    console.table(checks);
+    
+    const allPassed = Object.values(checks).every(v => v === true);
+    
+    if (allPassed) {
+      console.log("✅ All checks passed! booking.html should see these slots.");
+      alert("✅ جميع المواعيد مُنشأة بشكل صحيح متوافق مع صفحة الحجز");
+    } else {
+      console.error("❌ Some checks failed:", checks);
+      alert("⚠️ يوجد مشكلة في فورمات البيانات. راجع الكونسول للتفاصيل.");
+    }
+    
+  } catch (err) {
+    console.error("❌ Diagnosis failed:", err);
+    
+    // لو الخطأ متعلق بإنديكس
+    if (err.message?.includes("index")) {
+      alert("⚠️ فايربيس محتاج Composite Index.\n" + 
+            "افتح الكونسول (F12) وانسخ الرابط الأحمر لإنشائه.");
+    } else {
+      alert("❌ خطأ في قراءة البيانات: " + err.message);
+    }
+  }
+};
+
+// 3. إضافة زر تشخيص في الواجهة (يظهر فقط للأدمن)
+document.addEventListener("DOMContentLoaded", () => {
+  const diagBtn = document.createElement("button");
+  diagBtn.textContent = "🔍 فحص توافق المواعيد";
+  diagBtn.className = "btn";
+  diagBtn.style.background = "#6a1b9a";
+  diagBtn.style.marginTop = "10px";
+  diagBtn.onclick = () => window.diagnoseBookingCompatibility();
+  
+  // نضيفه بجانب زر "توليد"
+  const generateBtn = document.querySelector('button[onclick="createDaySlots()"]');
+  if (generateBtn?.parentElement) {
+    generateBtn.parentElement.appendChild(diagBtn);
+  }
+});
+
+console.log("🔧 Admin compatibility patch loaded");
 </script>
 </body>
 </html>
