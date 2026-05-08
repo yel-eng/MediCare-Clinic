@@ -462,89 +462,132 @@ window.deleteDay = async (date) => {
 };
 
 /* assign request */
-window.assignRequest = async (id) => {
+/* assign request */
+window.assignRequest = async () => {
+
+  if (!activeId) {
+    alert("اختاري الطلب الأول");
+    return;
+  }
+
   let date = assignDate.value;
   let time = assignTime.value;
 
-  if (!date || !time) return alert("اختار التاريخ والوقت");
-
-  const ref = doc(db, "slots", id);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) return;
-
-  const req = snap.data();
-
-  const q = query(slotsRef, where("date", "==", date), where("time", "==", time));
-  const res = await getDocs(q);
-
-  let found = null;
-
-  res.forEach((d) => {
-    if (!d.data().booked) found = d.id;
-  });
-
-  if (found) {
-    await updateDoc(doc(db, "slots", found), {
-      booked: true,
-      status: "حجز",
-      patient: req.patient || {},
-      paid: req.paid || 0
-    });
-
-    await deleteDoc(ref);
-    alert("تم التحويل ✔️");
+  if (!date || !time) {
+    alert("اختار التاريخ والوقت");
     return;
   }
+
+  const requestRef = doc(db, "slots", activeId);
+  const requestSnap = await getDoc(requestRef);
+
+  if (!requestSnap.exists()) {
+    alert("الطلب غير موجود");
+    return;
+  }
+
+  const req = requestSnap.data();
+
+  /* البحث عن نفس الميعاد */
+  const q = query(
+    slotsRef,
+    where("date", "==", date),
+    where("time", "==", time)
+  );
+
+  const res = await getDocs(q);
+
+  let freeSlot = null;
+  let bookedSlot = null;
+
+  res.forEach((d) => {
+
+    if (!d.data().booked) {
+      freeSlot = d;
+    } else {
+      bookedSlot = d;
+    }
+
+  });
+
+  /* =========================
+     لو فيه ميعاد فاضي
+  ========================= */
+
+  if (freeSlot) {
+
+    await updateDoc(doc(db, "slots", freeSlot.id), {
+      booked: true,
+      status: "حجز",
+      patient: req.patient || {
+        name: req.name || "",
+        phone: req.phone || ""
+      },
+      paid: 0
+    });
+
+    await deleteDoc(requestRef);
+
+    alert("تم تحويل الطلب لموعد ✔️");
+    return;
+  }
+
+  /* =========================
+     لو الميعاد محجوز
+  ========================= */
+
+  if (bookedSlot) {
+
+    const ok = confirm(
+      `يوجد حجز بالفعل الساعة ${time}\n\nهل تريد إنشاء ميعاد إضافي؟`
+    );
+
+    if (!ok) return;
+
+    await addDoc(slotsRef, {
+      date,
+      time,
+      booked: true,
+      status: "حجز",
+      paid: 0,
+      patient: req.patient || {
+        name: req.name || "",
+        phone: req.phone || ""
+      }
+    });
+
+    await deleteDoc(requestRef);
+
+    alert("تم إنشاء ميعاد إضافي ✔️");
+    return;
+  }
+
+  /* =========================
+     اليوم غير موجود بالكامل
+  ========================= */
+
+  const createDay = confirm(
+    `هذا اليوم لا يحتوي على جدول.\n\nهل تريد إنشاء هذا الموعد كأول ميعاد في اليوم؟`
+  );
+
+  if (!createDay) return;
 
   await addDoc(slotsRef, {
     date,
     time,
     booked: true,
     status: "حجز",
-    patient: req.patient || {},
-    paid: req.paid || 0
+    paid: 0,
+    patient: req.patient || {
+      name: req.name || "",
+      phone: req.phone || ""
+    }
   });
 
-  await deleteDoc(ref);
+  await deleteDoc(requestRef);
+
+  alert("تم إنشاء اليوم والموعد ✔️");
 };
-
-/* render */
-function renderSlots() {
-  let days = {};
-  let total = 0;
-
-  cache.forEach((d) => {
-    if (!days[d.date]) days[d.date] = [];
-    days[d.date].push(d);
-  });
-
-  daysGrid.innerHTML = "";
-
-  for (let d in days) {
-    let col = document.createElement("div");
-    col.className = "day-col";
-
-    col.innerHTML = `
-      <div class="day-head">
-        ${d}
-        <span class="del-btn" onclick="deleteDay('${d}')">×</span>
-      </div>
-
-      ${days[d]
-        .sort((a,b)=> a.status === "pending" ? -1 : 1)
-        .map(x => `
-          <div class="slot-item ${x.booked ? "booked" : ""} ${x.status === "pending" ? "pending-slot" : ""}"
-          onclick="selectSlot('${x.id}')">
-            <b>${x.status === "pending" ? "📩 طلب" : x.time}</b>
-            - ${x.patient?.name || "بدون اسم"} (${x.status})
-          </div>
-        `).join("")}
-    `;
-
-    daysGrid.appendChild(col);
-  }
-}
 </script>
 
 </body>
