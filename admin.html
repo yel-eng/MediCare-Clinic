@@ -472,51 +472,9 @@ window.setAvailability = async () => {
 
   alert("تم التوليد ✔️");
 };
-const pendingQuery = query(
-  slotsRef,
-  where("status", "==", "pending"),
-  where("requestedDate", "==", date)
-);
 
-const pendingSnap = await getDocs(pendingQuery);
+        
 
-for (const pendingDoc of pendingSnap.docs) {
-
-  const pendingData = pendingDoc.data();
-
-  const freeQuery = query(
-    slotsRef,
-    where("date", "==", date)
-  );
-
-  const freeSnap = await getDocs(freeQuery);
-
-  let freeSlot = null;
-
-  freeSnap.forEach(s => {
-    if (!s.data().booked && !freeSlot) {
-      freeSlot = s;
-    }
-  });
-
-  if (freeSlot) {
-
-    await updateDoc(doc(db, "slots", freeSlot.id), {
-      booked: true,
-      status: "حجز",
-      patient: pendingData.patient || {},
-      paid: pendingData.paid || 0
-    });
-
-    await updateDoc(doc(db, "slots", pendingDoc.id), {
-      status: "محول"
-    });
-
-    alert(
-      `تم ترحيل ${pendingData.patient?.name || "مريض"} تلقائيًا`
-    );
-  }
-}
 /* ================= Delete Day ================= */
 window.deleteDay = async (date) => {
   if (!confirm("حذف اليوم؟")) return;
