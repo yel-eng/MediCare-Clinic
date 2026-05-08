@@ -102,7 +102,12 @@ let slotsCache = [];
 ========================= */
 
 document.getElementById("dateInput").addEventListener("change", async (e)=>{
+
   selectedDate = e.target.value;
+  selectedSlotId = null; // FIX: reset selection
+
+  if(!selectedDate) return;
+
   await loadSlots(selectedDate);
 });
 
@@ -141,6 +146,7 @@ function renderSlots(){
       <p>❌ لا يوجد مواعيد</p>
       <button onclick="createRequest()">طلب موعد</button>
     `;
+
     return;
   }
 
@@ -151,6 +157,7 @@ function renderSlots(){
     div.innerText = "🕒 " + slot.time;
 
     div.onclick = ()=>{
+
       selectedSlotId = slot.id;
 
       document.querySelectorAll(".slot")
@@ -172,8 +179,13 @@ window.book = async function(){
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
 
-  if(!name || !phone || !selectedDate){
+  if(!name || !phone){
     alert("أكمل البيانات");
+    return;
+  }
+
+  if(!selectedDate){
+    alert("اختر التاريخ");
     return;
   }
 
@@ -185,11 +197,14 @@ window.book = async function(){
   const ref = doc(db,"slots",selectedSlotId);
   const snap = await getDoc(ref);
 
-  if(!snap.exists()) return;
+  if(!snap.exists()){
+    alert("الموعد غير موجود");
+    return;
+  }
 
   const data = snap.data();
 
-  if(data.booked){
+  if(data.booked === true){
     alert("محجوز بالفعل");
     return;
   }
@@ -203,7 +218,8 @@ window.book = async function(){
 
   alert("تم الحجز ✔️");
 
-  loadSlots(selectedDate);
+  selectedSlotId = null; // FIX: prevent reuse
+  await loadSlots(selectedDate);
 };
 
 /* =========================
@@ -214,6 +230,11 @@ window.createRequest = async function(){
 
   const name = document.getElementById("name").value.trim();
   const phone = document.getElementById("phone").value.trim();
+
+  if(!name || !phone || !selectedDate){
+    alert("أكمل البيانات");
+    return;
+  }
 
   await addDoc(collection(db,"requests"),{
     name,
