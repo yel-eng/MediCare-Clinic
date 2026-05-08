@@ -510,10 +510,7 @@ window.assignRequest = async () => {
 
   });
 
-  /* =========================
-     لو فيه ميعاد فاضي
-  ========================= */
-
+  /* لو فيه ميعاد فاضي */
   if (freeSlot) {
 
     await updateDoc(doc(db, "slots", freeSlot.id), {
@@ -532,10 +529,7 @@ window.assignRequest = async () => {
     return;
   }
 
-  /* =========================
-     لو الميعاد محجوز
-  ========================= */
-
+  /* لو الميعاد محجوز */
   if (bookedSlot) {
 
     const ok = confirm(
@@ -562,10 +556,7 @@ window.assignRequest = async () => {
     return;
   }
 
-  /* =========================
-     اليوم غير موجود بالكامل
-  ========================= */
-
+  /* اليوم غير موجود بالكامل */
   const createDay = confirm(
     `هذا اليوم لا يحتوي على جدول.\n\nهل تريد إنشاء هذا الموعد كأول ميعاد في اليوم؟`
   );
@@ -588,6 +579,89 @@ window.assignRequest = async () => {
 
   alert("تم إنشاء اليوم والموعد ✔️");
 };
+
+/* render */
+function renderSlots() {
+
+  let days = {};
+
+  cache.forEach((d) => {
+
+    if (!days[d.date]) {
+      days[d.date] = [];
+    }
+
+    days[d.date].push(d);
+
+  });
+
+  daysGrid.innerHTML = "";
+
+  for (let d in days) {
+
+    let col = document.createElement("div");
+    col.className = "day-col";
+
+    col.innerHTML = `
+      <div class="day-head">
+        ${d}
+        <span class="del-btn" onclick="deleteDay('${d}')">×</span>
+      </div>
+
+      ${days[d]
+        .sort((a,b)=> {
+
+          if(a.status === "pending") return -1;
+          if(b.status === "pending") return 1;
+
+          return a.time.localeCompare(b.time);
+
+        })
+
+        .map(x => `
+
+          <div class="
+            slot-item
+            ${x.booked ? "booked" : ""}
+            ${x.status === "pending" ? "pending-slot" : ""}
+            ${x.status === "ملغي" ? "cancel" : ""}
+          "
+
+          onclick="selectSlot('${x.id}')">
+
+            <b>
+              ${x.status === "pending"
+                ? "📩 طلب تحديد موعد"
+                : x.time}
+            </b>
+
+            - ${x.patient?.name || x.name || "بدون اسم"}
+
+            (${x.status})
+
+            ${(x.patient?.phone || x.phone) ? `
+              <br>
+
+              <a
+                class="whatsapp"
+                target="_blank"
+                href="https://wa.me/2${x.patient?.phone || x.phone}"
+              >
+                واتساب 📱
+              </a>
+            ` : ""}
+
+          </div>
+
+        `).join("")}
+
+    `;
+
+    daysGrid.appendChild(col);
+
+  }
+
+}
 </script>
 
 </body>
