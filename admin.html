@@ -907,6 +907,216 @@ console.log("✅ All missing admin functions loaded:", {
   safeLoad: typeof window.safeLoad,
   loadAvailableSlots: typeof window.loadAvailableSlots
 });
+
+/* =======================================================
+   🛠️ ميزات إضافية لصفحة الأدمن (بدون تعديل HTML/CSS)
+   ضع هذا الكود في نهاية سكربت admin.html قبل </script>
+   ======================================================= */
+
+// 1. 💬 فتح واتساب مع المريض
+window.openWhatsApp = (phone) => {
+  if (!phone) return alert("⚠️ لا يوجد رقم هاتف مسجل");
+  
+  // تنسيق الرقم: إزالة الأصفار الأولى + إضافة كود مصر
+  let waPhone = phone.replace(/^0+/, "").replace(/\s+/g, "");
+  if (!waPhone.startsWith("20")) waPhone = "20" + waPhone;
+  
+  const message = encodeURIComponent(`مرحباً د/ حسني، بخصوص موعد المريض في العيادة...`);
+  window.open(`https://wa.me/${waPhone}?text=${message}`, "_blank");
+  console.log("📱 WhatsApp opened for:", phone);
+};
+
+// 2. ✏️ بدء تعديل ميعاد (نقل المريض لميعاد آخر)
+window.startEditSlot = async (slotId) => {
+  const slot = cache.find(s => s.id === slotId);
+  if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً أولاً");
+  
+  const patient = slot.patient;
+  if (!patient?.name) return alert("⚠️ لا توجد بيانات مريض لهذا الميعاد");
+  
+  // عرض المواعيد البديلة المتاحة (نفس اليوم أو أيام تانية)
+  const alternatives = cache.filter(s => 
+    !s.booked && 
+    s.status !== "cancelled" && 
+    s.id !== slotId
+  );
+  
+  if (alternatives.length === 0) {
+    return alert("❌ لا توجد مواعيد بديلة متاحة حالياً");
+  }
+  
+  // عرض خيارات بسيطة للمستخدم (يمكن تطويرها لنافذة منبثقة)
+  const options = alternatives.slice(0, 5).map((s, i) => 
+    `${i+1}. ${s.date} - ${s.time}`
+  ).join("\n");
+  
+  const choice = prompt(
+    `✏️ تعديل ميعاد: ${patient.name}\n` +
+    `الميعاد الحالي: ${slot.date} - ${slot.time}\n\n` +
+    `اختر ميعاداً بديلاً (اكتب الرقم):\n${options}\n\n` +
+    `أو اكتب "إلغاء" للخروج`
+  );
+  
+  if (!choice || choice.toLowerCase() === "إلغاء" || choice === "cancel") return;
+  
+  const index = parseInt(choice) - 1;
+  if (isNaN(index) || index < 0 || index >= alternatives.length) {
+    return alert("❌ اختيار غير صحيح");
+  }
+  
+  const newSlot = alternatives[index];
+  
+  if (!confirm(`✅ تأكيد التعديل:\n🔄 من: ${slot.date} ${slot.time}\n✅ إلى: ${newSlot.date} ${newSlot.time}\n\nالمريض: ${patient.name}`)) {
+    return;
+  }
+  
+  try {
+    // 1. تحرير الميعاد القديم
+    await updateDoc(doc(db, "slots", slotId), {
+      booked: false,
+      status: "available",
+      patient: null,
+      updatedAt: serverTimestamp()
+    });
+    
+    // 2. حجز الميعاد الجديد ببيانات نفس المريض
+    await updateDoc(doc(db, "slots", newSlot.id), {
+      booked: true,
+      status: "booked",
+      patient: patient,
+      paid: slot.paid || 0,
+      notes: slot.notes || "",
+      updatedAt: serverTimestamp()
+    });
+    
+    alert("✅ تم تعديل الميعاد بنجاح!");
+    console.log("✏️ Slot edited:", slotId, "→", newSlot.id);
+    
+  } catch (err) {
+    console.error("❌ Edit Error:", err);
+    alert("❌ حدث خطأ أثناء التعديل: " + err.message);
+  }
+};
+
+// 3. 🗑️ إلغاء/حذف حجز (مع تأكيد)
+window.cancelSlot = async (slotId) => {
+  const slot = cache.find(s => s.id === slotId);
+  if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً أولاً");
+  
+  const patient = slot.patient;
+  const confirmMsg = `⚠️ تأكيد الإلغاء:\n📅 ${slot.date} - ${slot.time}\n👤 ${patient?.name || "بدون اسم"}\n📞 ${patient?.phone || ""}\n\nهل أنت متأكد؟`;
+  
+  if (!confirm(confirmMsg)) return;
+  
+  try {
+    // نغير الحالة لـ "cancelled" بدلاً من الحذف النهائي (لحفظ السجل)
+    await updateDoc(doc(db, "slots", slotId), {
+      booked: false,
+      status: "cancelled",
+      patient: null,
+      paid: 0,
+      cancelledAt: serverTimestamp(),
+      cancelledBy: auth.currentUser?.uid || "admin"
+    });
+    
+    alert("✅ تم إلغاء الحجز بنجاح");
+    console.log("🗑️ Slot cancelled:", slotId);
+    
+  } catch (err) {
+    console.error("❌ Cancel Error:", err);
+    alert("❌ حدث خطأ أثناء الإلغاء: " + err.message);
+  }
+};
+
+// 4. 🔄 تعديل دالة renderSlots() لإضافة الأزرار الجديدة (يتم استبدال الدالة القديمة)
+// ملاحظة: هذا الكود يعيد تعريف الدالة بنفس الاسم، فلا حاجة لحذف القديمة يدوياً
+window.renderSlots = function() {
+  const grid = $("daysGrid");
+  const totalBox = $("globalTotal");
+
+  let days = {};
+  let total = 0;
+
+  cache.forEach(d => {
+    if (!d.date) return;
+    if (!days[d.date]) days[d.date] = [];
+    days[d.date].push(d);
+  });
+
+  grid.innerHTML = "";
+
+  Object.keys(days).sort().forEach(date => {
+    let dayTotal = 0;
+    days[date].forEach(s => {
+      if (s.status === "كشف") {
+        dayTotal += Number(s.paid || 0);
+        total += Number(s.paid || 0);
+      }
+    });
+
+    const col = document.createElement("div");
+    col.className = "day-col";
+
+    // بناء قائمة المواعيد مع الأزرار الجديدة
+    const slotsHTML = days[date]
+      .sort((a,b) => a.time.localeCompare(b.time))
+      .map(x => {
+        const isBooked = x.booked && x.status !== "cancelled";
+        const patientName = x.patient?.name || "بدون اسم";
+        const phone = x.patient?.phone || "";
+        
+        // أزرار الإجراءات (تظهر فقط للمحجوز)
+        const actionButtons = isBooked ? `
+          <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap">
+            <button onclick="event.stopPropagation(); openWhatsApp('${phone}')" 
+              style="background:#25d366;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer">
+              💬 واتساب
+            </button>
+            <button onclick="event.stopPropagation(); startEditSlot('${x.id}')" 
+              style="background:#ff9800;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer">
+              ✏️ تعديل
+            </button>
+            <button onclick="event.stopPropagation(); cancelSlot('${x.id}')" 
+              style="background:#f44336;color:#fff;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer">
+              🗑️ إلغاء
+            </button>
+          </div>
+        ` : "";
+        
+        // ستايل مختلف للملغي
+        const slotClass = x.status === "cancelled" ? "cancel" : (isBooked ? "booked" : "");
+        const statusLabel = x.status === "cancelled" ? "❌ ملغي" : (isBooked ? "✅ محجوز" : "⭕ متاح");
+        
+        return `
+          <div class="slot-item ${slotClass}" onclick="selectSlot('${x.id}')">
+            <b>${x.time}</b> - ${patientName} 
+            <span style="float:left;font-size:11px;color:#666">(${statusLabel})</span>
+            ${actionButtons}
+          </div>
+        `;
+      }).join("");
+
+    col.innerHTML = `
+      <div class="day-head">
+        ${date}
+        <span class="del-btn" onclick="deleteDay('${date}')">×</span>
+      </div>
+      <div class="day-money">💰 ${dayTotal} جنيه</div>
+      ${slotsHTML}
+    `;
+    grid.appendChild(col);
+  });
+
+  totalBox.innerText = "💰 إجمالي العيادة: " + total + " جنيه";
+};
+
+// 5. ✅ تأكيد أن كل الدوال متاحة عالمياً
+console.log("✅ Admin extra features loaded:", {
+  openWhatsApp: typeof window.openWhatsApp,
+  startEditSlot: typeof window.startEditSlot,
+  cancelSlot: typeof window.cancelSlot,
+  renderSlots: typeof window.renderSlots
+});
 </script>
 </body>
 </html>
