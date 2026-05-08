@@ -68,185 +68,138 @@ button:hover {
   <input type="password" id="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
-import { db } from "./firebase.js";
+
+
+
+<script type="module" src="auth.js">
+/* =========================
+   FIREBASE INIT
+========================= */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+  getFirestore, doc, getDoc 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  addDoc,
-  serverTimestamp
-} from "firebase/firestore";
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* =========================
-   GLOBAL STATE
+   CONFIG
 ========================= */
 
-let selectedDate = "";
-let slotsCache = [];
+const firebaseConfig = {
+  apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
+  authDomain: "mydoctor-clinic.firebaseapp.com",
+  projectId: "mydoctor-clinic",
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+const auth = getAuth(app);
 
 /* =========================
-   1) LOAD SLOTS BY DATE
+   AUTH STATE
 ========================= */
 
-window.loadSlots = async function (date) {
+let currentUser = null;
 
-  selectedDate = date;
+/* =========================
+   LOGIN FUNCTION
+========================= */
 
-  const q = query(
-    collection(db, "slots"),
-    where("date", "==", date)
-  );
+window.login = async function () {
 
-  const snap = await getDocs(q);
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  slotsCache = [];
+  try {
 
-  snap.forEach(d => {
-    slotsCache.push({ id: d.id, ...d.data() });
-  });
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
 
-  renderSlots();
+    const uid = userCred.user.uid;
+
+    const roleSnap = await getDoc(doc(db, "users", uid));
+
+    let role = "user";
+
+    if (roleSnap.exists()) {
+      role = roleSnap.data().role || "user";
+    }
+
+    currentUser = {
+      uid,
+      email: userCred.user.email,
+      role
+    };
+
+    alert("Login successful ✔️");
+
+    window.location.href = "booking.html";
+
+  } catch (err) {
+    alert("Login failed: " + err.message);
+  }
 };
 
 /* =========================
-   2) BOOK SLOT (USER FLOW)
+   LOGOUT FUNCTION
 ========================= */
 
-window.bookSlot = async function (slotId) {
-
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-
-  if (!name || !phone) {
-    alert("من فضلك املأ البيانات");
-    return;
-  }
-
-  const ref = doc(db, "slots", slotId);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    alert("الموعد غير موجود");
-    return;
-  }
-
-  const data = snap.data();
-
-  /* منع الحجز المكرر */
-  if (data.booked) {
-    alert("هذا الموعد محجوز بالفعل");
-    return;
-  }
-
-  await updateDoc(ref, {
-    booked: true,
-    status: "booked",
-    patient: {
-      name,
-      phone
-    },
-    updatedAt: serverTimestamp()
-  });
-
-  alert("تم الحجز بنجاح ✔️");
-
-  loadSlots(selectedDate);
+window.logout = async function () {
+  await signOut(auth);
+  currentUser = null;
+  window.location.href = "login.html";
 };
 
 /* =========================
-   3) CREATE REQUEST (NO SLOTS CASE)
+   AUTH GUARD (PROTECTION)
 ========================= */
 
-window.createRequest = async function () {
+onAuthStateChanged(auth, async (user) => {
 
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-
-  if (!name || !phone || !selectedDate) {
-    alert("من فضلك املأ البيانات");
+  if (!user) {
+    currentUser = null;
     return;
   }
 
-  await addDoc(collection(db, "requests"), {
+  const roleSnap = await getDoc(doc(db, "users", user.uid));
 
-    name,
-    phone,
-    date: selectedDate,
+  let role = "user";
 
-    status: "pending",
-
-    createdAt: serverTimestamp()
-
-  });
-
-  alert("تم إرسال طلبك ✔️ وسيتم تحديد موعد قريبًا");
-};
-
-/* =========================
-   4) RENDER UI LOGIC
-========================= */
-
-function renderSlots() {
-
-  const container = document.getElementById("slotsContainer");
-
-  container.innerHTML = "";
-
-  /* لا يوجد slots */
-  if (slotsCache.length === 0) {
-
-    container.innerHTML = `
-      <div style="text-align:center;padding:20px;">
-        <p>❌ لا يوجد مواعيد متاحة لهذا اليوم</p>
-
-        <button onclick="createRequest()"
-          style="
-            background:#1d4ed8;
-            color:#fff;
-            padding:10px 20px;
-            border:none;
-            border-radius:10px;
-            cursor:pointer;
-          ">
-          إرسال طلب حجز
-        </button>
-      </div>
-    `;
-
-    return;
+  if (roleSnap.exists()) {
+    role = roleSnap.data().role || "user";
   }
 
-  /* يوجد slots */
-  slotsCache
-    .filter(slot => !slot.booked)
-    .sort((a, b) => a.time.localeCompare(b.time))
-    .forEach(slot => {
+  currentUser = {
+    uid: user.uid,
+    email: user.email,
+    role
+  };
 
-      container.innerHTML += `
-        <div onclick="bookSlot('${slot.id}')"
-          style="
-            padding:12px;
-            margin:8px 0;
-            background:#f1f5f9;
-            border-radius:10px;
-            cursor:pointer;
-          ">
-          🕒 ${slot.time}
-        </div>
-      `;
-    });
-}
+  console.log("Logged in as:", currentUser.role);
+});
 
 /* =========================
-   5) HELPER (OPTIONAL)
+   GLOBAL ACCESS
 ========================= */
 
-window.getSelectedDate = function () {
-  return selectedDate;
+window.currentUser = currentUser;
+
+/* =========================
+   ROLE CHECK HELPERS
+========================= */
+
+window.isAdmin = function () {
+  return currentUser?.role === "admin";
 };
 
+window.isUser = function () {
+  return currentUser?.role === "user";
+};  
+  </script>
