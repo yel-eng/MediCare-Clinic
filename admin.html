@@ -674,6 +674,9 @@ window.assignRequest = async () => {
   alert("تم إنشاء ميعاد جديد ✔️");
 };
 
+
+        
+
         window.loadAvailableSlots = async (date) => {
 
   const select = $("availableSlots");
@@ -702,8 +705,78 @@ window.assignRequest = async () => {
     }
   });
 };
-</script>
+
+
         
+/* =========================
+   PROCESS PENDING REQUESTS
+========================= */
+
+window.processPendingRequests = async (date) => {
+
+  const pendingQ = query(
+    collection(db, "requests"),
+    where("status", "==", "pending"),
+    where("requestedDate", "==", date)
+  );
+
+  const pendingSnap = await getDocs(pendingQ);
+
+  for (const reqDoc of pendingSnap.docs) {
+
+    const req = reqDoc.data();
+
+    // 1. نجيب كل slots لليوم
+    const slotsQ = query(
+      collection(db, "slots"),
+      where("date", "==", date)
+    );
+
+    const slotsSnap = await getDocs(slotsQ);
+
+    let freeSlot = null;
+
+    slotsSnap.forEach(s => {
+      const data = s.data();
+      if (!data.booked && !freeSlot) {
+        freeSlot = s;
+      }
+    });
+
+    // 2. لو فيه slot فاضي
+    if (freeSlot) {
+
+      await updateDoc(doc(db, "slots", freeSlot.id), {
+        booked: true,
+        status: "حجز",
+        patient: req.patient || {},
+        paid: 0
+      });
+
+      await updateDoc(doc(db, "requests", reqDoc.id), {
+        status: "converted"
+      });
+
+    } else {
+
+      // 3. لو مفيش slot → نعمل واحد جديد
+      const newSlot = await addDoc(collection(db, "slots"), {
+        date,
+        time: "09:00", // ممكن تخليه auto later
+        booked: true,
+        status: "حجز",
+        patient: req.patient || {},
+        paid: 0
+      });
+
+      await updateDoc(doc(db, "requests", reqDoc.id), {
+        status: "converted"
+      });
+    }
+  }
+
+  alert("تم معالجة الطلبات ✔️");
+};        
 </script>
 
 </body>
