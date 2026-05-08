@@ -686,12 +686,14 @@ function renderSlots() {
 
         .map(x => `
 
-          <div class="
-            slot-item
-            ${x.booked ? "booked" : ""}
-            ${x.status === "ملغي" ? "cancel" : ""}
-            ${x.status === "pending" ? "pending-slot" : ""}
-          "
+         <div class="
+  slot-item
+  ${x.booked ? "booked" : ""}
+  ${x.status === "ملغي" ? "cancel" : ""}
+  ${x.status === "pending" ? "pending-slot" : ""}
+"
+draggable="true"
+ondragstart="dragStart(event,'${x.id}')"
 
           onclick="selectSlot('${x.id}')"
           draggable="true"
