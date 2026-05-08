@@ -16,114 +16,40 @@ body{
   min-height: 100vh;
 }
 
-/* Card */
 .box{
   width: 100%;
   max-width: 520px;
-  background: #ffffff;
+  background: #fff;
   padding: 30px;
   border-radius: 18px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  border: 1px solid rgba(0,0,0,0.05);
-  position: relative;
-  overflow: hidden;
 }
 
-/* Title */
-.box h2{
-  margin-bottom: 20px;
-  font-size: 24px;
-  color: #1a237e;
-  text-align: center;
+h2{
+  text-align:center;
+  color:#1a237e;
 }
 
-/* Inputs */
-input, select{
-  width: 100%;
-  padding: 12px 14px;
-  margin: 10px 0;
-  border-radius: 10px;
-  border: 1px solid #dfe3e8;
-  background: #fafbff;
-  font-size: 14px;
-  transition: 0.2s ease;
+input{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border-radius:10px;
+  border:1px solid #ddd;
 }
 
-input:focus, select:focus{
-  border-color: #3f51b5;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(63,81,181,0.15);
-  background: #fff;
-}
-
-/* Button */
 button{
-  width: 100%;
-  padding: 13px;
-  margin-top: 10px;
-  background: linear-gradient(135deg, #2e7d32, #1b5e20);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.25s ease;
-  box-shadow: 0 6px 15px rgba(46,125,50,0.25);
+  width:100%;
+  padding:12px;
+  background:#1b5e20;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
 }
 
-button:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(46,125,50,0.3);
-}
-
-button:active{
-  transform: scale(0.98);
-}
-
-/* Message */
-.msg{
-  margin: 12px 0;
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 14px;
-  background: #fff3f3;
-  border: 1px solid #ffcdd2;
-  color: #c62828;
-  text-align: center;
-}
-
-.ok{
-  background: #e8f5e9 !important;
-  border-color: #a5d6a7 !important;
-  color: #2e7d32 !important;
-}
-
-/* Loading state */
-.loading{
-  opacity: 0.7;
-  pointer-events: none;
-  position: relative;
-}
-
-/* Loading animation */
-.loading::after{
-  content: "";
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  border: 2px solid #fff;
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  transform: translateY(-50%);
-}
-
-@keyframes spin{
-  0% { transform: translateY(-50%) rotate(0deg); }
-  100% { transform: translateY(-50%) rotate(360deg); }
+#slotsContainer{
+  margin-top:15px;
 }
 </style>
 </head>
@@ -137,20 +63,16 @@ button:active{
 <input id="name" placeholder="الاسم">
 <input id="phone" placeholder="رقم الهاتف">
 
-<input type="date" id="dateInput" onchange="checkDay()">
+<input type="date" id="dateInput">
 
-<select id="timeSelect" style="display:none;"></select>
+<div id="slotsContainer"></div>
 
-<div id="msg" class="msg"></div>
-
-<button id="btn" onclick="book()">تأكيد الحجز</button>
+<button onclick="book()">تأكيد الحجز</button>
 
 </div>
 
-
-
 <script type="module">
-<script type="module">
+
 import { db } from "./firebase.js";
 
 import {
@@ -170,48 +92,33 @@ import {
 ========================= */
 
 let selectedDate = "";
-let selectedSlot = null;
 let slotsCache = [];
 
 /* =========================
-   AUTH GUARD
+   AUTH CHECK
 ========================= */
 
 window.addEventListener("load", () => {
-
   const user = window.getCurrentUser?.();
-
-  if (!user) {
-    window.location.href = "login.html";
-  }
+  if (!user) window.location.href = "login.html";
 });
 
 /* =========================
-   DATE CHANGE HANDLER (FIXED)
+   DATE HANDLER
 ========================= */
 
-window.checkDay = async function () {
-
-  const date = document.getElementById("dateInput").value;
-
-  if (!date) return;
-
-  selectedDate = date;
-
-  await loadSlots(date);
-};
+document.getElementById("dateInput").addEventListener("change", async (e) => {
+  selectedDate = e.target.value;
+  await loadSlots(selectedDate);
+});
 
 /* =========================
    LOAD SLOTS
 ========================= */
 
-window.loadSlots = async function (date) {
+async function loadSlots(date) {
 
-  const q = query(
-    collection(db, "slots"),
-    where("date", "==", date)
-  );
-
+  const q = query(collection(db, "slots"), where("date", "==", date));
   const snap = await getDocs(q);
 
   slotsCache = [];
@@ -221,51 +128,23 @@ window.loadSlots = async function (date) {
   });
 
   renderSlots();
-};
+}
 
 /* =========================
-   RENDER SLOTS (FIXED MISSING UI)
+   RENDER
 ========================= */
 
 function renderSlots() {
 
-  let container = document.getElementById("slotsContainer");
-
-  if (!container) {
-
-    container = document.createElement("div");
-    container.id = "slotsContainer";
-    container.style.marginTop = "15px";
-
-    document.querySelector(".box").appendChild(container);
-  }
-
+  const container = document.getElementById("slotsContainer");
   container.innerHTML = "";
-
-  if (slotsCache.length === 0) {
-    container.innerHTML = `
-      <p style="text-align:center;color:#c62828;">
-        ❌ لا يوجد مواعيد متاحة
-      </p>
-
-      <button onclick="createRequest()">
-        إرسال طلب حجز
-      </button>
-    `;
-    return;
-  }
 
   const available = slotsCache.filter(s => !s.booked);
 
   if (available.length === 0) {
     container.innerHTML = `
-      <p style="text-align:center;">
-        ⚠️ كل المواعيد محجوزة
-      </p>
-
-      <button onclick="createRequest()">
-        طلب موعد
-      </button>
+      <p>❌ لا يوجد مواعيد</p>
+      <button onclick="createRequest()">طلب موعد</button>
     `;
     return;
   }
@@ -282,49 +161,38 @@ function renderSlots() {
 
     div.innerText = "🕒 " + slot.time;
 
-    div.onclick = () => {
-      selectedSlot = slot;
-      book(slot.id);
-    };
+    div.onclick = () => book(slot.id);
 
     container.appendChild(div);
   });
 }
 
 /* =========================
-   BOOK SLOT (FIXED BOOK FUNCTION)
+   BOOK SLOT
 ========================= */
 
 window.book = async function (slotId) {
 
   const user = window.getCurrentUser?.();
 
-  if (!user) return alert("Login required");
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
 
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-
-  if (!name || !phone) {
-    return alert("املأ البيانات أولاً");
-  }
+  if (!name || !phone) return alert("املأ البيانات");
 
   const ref = doc(db, "slots", slotId);
   const snap = await getDoc(ref);
 
-  if (!snap.exists()) return alert("Slot not found");
+  if (!snap.exists()) return;
 
   const data = snap.data();
 
-  if (data.booked) return alert("محجوز بالفعل");
+  if (data.booked) return alert("محجوز");
 
   await updateDoc(ref, {
     booked: true,
     status: "booked",
-    patient: {
-      uid: user.uid,
-      name,
-      phone
-    },
+    patient: { uid: user.uid, name, phone },
     updatedAt: serverTimestamp()
   });
 
@@ -334,19 +202,15 @@ window.book = async function (slotId) {
 };
 
 /* =========================
-   REQUEST FLOW
+   REQUEST
 ========================= */
 
 window.createRequest = async function () {
 
   const user = window.getCurrentUser?.();
 
-  const name = document.getElementById("name").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-
-  if (!user || !selectedDate) {
-    return alert("Missing data");
-  }
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
 
   await addDoc(collection(db, "requests"), {
     uid: user.uid,
@@ -359,7 +223,7 @@ window.createRequest = async function () {
 
   alert("تم إرسال الطلب ✔️");
 };
-</script>
+
 </script>
 
 </body>
