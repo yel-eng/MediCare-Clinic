@@ -67,8 +67,7 @@ button{
 <h3>➕ Create Slots</h3>
 
 <input type="date" id="slotDate">
-
-<input type="text" id="slotTimes" placeholder="مثال: 10:00,10:30,11:00">
+<input type="text" id="slotTimes" placeholder="10:00,10:30,11:00">
 
 <button onclick="createSlots()">Create Slots</button>
 </div>
@@ -105,6 +104,7 @@ import {
   where,
   doc,
   updateDoc,
+  getDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -114,7 +114,7 @@ import {
 
 window.addEventListener("load", () => {
 
-  const user = window.getCurrentUser?.();
+  const user = window.currentUser;
 
   if (!user || user.role !== "admin") {
     alert("Access Denied");
@@ -165,12 +165,19 @@ async function loadRequests() {
 
     const data = r.data();
 
+    const phone = data.phone || "";
+
     box.innerHTML += `
       <div class="req">
         <b>${data.name}</b><br>
         📅 ${data.date}<br>
 
-        <button onclick="approveRequest('${r.id}','${data.date}','${data.name}')">
+        <!-- WhatsApp Button -->
+        <a href="https://wa.me/${phone}" target="_blank">
+          <button>📲 WhatsApp</button>
+        </a>
+
+        <button onclick="approveRequest('${r.id}')">
           Approve
         </button>
       </div>
@@ -182,9 +189,16 @@ async function loadRequests() {
    APPROVE REQUEST
 ========================= */
 
-window.approveRequest = async function (id, date, name) {
+window.approveRequest = async function (id) {
 
-  await updateDoc(doc(db, "requests", id), {
+  const ref = doc(db, "requests", id);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  await updateDoc(ref, {
     status: "approved"
   });
 
@@ -194,7 +208,7 @@ window.approveRequest = async function (id, date, name) {
 };
 
 /* =========================
-   DIRECT BOOKING
+   DIRECT BOOKING (SAFE VERSION)
 ========================= */
 
 window.directBook = async function () {
@@ -204,7 +218,21 @@ window.directBook = async function () {
   const name = document.getElementById("patientName").value;
   const phone = document.getElementById("patientPhone").value;
 
-  if (!date || !time) return;
+  if (!date || !time || !name || !phone) return;
+
+  // check if slot exists already
+  const q = query(
+    collection(db, "slots"),
+    where("date", "==", date),
+    where("time", "==", time)
+  );
+
+  const snap = await getDocs(q);
+
+  if (!snap.empty) {
+    alert("Slot already exists!");
+    return;
+  }
 
   await addDoc(collection(db, "slots"), {
     date,
