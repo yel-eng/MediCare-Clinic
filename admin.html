@@ -697,6 +697,216 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 console.log("🔧 Admin compatibility patch loaded");
+
+
+
+
+        /* =======================================================
+   🛠️ الدوال الناقصة لصفحة الأدمن (جاهزة للنسخ)
+   ضع هذا الكود في نهاية ملف admin.html قبل </script>
+   ======================================================= */
+
+// 1. توليد كود QR للميعاد الحالي
+window.generateQR = () => {
+  const qrImg = $("qrImg");
+  if (!activeId) {
+    alert("⚠️ اختر ميعاداً أولاً لعرض الـ QR");
+    return;
+  }
+  
+  const name = $("pName").value || "بدون اسم";
+  const phone = $("pPhone").value || "";
+  const timeInfo = $("targetTime").innerText;
+  
+  // نص الـ QR
+  const qrData = `عيادة ميديكال\nمريض: ${name}\nتليفون: ${phone}\nموعد: ${timeInfo}`;
+  
+  // نستخدم API خارجي بسيط لتوليد الصورة
+  const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
+  
+  qrImg.src = qrURL;
+  qrImg.style.display = "block";
+  console.log("✅ QR Generated for:", name);
+};
+
+// 2. ربط طلب قادم (Request) بالموعد المحدد
+window.assignRequest = async () => {
+  if (!activeId) return alert("⚠️ اختر ميعاداً من الجدول أولاً");
+  
+  const phone = $("pPhone").value.trim();
+  if (!phone) return alert("⚠️ اكتب رقم هاتف المريض للبحث عن طلبه");
+  
+  try {
+    // نبحث عن طلب بهذا الرقم وحالته "pending"
+    const q = query(
+      collection(db, "requests"),
+      where("phone", "==", phone),
+      where("status", "==", "pending")
+    );
+    
+    const snap = await getDocs(q);
+    
+    if (snap.empty) {
+      return alert("❌ لم يتم العثور على طلب معلق بهذا الرقم");
+    }
+    
+    // نأخذ أول طلب مطابق
+    const reqDoc = snap.docs[0];
+    const reqData = reqDoc.data();
+    
+    // 1. نحدث الميعاد ببيانات المريض
+    await updateDoc(doc(db, "slots", activeId), {
+      booked: true,
+      status: "booked",
+      patient: {
+        name: reqData.name,
+        phone: reqData.phone,
+        notes: reqData.notes || ""
+      },
+      paid: 0,
+      updatedAt: serverTimestamp()
+    });
+    
+    // 2. نحدث حالة الطلب ليصبح "assigned"
+    await updateDoc(doc(db, "requests", reqDoc.id), {
+      status: "assigned",
+      slotId: activeId,
+      assignedAt: serverTimestamp()
+    });
+    
+    alert(`✅ تم ربط طلب ${reqData.name} بالموعد بنجاح`);
+    
+    // نعيد تعيين الحقول
+    activeId = null;
+    $("pName").value = "";
+    $("pPhone").value = "";
+    
+  } catch (err) {
+    console.error("❌ Assign Error:", err);
+    
+    if (err.message?.includes("index")) {
+      alert("⚠️ هذا العملية تحتاج فهرس جديد في فايربيس.\nراجعي الكونسول للرابط.");
+    } else {
+      alert("❌ حدث خطأ أثناء الربط: " + err.message);
+    }
+  }
+};
+
+// 3. فلترة وعرض المواعيد (للبحث والفلتر)
+window.safeLoad = () => {
+  const searchTerm = $("search").value.toLowerCase();
+  const filterValue = $("filter").value;
+  
+  // نفلتر الكاش المحلي (أسرع من عمل كويري جديد كل مرة)
+  const filtered = cache.filter(slot => {
+    // 1. فلتر البحث (بالاسم أو الوقت)
+    const matchSearch = 
+      !searchTerm || 
+      (slot.patient?.name?.toLowerCase().includes(searchTerm)) ||
+      (slot.time.includes(searchTerm));
+    
+    // 2. فلتر الحالة
+    let matchFilter = true;
+    if (filterValue === "booked") {
+      matchFilter = slot.booked === true;
+    } else if (filterValue === "free") {
+      matchFilter = slot.booked === false;
+    }
+    
+    return matchSearch && matchFilter;
+  });
+  
+  // نعيد رسم الجدول بالبيانات المفلترة (نسخة مبسطة من renderSlots)
+  const grid = $("daysGrid");
+  grid.innerHTML = "";
+  
+  let days = {};
+  filtered.forEach(d => {
+    if (!d.date) return;
+    if (!days[d.date]) days[d.date] = [];
+    days[d.date].push(d);
+  });
+  
+  Object.keys(days).sort().forEach(date => {
+    const col = document.createElement("div");
+    col.className = "day-col";
+    
+    col.innerHTML = `
+      <div class="day-head">${date}</div>
+      ${days[date]
+        .sort((a,b) => a.time.localeCompare(b.time))
+        .map(x => `
+          <div class="slot-item ${x.booked ? "booked" : ""}"
+            onclick="selectSlot('${x.id}')">
+            <b>${x.time}</b> - ${x.patient?.name || "متاح"} 
+            <span style="float:left;color:#666;font-size:12px">(${x.status})</span>
+          </div>
+        `).join("")}
+    `;
+    
+    grid.appendChild(col);
+  });
+  
+  console.log(`🔍 Search: "${searchTerm}" | Filter: ${filterValue} | Results: ${filtered.length}`);
+};
+
+// 4. تحميل المواعيد المتاحة لتاريخ معين في قائمة الـ Select
+window.loadAvailableSlots = async (date) => {
+  const select = $("availableSlots");
+  if (!select || !date) return;
+  
+  select.innerHTML = '<option value="">جاري التحميل...</option>';
+  select.disabled = true;
+  
+  try {
+    // نجيب المواعيد في هذا التاريخ + اللي لسه فاضية
+    const q = query(
+      collection(db, "slots"),
+      where("date", "==", date),
+      where("booked", "==", false)
+    );
+    
+    const snap = await getDocs(q);
+    
+    select.innerHTML = '<option value="">اختر ميعاد متاح</option>';
+    
+    if (snap.empty) {
+      select.innerHTML += '<option value="" disabled>❌ لا توجد مواعيد متاحة</option>';
+      select.disabled = true;
+      return;
+    }
+    
+    // نضيف كل ميعاد متاح كـ option
+    snap.forEach(docSnap => {
+      const slot = docSnap.data();
+      const option = document.createElement("option");
+      option.value = docSnap.id; // نخزن الـ ID عشان نستخدمه لاحقاً
+      option.textContent = `🕒 ${slot.time} - متاح`;
+      select.appendChild(option);
+    });
+    
+    select.disabled = false;
+    console.log(`✅ Loaded ${snap.size} available slots for ${date}`);
+    
+  } catch (err) {
+    console.error("❌ Load Slots Error:", err);
+    select.innerHTML = '<option value="">❌ فشل التحميل</option>';
+    
+    if (err.message?.includes("index")) {
+      console.warn("⚠️ Requires Composite Index. Check console for link.");
+    }
+  }
+};
+
+/* =======================================================
+   ✅ تأكيد أن كل الدوال متاحة عالمياً
+   ======================================================= */
+console.log("✅ All missing admin functions loaded:", {
+  generateQR: typeof window.generateQR,
+  assignRequest: typeof window.assignRequest,
+  safeLoad: typeof window.safeLoad,
+  loadAvailableSlots: typeof window.loadAvailableSlots
+});
 </script>
 </body>
 </html>
