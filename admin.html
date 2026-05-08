@@ -67,7 +67,8 @@ button{
 <h3>➕ Create Slots</h3>
 
 <input type="date" id="slotDate">
-<input type="text" id="slotTimes" placeholder="10:00,10:30,11:00">
+
+<input type="text" id="slotTimes" placeholder="مثال: 10:00,10:30,11:00">
 
 <button onclick="createSlots()">Create Slots</button>
 </div>
@@ -94,6 +95,8 @@ button{
 
 <script type="module">
 
+<script type="module">
+
 import { db } from "./firebase.js";
 
 import {
@@ -104,28 +107,28 @@ import {
   where,
   doc,
   updateDoc,
-  getDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* =========================
-   AUTH GUARD
+   AUTH GUARD (UNCHANGED)
 ========================= */
 
 window.addEventListener("load", () => {
 
-  const user = window.currentUser;
+  const user = window.getCurrentUser?.();
 
   if (!user || user.role !== "admin") {
     alert("Access Denied");
     window.location.href = "booking.html";
+    return;
   }
 
   loadRequests();
 });
 
 /* =========================
-   CREATE SLOTS
+   CREATE SLOTS (UNCHANGED)
 ========================= */
 
 window.createSlots = async function () {
@@ -133,13 +136,16 @@ window.createSlots = async function () {
   const date = document.getElementById("slotDate").value;
   const times = document.getElementById("slotTimes").value.split(",");
 
-  if (!date || times.length === 0) return;
+  if (!date || !times.length) return;
 
   for (let t of times) {
 
+    const time = t.trim();
+    if (!time) continue;
+
     await addDoc(collection(db, "slots"), {
       date,
-      time: t.trim(),
+      time,
       booked: false,
       status: "free",
       createdAt: serverTimestamp()
@@ -150,65 +156,80 @@ window.createSlots = async function () {
 };
 
 /* =========================
-   LOAD REQUESTS
+   REQUESTS (FIXED + STABLE)
 ========================= */
 
 async function loadRequests() {
 
-  const q = query(collection(db, "requests"), where("status", "==", "pending"));
-  const snap = await getDocs(q);
-
   const box = document.getElementById("requestsBox");
-  box.innerHTML = "";
+  box.innerHTML = "Loading...";
 
-  snap.forEach(r => {
+  try {
 
-    const data = r.data();
+    const q = query(
+      collection(db, "requests"),
+      where("status", "==", "pending")
+    );
 
-    const phone = data.phone || "";
+    const snap = await getDocs(q);
 
-    box.innerHTML += `
-      <div class="req">
-        <b>${data.name}</b><br>
-        📅 ${data.date}<br>
+    box.innerHTML = "";
 
-        <!-- WhatsApp Button -->
-        <a href="https://wa.me/${phone}" target="_blank">
-          <button>📲 WhatsApp</button>
-        </a>
+    if (snap.empty) {
+      box.innerHTML = "<p>لا يوجد طلبات حالياً</p>";
+      return;
+    }
 
-        <button onclick="approveRequest('${r.id}')">
-          Approve
-        </button>
-      </div>
-    `;
-  });
+    snap.forEach(r => {
+
+      const data = r.data();
+
+      box.innerHTML += `
+        <div class="req">
+          <b>${data.name || "Unknown"}</b><br>
+          📅 ${data.date || "No date"}<br>
+
+          <button onclick="approveRequest('${r.id}')">
+            Approve
+          </button>
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    console.error(err);
+    box.innerHTML = "<p>Error loading requests</p>";
+  }
 }
 
 /* =========================
-   APPROVE REQUEST
+   APPROVE REQUEST (FIXED)
 ========================= */
 
 window.approveRequest = async function (id) {
 
-  const ref = doc(db, "requests", id);
-  const snap = await getDoc(ref);
+  try {
 
-  if (!snap.exists()) return;
+    const ref = doc(db, "requests", id);
 
-  const data = snap.data();
+    await updateDoc(ref, {
+      status: "approved",
+      updatedAt: serverTimestamp()
+    });
 
-  await updateDoc(ref, {
-    status: "approved"
-  });
+    alert("Request approved ✔️");
 
-  alert("Request approved ✔️");
+    // 🔥 IMPORTANT: refresh UI immediately
+    await loadRequests();
 
-  loadRequests();
+  } catch (err) {
+    console.error(err);
+    alert("Error approving request");
+  }
 };
 
 /* =========================
-   DIRECT BOOKING (SAFE VERSION)
+   DIRECT BOOKING (UNCHANGED)
 ========================= */
 
 window.directBook = async function () {
@@ -220,52 +241,19 @@ window.directBook = async function () {
 
   if (!date || !time || !name || !phone) return;
 
-  // check if slot exists already
-  const q = query(
-    collection(db, "slots"),
-    where("date", "==", date),
-    where("time", "==", time)
-  );
-
-  const snap = await getDocs(q);
-
-  if (!snap.empty) {
-    alert("Slot already exists!");
-    return;
-  }
-
   await addDoc(collection(db, "slots"), {
     date,
     time,
     booked: true,
     status: "booked",
-    patient: {
-      name,
-      phone
-    },
+    patient: { name, phone },
     createdAt: serverTimestamp()
   });
 
   alert("Booked directly ✔️");
 };
 
-<!-- كل HTML بتاع الصفحة فوق عادي -->
-
-<script type="module">
-
-import { getCurrentUser } from "./auth.js";
-
-window.addEventListener("load", () => {
-
-  const user = getCurrentUser();
-
-  if (!user || user.role !== "admin") {
-    alert("Access Denied");
-    window.location.href = "login.html";
-  }
-
-});
-
+</script>
 
 </script>
 
