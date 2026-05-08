@@ -347,6 +347,400 @@ window.diagnoseBookingCompatibility = async () => {
 };
 
 console.log("✅ Admin Loaded - All Features Active");
+
+
+/* =======================================================
+   🔄 نظام تعديل المواعيد الذكي (مع دعم الأيام بدون جدول)
+   ضع هذا الكود في نهاية admin.html قبل </script>
+   ======================================================= */
+
+// متغير لتتبع عملية التعديل الحالية
+let editSession = {
+  originalSlotId: null,
+  patient: null,
+  popup: null
+};
+
+// 1. 💡 الدالة الرئيسية: بدء تعديل الميعاد (نسخة مطورة)
+window.startEditSlot = async (slotId) => {
+  const slot = cache.find(s => s.id === slotId);
+  if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً أولاً");
+  
+  const patient = slot.patient;
+  if (!patient?.name) return alert("⚠️ لا توجد بيانات مريض لهذا الميعاد");
+  
+  // حفظ جلسة التعديل
+  editSession = {
+    originalSlotId: slotId,
+    originalDate: slot.date,
+    originalTime: slot.time,
+    patient: { ...patient },
+    paid: slot.paid || 0,
+    notes: slot.notes || ""
+  };
+  
+  // إنشاء/إظهار النافذة المنبثقة للتعديل
+  showEditModal(slot);
+};
+
+// 2. 🪟 إنشاء وعرض نافذة التعديل (ديناميكي - بدون تعديل HTML)
+function showEditModal(originalSlot) {
+  // إزالة أي نافذة قديمة
+  const oldPopup = document.getElementById("editModal");
+  if (oldPopup) oldPopup.remove();
+  
+  // إنشاء النافذة
+  const modal = document.createElement("div");
+  modal.id = "editModal";
+  modal.style.cssText = `
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.7); z-index:10000;
+    display:flex; justify-content:center; align-items:center;
+    animation:fadeIn 0.2s ease;
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background:#fff; width:95%; max-width:450px; max-height:90vh;
+      border-radius:20px; padding:25px; overflow:auto;
+      box-shadow:0 20px 60px rgba(0,0,0,0.4);
+      animation:slideDown 0.3s ease;
+    ">
+      <h3 style="color:#1a237e; margin:0 0 15px; text-align:center">
+        ✏️ تعديل ميعاد: ${editSession.patient.name}
+      </h3>
+      
+      <div style="background:#f5f5f5; padding:12px; border-radius:10px; margin-bottom:15px; font-size:14px">
+        <b>الميعاد الحالي:</b><br>
+        📅 ${originalSlot.date} | 🕒 ${originalSlot.time}
+      </div>
+      
+      <label style="display:block; margin-bottom:6px; font-weight:500">اختر تاريخ جديد:</label>
+      <input type="date" id="editDateInput" value="${originalSlot.date}" 
+        style="width:100%; padding:10px; margin-bottom:15px; border:2px solid #ddd; border-radius:8px">
+      
+      <div id="editSlotsContainer" style="min-height:100px; max-height:250px; overflow-y:auto; margin-bottom:15px">
+        <p style="color:#666; text-align:center">اختر تاريخاً لعرض المواعيد المتاحة</p>
+      </div>
+      
+      <!-- قسم الوقت اليدوي (يظهر فقط لو مفيش جدول) -->
+      <div id="manualTimeSection" style="display:none; background:#fff3e0; padding:12px; border-radius:10px; margin-bottom:15px">
+        <p style="margin:0 0 10px; font-weight:500; color:#e65100">⚠️ لا توجد مواعيد في هذا اليوم</p>
+        <label>حدد وقتاً يدوياً:</label>
+        <input type="time" id="manualTimeInput" value="17:00" 
+          style="width:100%; padding:8px; margin:8px 0; border-radius:6px">
+        <small style="color:#666">سيتم إنشاء ميعاد مرن، وسيُرحّل تلقائياً لو أضيف جدول لاحقاً</small>
+      </div>
+      
+      <div style="display:flex; gap:10px; margin-top:20px">
+        <button onclick="saveEditSlot()" 
+          style="flex:1; background:#1a237e; color:#fff; border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:600">
+          💾 حفظ التعديل
+        </button>
+        <button onclick="closeEditModal()" 
+          style="flex:1; background:#f44336; color:#fff; border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:600">
+          ❌ إلغاء
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  editSession.popup = modal;
+  
+  // ربط حدث تغيير التاريخ
+  document.getElementById("editDateInput").addEventListener("change", (e) => {
+    loadEditSlotsForDate(e.target.value);
+  });
+  
+  // تحميل مواعيد التاريخ الافتراضي
+  loadEditSlotsForDate(originalSlot.date);
+}
+
+// 3. 📅 تحميل المواعيد المتاحة لتاريخ معين في نافذة التعديل
+async function loadEditSlotsForDate(date) {
+  const container = document.getElementById("editSlotsContainer");
+  const manualSection = document.getElementById("manualTimeSection");
+  
+  if (!date) return;
+  
+  container.innerHTML = "<p style='text-align:center;color:#666'>جاري التحميل...</p>";
+  manualSection.style.display = "none";
+  
+  try {
+    // البحث عن مواعيد في هذا التاريخ
+    const q = query(collection(db, "slots"), where("date", "==", date));
+    const snap = await getDocs(q);
+    
+    const daySlots = [];
+    snap.forEach(d => daySlots.push({ id: d.id, ...d.data() }));
+    
+    // فلترة: المتاحة فقط
+    const available = daySlots.filter(s => !s.booked && s.status !== "cancelled");
+    
+    if (available.length > 0) {
+      // ✅ في جدول → اعرض المواعيد المتاحة
+      available.sort((a,b) => a.time.localeCompare(b.time));
+      
+      container.innerHTML = `<p style="font-weight:500;margin-bottom:10px">المواعيد المتاحة:</p>`;
+      
+      available.forEach(slot => {
+        const div = document.createElement("div");
+        div.style.cssText = `
+          padding:12px; margin:6px 0; background:#f5f5f5; 
+          border-radius:8px; cursor:pointer; border:2px solid transparent;
+          transition:0.2s; display:flex; justify-content:space-between; align-items:center;
+        `;
+        div.innerHTML = `<span>🕒 ${slot.time}</span><span style="font-size:12px;color:#2e7d32">متاح</span>`;
+        
+        div.onclick = () => {
+          // إزالة التحديد السابق
+          container.querySelectorAll("div[style*='border-color:#1a237e']").forEach(el => {
+            el.style.borderColor = "transparent";
+            el.style.background = "#f5f5f5";
+          });
+          // تحديد الجديد
+          div.style.borderColor = "#1a237e";
+          div.style.background = "#e8eaf6";
+          editSession.newSlotId = slot.id;
+          editSession.isManual = false;
+        };
+        
+        container.appendChild(div);
+      });
+      
+    } else {
+      // ❌ مفيش جدول → اعرض حقل الوقت اليدوي
+      container.innerHTML = `<p style="color:#e65100;text-align:center">لا توجد مواعيد مُضافة لهذا اليوم</p>`;
+      manualSection.style.display = "block";
+      editSession.isManual = true;
+      editSession.newSlotId = null;
+      editSession.manualTime = document.getElementById("manualTimeInput").value;
+      
+      // تحديث الوقت اليدوي عند التغيير
+      document.getElementById("manualTimeInput").onchange = (e) => {
+        editSession.manualTime = e.target.value;
+      };
+    }
+    
+  } catch (err) {
+    console.error("Load Edit Slots Error:", err);
+    container.innerHTML = `<p style="color:#c62828;text-align:center">❌ فشل التحميل</p>`;
+  }
+}
+
+// 4. 💾 حفظ التعديل (يدعم المواعيد العادية واليدوية)
+window.saveEditSlot = async () => {
+  if (!editSession.originalSlotId) return alert("⚠️ خطأ في جلسة التعديل");
+  
+  const newDate = document.getElementById("editDateInput").value;
+  if (!newDate) return alert("⚠️ اختر تاريخاً");
+  
+  let newSlotId = editSession.newSlotId;
+  let newTime = editSession.manualTime;
+  const isManual = editSession.isManual;
+  
+  // التحقق من الاختيار
+  if (!isManual && !newSlotId) {
+    return alert("⚠️ اختر ميعاداً متاحاً من القائمة");
+  }
+  
+  // تأكيد التعديل
+  const confirmMsg = isManual 
+    ? `✅ تأكيد التعديل:\n🔄 من: ${editSession.originalDate} ${editSession.originalTime}\n✅ إلى: ${newDate} ${newTime} (ميعاد مرن)\n\nالمريض: ${editSession.patient.name}`
+    : `✅ تأكيد التعديل:\n🔄 من: ${editSession.originalDate} ${editSession.originalTime}\n✅ إلى: ${newDate} ${newTime}\n\nالمريض: ${editSession.patient.name}`;
+  
+  if (!confirm(confirmMsg)) return;
+  
+  try {
+    // 1. تحرير الميعاد القديم
+    await updateDoc(doc(db, "slots", editSession.originalSlotId), {
+      booked: false,
+      status: "available",
+      patient: null,
+      updatedAt: serverTimestamp()
+    });
+    
+    if (isManual) {
+      // 2أ. إنشاء ميعاد "مرن" جديد (بدون ID مسبق)
+      const newSlotRef = await addDoc(collection(db, "slots"), {
+        date: newDate,
+        time: newTime,
+        booked: true,
+        status: "booked_manual", // حالة خاصة للتمييز
+        patient: editSession.patient,
+        paid: editSession.paid,
+        notes: editSession.notes,
+        isManual: true, // علامة للترحيل التلقائي لاحقاً
+        originalSlotId: editSession.originalSlotId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      alert("✅ تم تعديل الميعاد (مرن) بنجاح!\nسيُرحّل تلقائياً لو أُضيف جدول لهذا اليوم.");
+      
+    } else {
+      // 2ب. حجز الميعاد المختار من الجدول
+      await updateDoc(doc(db, "slots", newSlotId), {
+        booked: true,
+        status: "booked",
+        patient: editSession.patient,
+        paid: editSession.paid,
+        notes: editSession.notes,
+        isManual: false,
+        updatedAt: serverTimestamp()
+      });
+      
+      alert("✅ تم تعديل الميعاد بنجاح!");
+    }
+    
+    // إغلاق النافذة وإعادة التعيين
+    closeEditModal();
+    
+  } catch (err) {
+    console.error("❌ Save Edit Error:", err);
+    alert("❌ حدث خطأ أثناء الحفظ: " + err.message);
+  }
+};
+
+// 5. ❌ إغلاق نافذة التعديل
+window.closeEditModal = () => {
+  if (editSession.popup) {
+    editSession.popup.remove();
+    editSession.popup = null;
+  }
+  editSession = { originalSlotId: null, patient: null };
+};
+
+// 6. 🔄 Listener: ترحيل المواعيد المرنة تلقائياً عند إنشاء جدول جديد
+// يُضاف هذا الـ listener مرة واحدة عند تحميل الصفحة
+onSnapshot(slotsRef, (snap) => {
+  // ... (الكود الأصلي لتحديث الكاش) ...
+  cache = [];
+  snap.forEach(d => cache.push({ id: d.id, ...d.data() }));
+  
+  // ✅ فحص جديد: هل تم إنشاء جدول ليوم به مواعيد مرنة؟
+  checkAndMigrateManualSlots(snap);
+  
+  // إعادة رسم الجدول
+  renderSlots();
+});
+
+// دالة فحص وترحيل المواعيد المرنة
+async function checkAndMigrateManualSlots(snap) {
+  // تجميع المواعيد الجديدة حسب التاريخ
+  const newSlotsByDate = {};
+  snap.docChanges().forEach(change => {
+    if (change.type === "added") {
+      const data = change.doc.data();
+      if (data.date && !data.isManual) { // مواعيد عادية (ليست مرنة)
+        if (!newSlotsByDate[data.date]) newSlotsByDate[data.date] = [];
+        newSlotsByDate[data.date].push({ id: change.doc.id, ...data });
+      }
+    }
+  });
+  
+  // لو في أيام جديدة أُضيفت لها مواعيد
+  for (const [date, slots] of Object.entries(newSlotsByDate)) {
+    // البحث عن مواعيد مرنة في نفس التاريخ
+    const manualSlots = cache.filter(s => 
+      s.date === date && 
+      s.isManual === true && 
+      s.booked === true
+    );
+    
+    if (manualSlots.length > 0) {
+      // ترحيل كل ميعاد مرن لأقرب ميعاد متاح
+      for (const manual of manualSlots) {
+        await migrateManualSlot(manual, slots);
+      }
+      
+      // إشعار للأدمن
+      showAdminNotification(`🔄 تم ترحيل ${manualSlots.length} ميعاد(مواعيد) مرن(ة) ليوم ${date} إلى جدول المواعيد`);
+    }
+  }
+}
+
+// دالة ترحيل ميعاد مرن واحد
+async function migrateManualSlot(manualSlot, availableSlots) {
+  // إيجاد أقرب ميعاد متاح (بالوقت)
+  const manualTime = manualSlot.time;
+  const sorted = [...availableSlots].filter(s => !s.booked).sort((a,b) => {
+    return Math.abs(timeToMinutes(a.time) - timeToMinutes(manualTime)) - 
+           Math.abs(timeToMinutes(b.time) - timeToMinutes(manualTime));
+  });
+  
+  if (sorted.length === 0) return; // مفيش متاح
+  
+  const targetSlot = sorted[0];
+  
+  try {
+    // 1. إلغاء الميعاد المرن القديم
+    await updateDoc(doc(db, "slots", manualSlot.id), {
+      booked: false,
+      status: "migrated",
+      patient: null,
+      migratedTo: targetSlot.id,
+      updatedAt: serverTimestamp()
+    });
+    
+    // 2. حجز الميعاد الجديد
+    await updateDoc(doc(db, "slots", targetSlot.id), {
+      booked: true,
+      status: "booked",
+      patient: manualSlot.patient,
+      paid: manualSlot.paid,
+      notes: manualSlot.notes,
+      migratedFrom: manualSlot.id,
+      updatedAt: serverTimestamp()
+    });
+    
+    console.log(`🔄 Migrated: ${manualSlot.id} → ${targetSlot.id}`);
+    
+  } catch (err) {
+    console.error("❌ Migration Error:", err);
+  }
+}
+
+// مساعدة: تحويل الوقت لدقائق للمقارنة
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h * 60 + m;
+}
+
+// 7. 🔔 عرض إشعار للأدمن (في الصفحة)
+function showAdminNotification(message) {
+  // إنشاء عنصر الإشعار
+  const notif = document.createElement("div");
+  notif.style.cssText = `
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,#43a047,#2e7d32); color:#fff;
+    padding:14px 24px; border-radius:12px; font-weight:500;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2); z-index:10001;
+    animation:slideIn 0.3s ease, fadeOut 0.3s ease 4.7s forwards;
+  `;
+  notif.innerHTML = `🔔 ${message}`;
+  document.body.appendChild(notif);
+  
+  // إزالة بعد 5 ثواني
+  setTimeout(() => notif.remove(), 5000);
+  
+  // إضافة أنيميشن إذا مش موجود
+  if (!document.querySelector("#notifAnimations")) {
+    const style = document.createElement("style");
+    style.id = "notifAnimations";
+    style.textContent = `
+      @keyframes slideIn { from { transform:translateX(-50%) translateY(-30px); opacity:0; } to { transform:translateX(-50%) translateY(0); opacity:1; } }
+      @keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+      @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+      @keyframes slideDown { from { transform:translateY(-30px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+console.log("✅ Smart Edit Modal Loaded - With Auto-Migration Support");
+  
 </script>
 </body>
 </html>
