@@ -147,220 +147,129 @@ button:active{
 
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 
 <script type="module">
-import { db } from "./firebase.js";
+// auth.js (AUTH CORE SYSTEM)
+
+import { auth, db } from "./firebase.js";
 
 import {
-  collection,
-  query,
-  where,
-  getDocs,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
   doc,
-  getDoc,
-  updateDoc,
-  addDoc,
-  serverTimestamp
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* =========================
-   STATE
+   GLOBAL STATE (NON-REACTIVE BUT SAFE)
 ========================= */
 
-let selectedDate = "";
-let slotsCache = [];
+let currentUser = null;
 
 /* =========================
-   AUTH CHECK (REQUIRED)
+   GET CURRENT USER (SAFE ACCESS)
 ========================= */
 
-window.addEventListener("load", () => {
-  const user = window.getCurrentUser?.();
+function getCurrentUser() {
+  return currentUser;
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+window.login = async function () {
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  try {
+
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+
+    const uid = cred.user.uid;
+
+    const userSnap = await getDoc(doc(db, "users", uid));
+
+    const role = userSnap.exists() ? (userSnap.data().role || "user") : "user";
+
+    currentUser = {
+      uid,
+      email: cred.user.email,
+      role
+    };
+
+    console.log("Logged in:", currentUser);
+
+    window.location.href = "booking.html";
+
+  } catch (e) {
+    alert("Login failed: " + e.message);
+  }
+};
+
+/* =========================
+   LOGOUT
+========================= */
+
+window.logout = async function () {
+  await signOut(auth);
+  currentUser = null;
+  window.location.href = "login.html";
+};
+
+/* =========================
+   AUTH STATE LISTENER (REAL SOURCE OF TRUTH)
+========================= */
+
+onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
-    window.location.href = "login.html";
+    currentUser = null;
+    return;
   }
+
+  const userSnap = await getDoc(doc(db, "users", user.uid));
+
+  const role = userSnap.exists() ? (userSnap.data().role || "user") : "user";
+
+  currentUser = {
+    uid: user.uid,
+    email: user.email,
+    role
+  };
+
+  console.log("Auth Updated:", currentUser);
 });
 
 /* =========================
-   LOAD SLOTS BY DATE
+   GUARDS
 ========================= */
 
-window.loadSlots = async function (date) {
-
-  selectedDate = date;
-
-  const q = query(
-    collection(db, "slots"),
-    where("date", "==", date)
-  );
-
-  const snap = await getDocs(q);
-
-  slotsCache = [];
-
-  snap.forEach(d => {
-    slotsCache.push({ id: d.id, ...d.data() });
-  });
-
-  renderSlots();
-};
-
-/* =========================
-   BOOK SLOT (USER FLOW)
-========================= */
-
-window.bookSlot = async function (slotId) {
-
-  const user = window.getCurrentUser?.();
-
-  if (!user) {
-    alert("Login required");
-    return;
+function requireAuth() {
+  if (!currentUser) {
+    window.location.href = "login.html";
   }
+}
 
-  const ref = doc(db, "slots", slotId);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    alert("Slot not found");
-    return;
-  }
-
-  const data = snap.data();
-
-  /* ❌ double booking protection */
-  if (data.booked === true) {
-    alert("This slot is already booked");
-    return;
-  }
-
-  await updateDoc(ref, {
-    booked: true,
-    status: "booked",
-    patient: {
-      uid: user.uid,
-      name: user.email
-    },
-    updatedAt: serverTimestamp()
-  });
-
-  alert("Booking confirmed ✔️");
-
-  loadSlots(selectedDate);
-};
-
-/* =========================
-   REQUEST FLOW (NO SLOTS CASE)
-========================= */
-
-window.createRequest = async function () {
-
-  const user = window.getCurrentUser?.();
-
-  if (!user || !selectedDate) {
-    alert("Missing data");
-    return;
-  }
-
-  await addDoc(collection(db, "requests"), {
-    uid: user.uid,
-    name: user.email,
-    date: selectedDate,
-    status: "pending",
-    createdAt: serverTimestamp()
-  });
-
-  alert("Request sent ✔️");
-};
-
-/* =========================
-   RENDER UI
-========================= */
-
-function renderSlots() {
-
-  const container = document.getElementById("slotsContainer");
-
-  container.innerHTML = "";
-
-  /* NO SLOTS CASE */
-  if (slotsCache.length === 0) {
-
-    container.innerHTML = `
-      <div style="text-align:center; padding:20px;">
-        <p>❌ No available slots for this day</p>
-
-        <button onclick="createRequest()"
-          style="
-            padding:10px 20px;
-            background:#1d4ed8;
-            color:white;
-            border:none;
-            border-radius:8px;
-            cursor:pointer;
-          ">
-          Request Appointment
-        </button>
-      </div>
-    `;
-
-    return;
-  }
-
-  /* AVAILABLE SLOTS */
-  const availableSlots = slotsCache
-    .filter(slot => slot.booked !== true)
-    .sort((a, b) => a.time.localeCompare(b.time));
-
-  availableSlots.forEach(slot => {
-
-    container.innerHTML += `
-      <div onclick="bookSlot('${slot.id}')"
-        style="
-          padding:12px;
-          margin:8px 0;
-          background:#f1f5f9;
-          border-radius:10px;
-          cursor:pointer;
-        ">
-        🕒 ${slot.time}
-      </div>
-    `;
-  });
-
-  /* IF ALL SLOTS BOOKED */
-  if (availableSlots.length === 0) {
-
-    container.innerHTML += `
-      <div style="text-align:center; margin-top:20px;">
-        <p>⚠️ All slots are booked</p>
-
-        <button onclick="createRequest()"
-          style="
-            padding:10px 20px;
-            background:#dc2626;
-            color:white;
-            border:none;
-            border-radius:8px;
-            cursor:pointer;
-          ">
-          Send Request
-        </button>
-      </div>
-    `;
+function requireAdmin() {
+  if (!currentUser || currentUser.role !== "admin") {
+    window.location.href = "booking.html";
   }
 }
 
 /* =========================
-   HELPERS
+   GLOBAL EXPORT (IMPORTANT)
 ========================= */
 
-window.getSelectedDate = function () {
-  return selectedDate;
-};>
+window.getCurrentUser = getCurrentUser;
+window.requireAuth = requireAuth;
+window.requireAdmin = requireAdmin;
 </script>
 
 </body>
