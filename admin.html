@@ -321,13 +321,13 @@ input, textarea, select {
 
 
 <script type="module">
+<script type="module">
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
   getAuth,
-  onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -365,17 +365,8 @@ window.db = db;
 window.auth = auth;
 
 /* =========================
-   AUTH
+   LOGOUT فقط
 ========================= */
-
-let checked = false;
-
-onAuthStateChanged(auth, (user) => {
-  if (!checked) {
-    checked = true;
-    if (!user) window.location.href = "login.html";
-  }
-});
 
 window.logout = () => {
   signOut(auth).then(() => {
@@ -511,7 +502,7 @@ window.deleteDay = async function (date) {
 };
 
 /* =========================
-   RENDER (FIXED)
+   RENDER
 ========================= */
 
 function renderSlots() {
@@ -591,7 +582,7 @@ function renderSlots() {
 }
 
 /* =========================
-   ASSIGN REQUEST (FIXED OUTSIDE LOOP)
+   ASSIGN REQUEST
 ========================= */
 
 window.assignRequest = async function (id) {
