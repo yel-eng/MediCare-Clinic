@@ -309,9 +309,10 @@ onchange="loadAvailableSlots(this.value)">
 
 </div>
 
+
+    
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -328,6 +329,8 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 /* ================= FIREBASE ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
@@ -340,11 +343,10 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 window.db = db;
-window.auth = auth;
 
 /* ================= STATE ================= */
 const $ = (id) => document.getElementById(id);
@@ -353,13 +355,14 @@ let cache = [];
 let activeId = null;
 
 const slotsRef = collection(db, "slots");
+const requestsRef = collection(db, "requests");
 
 /* ================= LOGOUT ================= */
 window.logout = () => {
   signOut(auth).then(() => location.href = "login.html");
 };
 
-/* ================= REALTIME LOAD ================= */
+/* ================= REALTIME ================= */
 onSnapshot(slotsRef, (snap) => {
 
   cache = [];
@@ -414,8 +417,8 @@ window.updateSlot = async () => {
   alert("تم التعديل ✔️");
 };
 
-/* ================= GENERATE SLOTS ================= */
-window.setAvailability = async () => {
+/* ================= CREATE DAY SLOTS ================= */
+window.createDaySlots = async () => {
 
   const date = $("slotDate").value;
   const start = $("startTime").value;
@@ -427,25 +430,76 @@ window.setAvailability = async () => {
     return;
   }
 
-  let s = new Date(`${date}T${start}`);
-  const e = new Date(`${date}T${end}`);
+  let time = new Date(`${date}T${start}`);
+  const endTime = new Date(`${date}T${end}`);
 
-  while (s < e) {
+  while (time < endTime) {
 
     await addDoc(slotsRef, {
       date,
-      time: s.toTimeString().slice(0, 5),
+      time: time.toTimeString().slice(0,5),
       booked: false,
-      status: "حجز",
-      paid: 0,
-      patient: {},
+      status: "available",
+      patient: null,
       createdAt: serverTimestamp()
     });
 
-    s.setMinutes(s.getMinutes() + duration);
+    time.setMinutes(time.getMinutes() + duration);
   }
 
-  alert("تم إنشاء المواعيد ✔️");
+  alert("تم إنشاء اليوم ✔️");
+};
+
+/* ================= CREATE REQUEST ================= */
+window.createRequest = async () => {
+
+  const name = $("pName").value;
+  const phone = $("pPhone").value;
+  const date = $("requestDate").value;
+
+  if (!name || !phone || !date) {
+    alert("اكمل البيانات");
+    return;
+  }
+
+  await addDoc(requestsRef, {
+    name,
+    phone,
+    date,
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
+
+  alert("تم إرسال الطلب ✔️");
+};
+
+/* ================= CONVERT REQUEST ================= */
+window.convertRequest = async (requestId, date, time) => {
+
+  const reqRef = doc(db, "requests", requestId);
+  const reqSnap = await getDoc(reqRef);
+
+  if (!reqSnap.exists()) return;
+
+  const req = reqSnap.data();
+
+  await addDoc(slotsRef, {
+    date,
+    time,
+    booked: true,
+    status: "booked",
+    patient: {
+      name: req.name,
+      phone: req.phone
+    },
+    createdAt: serverTimestamp()
+  });
+
+  await updateDoc(reqRef, {
+    status: "converted"
+  });
+
+  alert("تم التحويل ✔️");
 };
 
 /* ================= DELETE DAY ================= */
@@ -505,10 +559,11 @@ function renderSlots() {
       <div class="day-money">💰 ${dayTotal} جنيه</div>
 
       ${days[date]
-        .sort((a,b)=> (a.time || "").localeCompare(b.time || ""))
+        .sort((a,b)=>a.time.localeCompare(b.time))
         .map(x => `
           <div class="slot-item ${x.booked ? "booked" : ""}"
             onclick="selectSlot('${x.id}')">
+
             <b>${x.time}</b> - ${x.patient?.name || "بدون اسم"} (${x.status})
           </div>
         `).join("")}
@@ -521,6 +576,5 @@ function renderSlots() {
 }
 
 </script>
-
 </body>
 </html>
