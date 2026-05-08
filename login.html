@@ -202,4 +202,40 @@ window.isAdmin = function () {
 window.isUser = function () {
   return currentUser?.role === "user";
 };  
+
+
+  import { login } from "./auth.js";
+import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { db } from "./firebase.js";
+
+window.loginUser = async function () {
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+
+    const cred = await login(email, password);
+    const uid = cred.user.uid;
+
+    const snap = await getDoc(doc(db, "users", uid));
+
+    let role = "user";
+
+    if (snap.exists()) {
+      role = snap.data().role;
+    }
+
+    // 👉 التوجيه حسب الدور
+    if (role === "admin") {
+      window.location.href = "admin.html";
+    } else {
+      alert("Not allowed for admin panel");
+      window.location.href = "booking.html";
+    }
+
+  } catch (err) {
+    alert(err.message);
+  }
+};
   </script>
