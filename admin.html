@@ -405,9 +405,11 @@ window.selectSlot = async (id) => {
 
 /* update */
 window.updateSlot = async () => {
-  if (!activeId) return alert("اختاري ميعاد");
+  if (!activeId) return alert("اختاري ميعاد أولاً");
 
-  await updateDoc(doc(db, "slots", activeId), {
+  const ref = doc(db, "slots", activeId);
+
+  await updateDoc(ref, {
     booked: pName.value.trim() !== "",
     status: pStatus.value,
     paid: Number(pPaid.value || 0),
@@ -418,7 +420,8 @@ window.updateSlot = async () => {
     }
   });
 
-  alert("تم الحفظ");
+  activeId = null; // مهم جدًا
+  alert("تم التعديل ✔️");
 };
 
 /* generate slots */
@@ -545,9 +548,7 @@ window.assignRequest = async () => {
     return;
   }
 
-  /* =========================
-     لو الميعاد محجوز
-  ========================= */
+  
 
  /* =========================
    لو الميعاد محجوز
@@ -627,32 +628,36 @@ function renderSlots() {
   let totalGlobal = 0;
 
   cache.forEach((d) => {
-
     if (!days[d.date]) {
       days[d.date] = [];
     }
-
     days[d.date].push(d);
-
   });
 
   daysGrid.innerHTML = "";
+
+  let filter = document.getElementById("filter")?.value || "all";
 
   for (let d in days) {
 
     let total = 0;
 
     days[d].forEach((x) => {
-
       if (x.status === "كشف") {
         total += Number(x.paid || 0);
         totalGlobal += Number(x.paid || 0);
       }
+    });
 
+    // فلترة المواعيد
+    let filtered = days[d].filter(x => {
+      if (filter === "all") return true;
+      if (filter === "booked") return x.booked;
+      if (filter === "free") return !x.booked;
+      return true;
     });
 
     let col = document.createElement("div");
-
     col.className = "day-col";
 
     col.innerHTML = `
@@ -666,12 +671,11 @@ function renderSlots() {
         💰 ${total} جنيه
       </div>
 
-      ${days[d]
+      ${filtered
+        .sort((a, b) => {
 
-        .sort((a,b)=>{
-
-          if(a.status === "pending") return -1;
-          if(b.status === "pending") return 1;
+          if (a.status === "pending") return -1;
+          if (b.status === "pending") return 1;
 
           return a.time.localeCompare(b.time);
 
@@ -699,9 +703,7 @@ function renderSlots() {
             (${x.status})
 
             ${x.patient?.phone ? `
-
               <br>
-
               <a
                 class="whatsapp"
                 target="_blank"
@@ -709,7 +711,6 @@ function renderSlots() {
               >
                 واتساب 📱
               </a>
-
             ` : ""}
 
           </div>
