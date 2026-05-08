@@ -256,8 +256,12 @@ input, textarea, select {
 
 <input id="pName" placeholder="الاسم">
 <div id="historyBox" class="patient-history"></div>
-<input type="date" id="assignDate">
-<input type="time" id="assignTime">
+        <select id="availableSlots">
+<option value="">اختر ميعاد متاح</option>
+</select
+  <input type="date" id="requestDate"
+onchange="loadAvailableSlots(this.value)">
+<option value="pending">طلب جديد</option>
 <input id="pPhone" placeholder="الهاتف">
 <textarea id="pNotes" placeholder="ملاحظات"></textarea>
 <input id="pPaid" type="number" placeholder="المبلغ">
@@ -468,7 +472,51 @@ window.setAvailability = async () => {
 
   alert("تم التوليد ✔️");
 };
+const pendingQuery = query(
+  slotsRef,
+  where("status", "==", "pending"),
+  where("requestedDate", "==", date)
+);
 
+const pendingSnap = await getDocs(pendingQuery);
+
+for (const pendingDoc of pendingSnap.docs) {
+
+  const pendingData = pendingDoc.data();
+
+  const freeQuery = query(
+    slotsRef,
+    where("date", "==", date)
+  );
+
+  const freeSnap = await getDocs(freeQuery);
+
+  let freeSlot = null;
+
+  freeSnap.forEach(s => {
+    if (!s.data().booked && !freeSlot) {
+      freeSlot = s;
+    }
+  });
+
+  if (freeSlot) {
+
+    await updateDoc(doc(db, "slots", freeSlot.id), {
+      booked: true,
+      status: "حجز",
+      patient: pendingData.patient || {},
+      paid: pendingData.paid || 0
+    });
+
+    await updateDoc(doc(db, "slots", pendingDoc.id), {
+      status: "محول"
+    });
+
+    alert(
+      `تم ترحيل ${pendingData.patient?.name || "مريض"} تلقائيًا`
+    );
+  }
+}
 /* ================= Delete Day ================= */
 window.deleteDay = async (date) => {
   if (!confirm("حذف اليوم؟")) return;
@@ -626,6 +674,34 @@ window.assignRequest = async () => {
   alert("تم إنشاء ميعاد جديد ✔️");
 };
 
+        window.loadAvailableSlots = async (date) => {
+
+  const select = $("availableSlots");
+
+  select.innerHTML =
+    '<option value="">اختر ميعاد متاح</option>';
+
+  const q = query(
+    slotsRef,
+    where("date", "==", date)
+  );
+
+  const snap = await getDocs(q);
+
+  snap.forEach(docu => {
+
+    const d = docu.data();
+
+    if (!d.booked) {
+
+      select.innerHTML += `
+        <option value="${docu.id}">
+          ${d.time}
+        </option>
+      `;
+    }
+  });
+};
 </script>
         
 </script>
