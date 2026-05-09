@@ -211,18 +211,21 @@ window.saveEditSlot = async () => {
 window.closeEditModal = () => { const modal = document.getElementById("editModal"); if (modal) { modal.remove(); document.removeEventListener("keydown", arguments.callee); } editSession = {}; };
 
 window.cancelSlot = async (slotId) => { const slot = cache.find(s => s.id === slotId); if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً"); const patient = slot.patient; if (!confirm("⚠️ تأكيد الإلغاء:\n" + slot.date + " " + slot.time + "\n" + (patient?.name||"") + "\n" + (patient?.phone||"") + "\n\nمتأكد؟")) return; try { await updateDoc(doc(db, "slots", slotId), { booked: false, status: "cancelled", patient: null, paid: 0, cancelledAt: serverTimestamp() }); alert("✅ تم الإلغاء"); } catch (err) { alert("❌ خطأ: " + err.message); } };
-
 window.renderSlots = function() {
   const grid = $("daysGrid"), totalBox = $("globalTotal");
   let days = {}, total = 0;
   cache.forEach(d => { if (!d.date) return; if (!days[d.date]) days[d.date] = []; days[d.date].push(d); });
   grid.innerHTML = "";
+  
   Object.keys(days).sort().forEach(date => {
     let dayTotal = 0;
     days[date].forEach(s => { if (s.status === "كشف") { dayTotal += Number(s.paid||0); total += Number(s.paid||0); } });
-    const col = document.createElement("div"); col.className = "day-col";
     
-    // ✅ هيكل جديد يدعم الطي/الفرد
+    const col = document.createElement("div");
+    col.className = "day-col";
+    col.id = "day-" + date;
+    col.style.alignSelf = "start"; // 👈 مهم عشان العمود ياخد ارتفاع محتواه فقط
+
     const slotsHTML = days[date].sort((a,b)=>a.time.localeCompare(b.time)).map(x => {
       const isBooked = x.booked && x.status !== "cancelled";
       const pname = x.patient?.name || "بدون اسم", phone = x.patient?.phone || "";
@@ -233,12 +236,12 @@ window.renderSlots = function() {
     }).join("");
 
     col.innerHTML = `
-      <div class="day-head">
+      <div class="day-head" style="cursor:default;">
         ${date}
         <span class="del-btn" onclick="event.stopPropagation(); deleteDay('${date}')">×</span>
-        <span class="day-toggle" onclick="event.stopPropagation(); toggleDayColumn(this)" style="position:absolute;right:35px;top:14px;cursor:pointer;font-size:14px;color:#fff">▼</span>
+        <span class="day-toggle-btn" onclick="event.stopPropagation(); toggleDay('${date}')" style="position:absolute; right:40px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:14px; color:#fff; background:rgba(255,255,255,0.25); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;">▼</span>
       </div>
-      <div class="day-body" style="display:block; transition: all 0.25s ease;">
+      <div class="day-body" id="body-${date}" style="display:block; transition: all 0.2s ease;">
         <div class="day-money">💰 ${dayTotal} جنيه</div>
         ${slotsHTML}
       </div>
@@ -247,6 +250,7 @@ window.renderSlots = function() {
   });
   totalBox.innerText = "💰 إجمالي العيادة: " + total + " جنيه";
 };
+  
 window.diagnoseBookingCompatibility = async () => { try { const q = query(slotsRef, orderBy("createdAt", "desc")); const snap = await getDocs(q); const docs = snap.docs; if (docs.length === 0) return alert("⚠️ مفيش مواعيد"); const slot = docs[0].data(); const checks = { "date string": typeof slot.date==="string", "time string": typeof slot.time==="string", "booked boolean": typeof slot.booked==="boolean", "date format": /^\d{4}-\d{2}-\d{2}$/.test(slot.date), "time format": /^\d{2}:\d{2}$/.test(slot.time) }; console.table(checks); alert(Object.values(checks).every(v=>v) ? "✅ متوافق مع booking.html" : "⚠️ فيه مشكلة - راجع الكونسول"); } catch (err) { alert(err.message?.includes("index") ? "⚠️ محتاج إنديكس" : "❌ خطأ: " + err.message); } };
 
 async function checkAndMigrateManualSlots(snap) { const newSlotsByDate = {}; snap.docChanges().forEach(change => { if (change.type === "added") { const data = change.doc.data(); if (data.date && !data.isManual) { if (!newSlotsByDate[data.date]) newSlotsByDate[data.date] = []; newSlotsByDate[data.date].push({ id: change.doc.id, ...data }); } } }); for (const [date, slots] of Object.entries(newSlotsByDate)) { const manualSlots = cache.filter(s => s.date === date && s.isManual === true && s.booked === true); if (manualSlots.length > 0) { for (const manual of manualSlots) await migrateManualSlot(manual, slots); showAdminNotification("🔄 تم ترحيل " + manualSlots.length + " ميعاد مرن ليوم " + date); } } }
@@ -310,6 +314,30 @@ window.toggleDayColumn = function(btn) {
     body.style.display = 'none';
     btn.textContent = '▶';
     btn.title = 'توسيع اليوم';
+  }
+};
+
+  // ✅ دالة طي/فرد عمود اليوم (بتقلص المساحة فعلياً)
+window.toggleDay = function(date) {
+  const col = document.getElementById("day-" + date);
+  const body = document.getElementById("body-" + date);
+  const btn = col.querySelector(".day-toggle-btn");
+  
+  if (body.style.display === "none") {
+    // 🟢 فرد العمود
+    body.style.display = "block";
+    col.style.padding = ""; col.style.border = ""; col.style.boxShadow = ""; col.style.background = "";
+    btn.textContent = "▼";
+    btn.title = "تصغير اليوم";
+  } else {
+    // 🔴 طي العمود (إزالة المساحة الفارغة)
+    body.style.display = "none";
+    col.style.padding = "0";
+    col.style.border = "none";
+    col.style.boxShadow = "none";
+    col.style.background = "transparent";
+    btn.textContent = "▲";
+    btn.title = "توسيع اليوم";
   }
 };
 </script>
