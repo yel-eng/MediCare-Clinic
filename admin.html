@@ -347,6 +347,201 @@ onSnapshot(slotsRef, (snap) => {
 */
 
 console.log("✅ Available Slots Dropdown Fixed - With Manual Time + Auto-Migration");
+
+  /* =======================================================
+   🕒 إصلاح نهائي: حقل الوقت اليدوي يظهر دائماً لما مفيش جدول
+   ضع هذا الكود في نهاية admin.html قبل </script>
+   ======================================================= */
+
+// 1. ✅ دالة loadAvailableSlots المُحسّنة (تضمن ظهور الحقل اليدوي)
+window.loadAvailableSlots = async (date) => {
+  const select = $("availableSlots");
+  if (!select || !date) return;
+  
+  // تفريغ القائمة أولاً
+  select.innerHTML = '<option value="">⏳ جاري التحميل...</option>';
+  select.disabled = true;
+  
+  // إزالة أي حقل يدوي قديم
+  const oldManual = document.getElementById("manualTimeWrapper");
+  if (oldManual) oldManual.remove();
+  
+  try {
+    // جلب مواعيد هذا التاريخ
+    const q = query(collection(db, "slots"), where("date", "==", date));
+    const snap = await getDocs(q);
+    const daySlots = [];
+    snap.forEach(d => daySlots.push({ id: d.id, ...d.data() }));
+    
+    // فلترة: المتاحة فقط
+    const available = daySlots.filter(s => !s.booked && s.status !== "cancelled");
+    
+    if (available.length > 0) {
+      // ✅ في جدول → اعرض المواعيد
+      available.sort((a,b) => a.time.localeCompare(b.time));
+      select.innerHTML = '<option value="">-- اختر ميعاد متاح --</option>';
+      available.forEach(slot => {
+        const opt = document.createElement("option");
+        opt.value = slot.id;
+        opt.textContent = `🕒 ${slot.time} - متاح`;
+        select.appendChild(opt);
+      });
+      select.disabled = false;
+      console.log(`✅ Loaded ${available.length} slots`);
+    } else {
+      // ❌ مفيش جدول → فعّل الوضع اليدوي
+      select.innerHTML = '<option value="__MANUAL__" selected>⏰ أدخل وقت يدوي</option>';
+      select.disabled = false;
+      
+      // إنشاء حقل الوقت اليدوي (مضمون الظهور)
+      const manualWrapper = document.createElement("div");
+      manualWrapper.id = "manualTimeWrapper";
+      manualWrapper.style.cssText = "margin-top:12px;padding:15px;background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:12px;border:2px solid #ff9800";
+      manualWrapper.innerHTML = `
+        <p style="margin:0 0 10px;font-weight:600;color:#e65100;font-size:14px">
+          ⚠️ لا توجد مواعيد مُضافة لهذا اليوم
+        </p>
+        <label style="display:block;margin-bottom:6px;font-weight:500;font-size:13px">
+          🕐 حدد الوقت المطلوب:
+        </label>
+        <input type="time" id="manualTimeInput" value="17:00" 
+          style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:15px">
+        <p style="margin:8px 0 0;font-size:12px;color:#666">
+          💡 سيتم حجز هذا الوقت كـ "ميعاد مرن"، وسيُرحّل تلقائياً لأقرب ميعاد متاح لو تم إنشاء جدول لهذا اليوم لاحقاً
+        </p>
+      `;
+      
+      // إدخال الحقل بعد القائمة مباشرة (مضمون)
+      select.parentNode.insertBefore(manualWrapper, select.nextSibling);
+      
+      console.log(`🕒 Manual mode activated for ${date}`);
+    }
+    
+  } catch (err) {
+    console.error("❌ Load Error:", err);
+    select.innerHTML = '<option value="">❌ فشل التحميل</option>';
+  }
+};
+
+// 2. ✅ زر "استخدام الميعاد" (يظهر ديناميكياً بجانب القائمة)
+function ensureUseSlotButton() {
+  // لو الزر موجود بالفعل، اخرجي
+  if (document.getElementById("useSlotBtn")) return;
+  
+  const select = $("availableSlots");
+  if (!select) return;
+  
+  const btn = document.createElement("button");
+  btn.id = "useSlotBtn";
+  btn.textContent = "✅ استخدام هذا الميعاد";
+  btn.className = "btn";
+  btn.style.cssText = "background:linear-gradient(135deg,#2e7d32,#43a047);margin-top:12px;font-weight:600";
+  btn.onclick = () => useSelectedSlot();
+  
+  // إدخال الزر بعد حقل الوقت اليدوي (لو موجود) أو بعد القائمة
+  const manualWrapper = document.getElementById("manualTimeWrapper");
+  if (manualWrapper) {
+    manualWrapper.parentNode.insertBefore(btn, manualWrapper.nextSibling);
+  } else {
+    select.parentNode.insertBefore(btn, select.nextSibling);
+  }
+}
+
+// 3. ✅ معالجة الحجز (تدعم العادي واليدوي)
+window.useSelectedSlot = async () => {
+  const select = $("availableSlots");
+  const slotId = select?.value;
+  const date = $("requestDate")?.value;
+  
+  if (!slotId || !date) return alert("⚠️ اختاري تاريخاً وميعاداً أولاً");
+  
+  // جمع بيانات المريض
+  const name = $("pName").value.trim();
+  const phone = $("pPhone").value.trim();
+  const notes = $("pNotes").value;
+  const paid = Number($("pPaid").value || 0);
+  const status = $("pStatus").value;
+  
+  if (!name || !phone) return alert("⚠️ اكملِ البيانات: الاسم والهاتف مطلوبان");
+  
+  try {
+    if (slotId === "__MANUAL__") {
+      // 🕒 حجز بوقت يدوي
+      const manualTime = document.getElementById("manualTimeInput")?.value;
+      if (!manualTime) return alert("⚠️ حددي الوقت المطلوب");
+      
+      await addDoc(collection(db, "slots"), {
+        date: date,
+        time: manualTime,
+        booked: true,
+        status: "booked_manual",  // حالة خاصة للتمييز
+        patient: { name, phone, notes },
+        paid: paid,
+        isManual: true,           // علامة للترحيل التلقائي
+        bookedBy: auth.currentUser?.uid || "admin",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      alert(`✅ تم الحجز في ميعاد مرن:\n📅 ${date} | 🕒 ${manualTime}\n\nسيُرحّل تلقائياً لو أُضيف جدول لهذا اليوم`);
+      
+    } else {
+      // 📋 حجز في ميعاد من الجدول
+      const slot = cache.find(s => s.id === slotId);
+      if (!slot) return alert("❌ الميعاد غير موجود، حاولي مرة أخرى");
+      
+      await updateDoc(doc(db, "slots", slotId), {
+        booked: true,
+        status: status,
+        patient: { name, phone, notes },
+        paid: paid,
+        isManual: false,
+        bookedBy: auth.currentUser?.uid || "admin",
+        updatedAt: serverTimestamp()
+      });
+      
+      alert(`✅ تم الحجز بنجاح:\n📅 ${date} | 🕒 ${slot.time}`);
+    }
+    
+    // إعادة تعيين الحقول
+    $("pName").value = "";
+    $("pPhone").value = "";
+    $("pNotes").value = "";
+    $("pPaid").value = "";
+    
+    // إعادة تعيين القائمة
+    select.innerHTML = '<option value="">اختر ميعاد متاح</option>';
+    
+    // إزالة الحقل اليدوي والزر
+    const manualWrapper = document.getElementById("manualTimeWrapper");
+    if (manualWrapper) manualWrapper.remove();
+    const useBtn = document.getElementById("useSlotBtn");
+    if (useBtn) useBtn.remove();
+    
+    // تحديث الجدول فوراً
+    renderSlots();
+    
+  } catch (err) {
+    console.error("❌ Booking Error:", err);
+    alert("❌ حدث خطأ أثناء الحجز: " + err.message);
+  }
+};
+
+// 4. ✅ تفعيل الزر تلقائياً عند: تحميل الصفحة + تغيير التاريخ
+document.addEventListener("DOMContentLoaded", () => {
+  ensureUseSlotButton();
+});
+
+const originalDateChange = $("requestDate")?.onchange;
+$("requestDate")?.addEventListener("change", (e) => {
+  if (originalDateChange) originalDateChange(e);
+  // تأخير بسيط عشان الدالة الأصلية تخلص
+  setTimeout(() => {
+    ensureUseSlotButton();
+  }, 150);
+});
+
+console.log("✅ Manual Time Input Fixed - Guaranteed to Appear");
 </script>
 </body>
 </html>
