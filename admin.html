@@ -135,6 +135,18 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
 </div>
 
 <script type="module">
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const ADMIN_EMAIL = "admin@clinic.com"; // ⚠️ استبدليه بالإيميل بتاعك
+const auth = getAuth(app); // 'app' معرف أصلاً في الكود
+
+onAuthStateChanged(auth, (user) => {
+  if (!user || user.email !== ADMIN_EMAIL) {
+    alert("⚠️ يرجى تسجيل الدخول بحساب الأدمن للوصول لهذه الصفحة");
+    window.location.href = "login.html";
+  }
+  // ✅ لو الإيميل مطابق، الصفحة تكمل تحميل عادي
+});
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, addDoc, deleteDoc, query, where, getDocs, writeBatch, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
