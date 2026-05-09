@@ -296,6 +296,22 @@ document.addEventListener("DOMContentLoaded", function() { ensureUseSlotButton()
 const originalDateChange = $("requestDate")?.onchange; $("requestDate")?.addEventListener("change", function(e) { if (originalDateChange) originalDateChange(e); setTimeout(function() { ensureUseSlotButton(); }, 150); });
 
 console.log("✅ Admin Loaded - System Colors + Closable Modal");
+
+  // ✅ دالة طي/فرد عمود اليوم
+window.toggleDayColumn = function(btn) {
+  const col = btn.closest('.day-col');
+  const body = col.querySelector('.day-body');
+  
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    btn.textContent = '▼';
+    btn.title = 'تصغير اليوم';
+  } else {
+    body.style.display = 'none';
+    btn.textContent = '▶';
+    btn.title = 'توسيع اليوم';
+  }
+};
 </script>
 </body>
 </html>
