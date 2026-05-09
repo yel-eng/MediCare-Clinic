@@ -79,18 +79,21 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
     <div class="card">
       <h3>👤 بيانات الحجز</h3>
       <p id="targetTime">اختر ميعاداً</p>
-      <input id="pName" placeholder="الاسم">
-      <div id="historyBox" class="patient-history"></div>
-      <select id="availableSlots"><option value="">اختر ميعاد متاح</option></select>
+            <input id="pName" placeholder="الاسم">
+            <input id="pPhone" placeholder="الهاتف">
       <input type="date" id="requestDate" onchange="loadAvailableSlots(this.value)">
-      <input id="pPhone" placeholder="الهاتف">
-      <textarea id="pNotes" placeholder="ملاحظات"></textarea>
-      <input id="pPaid" type="number" placeholder="المبلغ">
+      <select id="availableSlots"><option value="">اختر ميعاد متاح</option></select>
+            <input id="pPaid" type="number" placeholder="المبلغ">
+
       <select id="pStatus"><option value="حجز">حجز</option><option value="كشف">كشف</option><option value="ملغي">ملغي</option></select>
       <button class="btn" onclick="updateSlot()">حفظ</button>
+     <button class="btn" onclick="assignRequest()">تحديد ميعاد للطلب</button>
+
+
+      <div id="historyBox" class="patient-history"></div>
+      <textarea id="pNotes" placeholder="ملاحظات"></textarea>
       <button class="btn" style="background:#00897b" onclick="generateQR()">QR</button>
       <img id="qrImg" width="120" style="display:none;margin-top:10px;">
-      <button class="btn" onclick="assignRequest()">تحديد ميعاد للطلب</button>
       <input id="search" placeholder="بحث..." onkeyup="safeLoad()">
       <select id="filter" onchange="safeLoad()"><option value="all">الكل</option><option value="booked">محجوز</option><option value="free">متاح</option></select>
     </div>
