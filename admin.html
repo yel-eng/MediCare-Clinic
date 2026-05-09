@@ -2,59 +2,82 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام العيادة المستقر</title>
 <style>
-:root { --main: #1a237e; --main-light: #3949ab; --bg: #f4f7f6; --white: #ffffff; --text: #333333; --text-light: #666666; --success: #2e7d32; --warning: #ff9800; --danger: #f44336; --whatsapp: #25d366; }
+:root {
+  --main: #1a237e; --main-light: #3949ab; --bg: #f4f7f6; --white: #ffffff;
+  --text: #333333; --text-light: #666666; --success: #2e7d32; --warning: #ff9800;
+  --danger: #f44336; --whatsapp: #25d366;
+  --shadow: 0 4px 16px rgba(0,0,0,0.06); --shadow-hover: 0 8px 24px rgba(0,0,0,0.1);
+  --radius: 14px; --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 * { box-sizing: border-box; }
 body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; overflow-x:hidden; margin-right: 220px; color: var(--text); }
 .side-nav { position: fixed; top: 0; right: 0; width: 220px; height: 100vh; background: linear-gradient(180deg, var(--main), var(--main-light)); padding: 25px 15px; display: flex; flex-direction: column; gap: 15px; z-index: 999; }
 .side-nav .logo { color: #fff; text-align: center; margin-bottom: 20px; }
 .side-nav a.active { background: var(--white); color: var(--main); font-weight: bold; }
 .side-nav a.disabled { opacity: 0.5; pointer-events: none; }
-.side-nav a { text-decoration: none; color: #fff; padding: 12px; border-radius: 10px; transition: 0.3s; font-size: 15px; }
+.side-nav a { text-decoration: none; color: #fff; padding: 12px; border-radius: 10px; transition: var(--transition); font-size: 15px; }
 .side-nav a:hover { background: rgba(255,255,255,0.15); transform: translateX(-5px); }
 .admin-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
-.card { background: var(--white); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
-.days-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-.day-col { background: var(--white); border: 1px solid #ddd; border-radius: 12px; }
-.day-head { background: var(--main); color: white; padding: 12px; text-align: center; border-radius: 12px 12px 0 0; position: relative; }
-.day-money { background:#fff3e0; padding:6px; text-align:center; font-weight:bold; color: var(--warning); }
-.total-box { background:#c8e6c9; padding:10px; margin-bottom:15px; text-align:center; font-weight:bold; border-radius:10px; color: var(--success); }
-.slot-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; position: relative; }
-.slot-item:hover { background: #f0f7ff; }
-.booked { border-right: 5px solid var(--success); }
-.cancel { border-right: 5px solid var(--danger); }
-.del-btn { position:absolute; left:10px; top:10px; cursor:pointer; color: var(--danger); font-size:18px; }
+.card { background: var(--white); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+.days-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; padding: 10px 0; align-items: start; }
+
+/* Day Card Premium */
+.day-col { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: all var(--transition); display: flex; flex-direction: column; }
+.day-col:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+.day-col.collapsed { box-shadow: none; transform: none; background: transparent; }
+
+/* Header */
+.day-head { background: linear-gradient(135deg, var(--main), var(--main-light)); color: white; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 15px; position: relative; user-select: none; }
+.head-actions { display: flex; gap: 8px; align-items: center; }
+.head-btn { cursor: pointer; background: rgba(255,255,255,0.2); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 14px; }
+.head-btn:hover { background: rgba(255,255,255,0.35); transform: scale(1.05); }
+.head-btn.del:hover { background: var(--danger); }
+
+/* Body & Animation */
+.day-body { padding: 14px; background: var(--white); transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), padding 0.3s ease, opacity 0.3s ease; max-height: 1500px; opacity: 1; }
+.day-col.collapsed .day-body { max-height: 0; padding: 0 14px; opacity: 0; overflow: hidden; }
+
+/* Money Badge */
+.day-money { background: #fff8e1; color: var(--warning); padding: 10px; text-align: center; font-weight: 600; border-radius: 10px; margin-bottom: 14px; font-size: 14px; border: 1px solid #ffe082; }
+
+/* Slots */
+.slot-item { padding: 11px 12px; margin-bottom: 8px; background: #f8f9fa; border-radius: 10px; cursor: pointer; border-right: 4px solid transparent; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.slot-item:hover { background: #e8eaf6; transform: translateX(-4px); }
+.slot-item.booked { border-right-color: var(--success); background: #f1f8e9; }
+.slot-item.cancel { border-right-color: var(--danger); background: #ffebee; opacity: 0.8; }
+.slot-time { font-weight: 600; color: var(--main); font-size: 15px; }
+.slot-name { flex: 1; margin: 0 8px; font-size: 14px; color: var(--text); min-width: 100px; }
+.status-badge { font-size: 11px; padding: 3px 7px; border-radius: 6px; font-weight: 500; background: #e3f2fd; color: #1976d2; }
+.status-booked { background: #e8f5e9; color: var(--success); }
+.status-cancel { background: #ffebee; color: var(--danger); }
+
+/* Action Buttons */
+.action-buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; width: 100%; justify-content: flex-end; }
+.action-buttons button { background: var(--whatsapp); color: white; border: none; padding: 5px 9px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+.action-buttons button:nth-child(2) { background: var(--warning); }
+.action-buttons button:nth-child(3) { background: var(--danger); }
+.action-buttons button:hover { filter: brightness(1.1); transform: scale(1.05); }
+
+.total-box { background: #c8e6c9; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; border-radius: 10px; color: var(--success); border: 1px solid #a5d6a7; }
 input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
 .btn { background: var(--main); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; margin-top:5px; transition: 0.2s; }
 .btn:hover { background: var(--main-light); }
-.whatsapp { background: var(--whatsapp); color:white; padding:6px 10px; border-radius:6px; display:inline-block; margin-top:5px; text-decoration:none; font-size:12px; }
-.now-slot { background:#fff9c4 !important; border-right:5px solid #fbc02d !important; }
-.patient-history { background:#e3f2fd; padding:8px; border-radius:8px; margin-top:5px; font-size:13px; display:none; }
-.pending-slot { background:#ffe0b2 !important; border-right:5px solid var(--warning) !important; }
-.action-buttons { margin-top:8px; display:flex; gap:5px; flex-wrap:wrap; }
-.action-buttons button { background: var(--whatsapp); color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer; }
-.action-buttons button:nth-child(2) { background: var(--warning); }
-.action-buttons button:nth-child(3) { background: var(--danger); }
 
-/* ✅ Modal Styles - ألوان السيستم + إغلاق */
-.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(26,35,126,0.85); z-index:10000; display:flex; justify-content:center; align-items:center; cursor: pointer; }
+/* Modal & Notif */
+.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(26,35,126,0.85); z-index:10000; display:flex; justify-content:center; align-items:center; cursor:pointer; }
 .modal-content { background: var(--white); width:95%; max-width:450px; max-height:90vh; border-radius:16px; padding:20px 25px; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); position: relative; cursor: default; border-top: 4px solid var(--main); }
 .modal-close { position: absolute; top: 12px; left: 12px; width: 32px; height: 32px; border-radius: 50%; background: var(--danger); color: #fff; border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-.modal-close:hover { background: #d32f2f; transform: scale(1.05); }
-.modal-title { color: var(--main); text-align: center; margin: 0 0 15px; font-size: 18px; font-weight: 600; padding-right: 20px; }
+.modal-title { color: var(--main); text-align: center; margin: 0 0 15px; font-size: 18px; font-weight: 600; }
 .modal-slot { padding: 12px; margin: 6px 0; background: var(--bg); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; }
-.modal-slot:hover { background: #e8eaf6; }
 .modal-slot.selected { border-color: var(--main); background: #e8eaf6; }
 .manual-section { background: #fff3e0; padding: 12px; border-radius: 10px; margin: 15px 0; border: 2px solid var(--warning); }
 .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
 .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; }
 .modal-btn-primary { background: var(--main); color: #fff; }
-.modal-btn-primary:hover { background: var(--main-light); }
 .modal-btn-cancel { background: var(--danger); color: #fff; }
-.modal-btn-cancel:hover { background: #d32f2f; }
-
-/* Notification */
 .admin-notif { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,var(--success),#43a047); color:#fff; padding:14px 24px; border-radius:12px; font-weight:500; box-shadow:0 10px 30px rgba(0,0,0,0.2); z-index:10001; animation:slideIn 0.3s ease, fadeOut 0.3s ease 4.7s forwards; }
 @keyframes slideIn { from { transform:translateX(-50%) translateY(-30px); opacity:0; } to { transform:translateX(-50%) translateY(0); opacity:1; } }
 @keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
@@ -79,21 +102,18 @@ input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px
     <div class="card">
       <h3>👤 بيانات الحجز</h3>
       <p id="targetTime">اختر ميعاداً</p>
-            <input id="pName" placeholder="الاسم">
-            <input id="pPhone" placeholder="الهاتف">
-      <input type="date" id="requestDate" onchange="loadAvailableSlots(this.value)">
+      <input id="pName" placeholder="الاسم">
+      <div id="historyBox" style="background:#e3f2fd;padding:8px;border-radius:8px;margin-top:5px;font-size:13px;display:none;"></div>
       <select id="availableSlots"><option value="">اختر ميعاد متاح</option></select>
-            <input id="pPaid" type="number" placeholder="المبلغ">
-
+      <input type="date" id="requestDate" onchange="loadAvailableSlots(this.value)">
+      <input id="pPhone" placeholder="الهاتف">
+      <textarea id="pNotes" placeholder="ملاحظات"></textarea>
+      <input id="pPaid" type="number" placeholder="المبلغ">
       <select id="pStatus"><option value="حجز">حجز</option><option value="كشف">كشف</option><option value="ملغي">ملغي</option></select>
       <button class="btn" onclick="updateSlot()">حفظ</button>
-     <button class="btn" onclick="assignRequest()">تحديد ميعاد للطلب</button>
-
-
-      <div id="historyBox" class="patient-history"></div>
-      <textarea id="pNotes" placeholder="ملاحظات"></textarea>
       <button class="btn" style="background:#00897b" onclick="generateQR()">QR</button>
       <img id="qrImg" width="120" style="display:none;margin-top:10px;">
+      <button class="btn" onclick="assignRequest()">تحديد ميعاد للطلب</button>
       <input id="search" placeholder="بحث..." onkeyup="safeLoad()">
       <select id="filter" onchange="safeLoad()"><option value="all">الكل</option><option value="booked">محجوز</option><option value="free">متاح</option></select>
     </div>
@@ -120,7 +140,7 @@ import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/fir
 
 const firebaseConfig = { apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o", authDomain: "mydoctor-clinic.firebaseapp.com", projectId: "mydoctor-clinic", storageBucket: "mydoctor-clinic.firebasestorage.app", messagingSenderId: "996532645974", appId: "1:996532645974:web:bfc3e6a61bdc7f04a24bf7", measurementId: "G-33CQLHP3WP" };
 const app = initializeApp(firebaseConfig); const db = getFirestore(app); const auth = getAuth(app); window.db = db;
-const $ = (id) => document.getElementById(id); let cache = [], activeId = null, editSession = {};
+const $ = (id) => document.getElementById(id); let cache = [], activeId = null, editSession = {}, collapsedDays = {};
 const slotsRef = collection(db, "slots"); const requestsRef = collection(db, "requests");
 
 window.logout = () => signOut(auth).then(() => location.href = "login.html");
@@ -132,12 +152,12 @@ window.createDaySlots = async () => { const date = $("slotDate").value, start = 
 window.createRequest = async () => { const name = $("pName").value, phone = $("pPhone").value, date = $("requestDate").value; if (!name || !phone || !date) return alert("اكمل البيانات"); await addDoc(requestsRef, { name, phone, date, status: "pending", createdAt: serverTimestamp() }); alert("تم إرسال الطلب ✔️"); };
 window.convertRequest = async (requestId, date, time) => { const reqRef = doc(db, "requests", requestId); const reqSnap = await getDoc(reqRef); if (!reqSnap.exists()) return; const req = reqSnap.data(); await addDoc(slotsRef, { date, time, booked: true, status: "booked", patient: { name: req.name, phone: req.phone }, createdAt: serverTimestamp() }); await updateDoc(reqRef, { status: "converted" }); alert("تم التحويل ✔️"); };
 window.deleteDay = async (date) => { if (!confirm("حذف اليوم؟")) return; const q = query(slotsRef, where("date", "==", date)); const snap = await getDocs(q); const batch = writeBatch(db); snap.forEach(d => batch.delete(d.ref)); await batch.commit(); };
-window.generateQR = () => { const qrImg = $("qrImg"); if (!activeId) return alert("⚠️ اختر ميعاداً أولاً"); const name = $("pName").value || "بدون اسم", phone = $("pPhone").value || ""; const timeInfo = $("targetTime").innerText; const qrData = "عيادة ميديكال\\nمريض: " + name + "\\nتليفون: " + phone + "\\nموعد: " + timeInfo; qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(qrData); qrImg.style.display = "block"; };
+window.generateQR = () => { const qrImg = $("qrImg"); if (!activeId) return alert("⚠️ اختر ميعاداً أولاً"); const name = $("pName").value || "بدون اسم", phone = $("pPhone").value || ""; const timeInfo = $("targetTime").innerText; qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent("عيادة ميديكال\nمريض: " + name + "\nتليفون: " + phone + "\nموعد: " + timeInfo); qrImg.style.display = "block"; };
 window.assignRequest = async () => { if (!activeId) return alert("⚠️ اختر ميعاداً أولاً"); const phone = $("pPhone").value.trim(); if (!phone) return alert("⚠️ اكتب رقم الهاتف"); try { const q = query(collection(db, "requests"), where("phone", "==", phone), where("status", "==", "pending")); const snap = await getDocs(q); if (snap.empty) return alert("❌ لا يوجد طلب معلق بهذا الرقم"); const reqDoc = snap.docs[0], reqData = reqDoc.data(); await updateDoc(doc(db, "slots", activeId), { booked: true, status: "booked", patient: { name: reqData.name, phone: reqData.phone, notes: reqData.notes || "" }, paid: 0, updatedAt: serverTimestamp() }); await updateDoc(doc(db, "requests", reqDoc.id), { status: "assigned", slotId: activeId, assignedAt: serverTimestamp() }); alert("✅ تم ربط طلب " + reqData.name); activeId = null; $("pName").value = ""; $("pPhone").value = ""; } catch (err) { console.error(err); alert(err.message?.includes("index") ? "⚠️ يحتاج فهرس جديد" : "❌ خطأ: " + err.message); } };
-window.safeLoad = () => { const searchTerm = $("search").value.toLowerCase(), filterValue = $("filter").value; const filtered = cache.filter(slot => { const matchSearch = !searchTerm || slot.patient?.name?.toLowerCase().includes(searchTerm) || slot.time.includes(searchTerm); let matchFilter = true; if (filterValue === "booked") matchFilter = slot.booked === true; else if (filterValue === "free") matchFilter = slot.booked === false; return matchSearch && matchFilter; }); const grid = $("daysGrid"); grid.innerHTML = ""; let days = {}; filtered.forEach(d => { if (!d.date) return; if (!days[d.date]) days[d.date] = []; days[d.date].push(d); }); Object.keys(days).sort().forEach(date => { const col = document.createElement("div"); col.className = "day-col"; col.innerHTML = "<div class='day-head'>" + date + "</div>" + days[date].sort((a,b)=>a.time.localeCompare(b.time)).map(x => "<div class='slot-item " + (x.booked?"booked":"") + "' onclick='selectSlot(\"" + x.id + "\")'><b>" + x.time + "</b> - " + (x.patient?.name||"متاح") + " (" + x.status + ")</div>").join(""); grid.appendChild(col); }); };
+window.safeLoad = () => { const searchTerm = $("search").value.toLowerCase(), filterValue = $("filter").value; const filtered = cache.filter(slot => { const matchSearch = !searchTerm || slot.patient?.name?.toLowerCase().includes(searchTerm) || slot.time.includes(searchTerm); let matchFilter = true; if (filterValue === "booked") matchFilter = slot.booked === true; else if (filterValue === "free") matchFilter = slot.booked === false; return matchSearch && matchFilter; }); const grid = $("daysGrid"); grid.innerHTML = ""; let days = {}; filtered.forEach(d => { if (!d.date) return; if (!days[d.date]) days[d.date] = []; days[d.date].push(d); }); Object.keys(days).sort().forEach(date => { const col = document.createElement("div"); col.className = "day-col"; col.innerHTML = "<div class='day-head'>" + date + "</div><div class='day-money'>💰 0 جنيه</div>" + days[date].map(x => "<div class='slot-item " + (x.booked?"booked":"") + "' onclick='selectSlot(\"" + x.id + "\")'><b>" + x.time + "</b> - " + (x.patient?.name||"متاح") + " (" + x.status + ")</div>").join(""); grid.appendChild(col); }); };
 window.openWhatsApp = (phone) => { if (!phone) return alert("⚠️ لا يوجد رقم مسجل"); let wa = phone.replace(/^0+/,"").replace(/\s+/g,""); if (!wa.startsWith("20")) wa = "20" + wa; window.open("https://wa.me/" + wa + "?text=" + encodeURIComponent("مرحباً د/ حسني، بخصوص موعد المريض..."), "_blank"); };
 
-// ✏️ تعديل الميعاد - مع ألوان السيستم وإغلاق
+// ✏️ تعديل الميعاد
 window.startEditSlot = async (slotId) => { const slot = cache.find(s => s.id === slotId); if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً"); const patient = slot.patient; if (!patient?.name) return alert("⚠️ لا توجد بيانات مريض"); editSession = { originalSlotId: slotId, originalDate: slot.date, originalTime: slot.time, patient: {...patient}, paid: slot.paid||0, notes: slot.notes||"" }; showEditModal(slot); };
 
 function showEditModal(originalSlot) {
@@ -145,16 +165,11 @@ function showEditModal(originalSlot) {
   const modal = document.createElement("div"); modal.id = "editModal"; modal.className = "modal-overlay";
   modal.innerHTML = "<div class='modal-content'><button class='modal-close' title='إغلاق'>✕</button><h3 class='modal-title'>✏️ تعديل ميعاد: " + editSession.patient.name + "</h3><div style='background:var(--bg);padding:12px;border-radius:10px;margin-bottom:15px;font-size:14px'><b>الميعاد الحالي:</b><br>📅 " + originalSlot.date + " | 🕒 " + originalSlot.time + "</div><label style='display:block;margin-bottom:6px;font-weight:500'>اختر تاريخ جديد:</label><input type='date' id='editDateInput' value='" + originalSlot.date + "' style='width:100%;padding:10px;margin-bottom:15px;border:2px solid #ddd;border-radius:8px'><div id='editSlotsContainer' style='min-height:100px;max-height:250px;overflow-y:auto;margin-bottom:15px'><p style='color:var(--text-light);text-align:center'>اختر تاريخاً لعرض المواعيد</p></div><div id='manualTimeSection' class='manual-section' style='display:none'><p style='margin:0 0 10px;font-weight:500;color:#e65100'>⚠️ لا توجد مواعيد في هذا اليوم</p><label>وقت يدوي:</label><input type='time' id='manualTimeInput' value='17:00' style='width:100%;padding:8px;margin:8px 0;border-radius:6px'><small style='color:var(--text-light)'>سيُرحّل تلقائياً لو أُضيف جدول</small></div><div class='modal-actions'><button class='modal-btn modal-btn-primary' onclick='saveEditSlot()'>💾 حفظ التعديل</button><button class='modal-btn modal-btn-cancel' onclick='closeEditModal()'>❌ إلغاء</button></div></div>";
   document.body.appendChild(modal);
-  
-  // إغلاق المودال
   modal.onclick = function(e) { if (e.target === modal) closeEditModal(); };
   modal.querySelector(".modal-close").onclick = closeEditModal;
   document.getElementById("editDateInput").addEventListener("change", (e) => loadEditSlotsForDate(e.target.value));
-  
-  // إغلاق بكيبورد
   const onKey = function(e) { if (e.key === "Escape") { closeEditModal(); document.removeEventListener("keydown", onKey); } };
   document.addEventListener("keydown", onKey);
-  
   loadEditSlotsForDate(originalSlot.date);
 }
 
@@ -177,8 +192,7 @@ async function loadEditSlotsForDate(date) {
       });
     } else {
       container.innerHTML = "<p style='color:var(--warning);text-align:center'>لا توجد مواعيد مُضافة</p>";
-      manualSection.style.display = "block";
-      editSession.isManual = true; editSession.newSlotId = null;
+      manualSection.style.display = "block"; editSession.isManual = true; editSession.newSlotId = null;
       const manualInput = document.getElementById("manualTimeInput");
       editSession.manualTime = manualInput ? manualInput.value : "17:00";
       if (manualInput) manualInput.onchange = function(e) { editSession.manualTime = e.target.value; };
@@ -208,57 +222,59 @@ window.saveEditSlot = async () => {
   } catch (err) { alert("❌ خطأ: " + err.message); }
 };
 
-window.closeEditModal = () => { const modal = document.getElementById("editModal"); if (modal) { modal.remove(); document.removeEventListener("keydown", arguments.callee); } editSession = {}; };
+window.closeEditModal = () => { const modal = document.getElementById("editModal"); if (modal) modal.remove(); editSession = {}; };
 
 window.cancelSlot = async (slotId) => { const slot = cache.find(s => s.id === slotId); if (!slot || !slot.booked) return alert("⚠️ اختر ميعاداً محجوزاً"); const patient = slot.patient; if (!confirm("⚠️ تأكيد الإلغاء:\n" + slot.date + " " + slot.time + "\n" + (patient?.name||"") + "\n" + (patient?.phone||"") + "\n\nمتأكد؟")) return; try { await updateDoc(doc(db, "slots", slotId), { booked: false, status: "cancelled", patient: null, paid: 0, cancelledAt: serverTimestamp() }); alert("✅ تم الإلغاء"); } catch (err) { alert("❌ خطأ: " + err.message); } };
+
+// ✅✅✅ RENDER & TOGGLE (Premium UI + Smooth Collapse + Space Reclaim)
 window.renderSlots = function() {
   const grid = $("daysGrid"), totalBox = $("globalTotal");
   let days = {}, total = 0;
   cache.forEach(d => { if (!d.date) return; if (!days[d.date]) days[d.date] = []; days[d.date].push(d); });
   grid.innerHTML = "";
-  
+  grid.style.alignItems = "start"; // يمنع تمدد الصف تلقائياً
+
   Object.keys(days).sort().forEach(date => {
     let dayTotal = 0;
     days[date].forEach(s => { if (s.status === "كشف") { dayTotal += Number(s.paid||0); total += Number(s.paid||0); } });
-    
+
     const col = document.createElement("div");
     col.className = "day-col";
     col.id = "day-" + date;
-    col.style.alignSelf = "start"; // 👈 مهم عشان العمود ياخد ارتفاع محتواه فقط
+    if (collapsedDays[date]) col.classList.add("collapsed");
 
     const slotsHTML = days[date].sort((a,b)=>a.time.localeCompare(b.time)).map(x => {
       const isBooked = x.booked && x.status !== "cancelled";
       const pname = x.patient?.name || "بدون اسم", phone = x.patient?.phone || "";
+      const statusLabel = x.status==="cancelled"?"❌ ملغي":(isBooked?"✅ محجوز":"⭕ متاح");
+      const badgeClass = x.status==="cancelled"?"status-cancel":(isBooked?"status-booked":"status-available");
       const actions = isBooked ? "<div class='action-buttons'><button onclick='event.stopPropagation();openWhatsApp(\"" + phone + "\")'>💬 واتساب</button><button onclick='event.stopPropagation();startEditSlot(\"" + x.id + "\")'>✏️ تعديل</button><button onclick='event.stopPropagation();cancelSlot(\"" + x.id + "\")'>🗑️ إلغاء</button></div>" : "";
-      const cls = x.status==="cancelled"?"cancel":(isBooked?"booked":"");
-      const lbl = x.status==="cancelled"?"❌ ملغي":(isBooked?"✅ محجوز":"⭕ متاح");
-      return "<div class='slot-item " + cls + "' onclick='selectSlot(\"" + x.id + "\")'><b>" + x.time + "</b> - " + pname + " <span style='float:left;font-size:11px;color:var(--text-light)'>(" + lbl + ")</span>" + actions + "</div>";
+      return "<div class='slot-item " + (isBooked?'booked':(x.status==='cancelled'?'cancel':'')) + "' onclick='selectSlot(\"" + x.id + "\")'><span class='slot-time'>" + x.time + "</span><span class='slot-name'>" + pname + "</span><span class='status-badge " + badgeClass + "'>" + statusLabel + "</span>" + actions + "</div>";
     }).join("");
 
-    col.innerHTML = `
-      <div class="day-head" style="cursor:default;">
-        ${date}
-        <span class="del-btn" onclick="event.stopPropagation(); deleteDay('${date}')">×</span>
-        <span class="day-toggle-btn" onclick="event.stopPropagation(); toggleDay('${date}')" style="position:absolute; right:40px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:14px; color:#fff; background:rgba(255,255,255,0.25); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;">▼</span>
-      </div>
-      <div class="day-body" id="body-${date}" style="display:block; transition: all 0.2s ease;">
-        <div class="day-money">💰 ${dayTotal} جنيه</div>
-        ${slotsHTML}
-      </div>
-    `;
+    col.innerHTML = "<div class='day-head'><span>📅 " + date + "</span><div class='head-actions'><span class='head-btn' onclick='event.stopPropagation(); toggleDay(\"" + date + "\")' title='طي/فرد'>" + (collapsedDays[date] ? "▲" : "▼") + "</span><span class='head-btn del' onclick='event.stopPropagation(); deleteDay(\"" + date + "\")' title='حذف اليوم'>✕</span></div></div><div class='day-body' id='body-" + date + "'><div class='day-money'>💰 " + dayTotal + " جنيه</div>" + slotsHTML + "</div>";
     grid.appendChild(col);
   });
   totalBox.innerText = "💰 إجمالي العيادة: " + total + " جنيه";
 };
-  
-window.diagnoseBookingCompatibility = async () => { try { const q = query(slotsRef, orderBy("createdAt", "desc")); const snap = await getDocs(q); const docs = snap.docs; if (docs.length === 0) return alert("⚠️ مفيش مواعيد"); const slot = docs[0].data(); const checks = { "date string": typeof slot.date==="string", "time string": typeof slot.time==="string", "booked boolean": typeof slot.booked==="boolean", "date format": /^\d{4}-\d{2}-\d{2}$/.test(slot.date), "time format": /^\d{2}:\d{2}$/.test(slot.time) }; console.table(checks); alert(Object.values(checks).every(v=>v) ? "✅ متوافق مع booking.html" : "⚠️ فيه مشكلة - راجع الكونسول"); } catch (err) { alert(err.message?.includes("index") ? "⚠️ محتاج إنديكس" : "❌ خطأ: " + err.message); } };
 
+window.toggleDay = function(date) {
+  const col = document.getElementById("day-" + date);
+  if (collapsedDays[date]) {
+    collapsedDays[date] = false; col.classList.remove("collapsed");
+  } else {
+    collapsedDays[date] = true; col.classList.add("collapsed");
+  }
+  renderSlots(); // يعيد الرسم للحفاظ على الحالة والأنيميشن
+};
+
+// Migration Logic
 async function checkAndMigrateManualSlots(snap) { const newSlotsByDate = {}; snap.docChanges().forEach(change => { if (change.type === "added") { const data = change.doc.data(); if (data.date && !data.isManual) { if (!newSlotsByDate[data.date]) newSlotsByDate[data.date] = []; newSlotsByDate[data.date].push({ id: change.doc.id, ...data }); } } }); for (const [date, slots] of Object.entries(newSlotsByDate)) { const manualSlots = cache.filter(s => s.date === date && s.isManual === true && s.booked === true); if (manualSlots.length > 0) { for (const manual of manualSlots) await migrateManualSlot(manual, slots); showAdminNotification("🔄 تم ترحيل " + manualSlots.length + " ميعاد مرن ليوم " + date); } } }
 async function migrateManualSlot(manualSlot, availableSlots) { const manualTime = manualSlot.time; const sorted = [...availableSlots].filter(s => !s.booked).sort((a,b) => Math.abs(timeToMinutes(a.time) - timeToMinutes(manualTime)) - Math.abs(timeToMinutes(b.time) - timeToMinutes(manualTime))); if (sorted.length === 0) return; const targetSlot = sorted[0]; try { await updateDoc(doc(db, "slots", manualSlot.id), { booked: false, status: "migrated", patient: null, migratedTo: targetSlot.id, updatedAt: serverTimestamp() }); await updateDoc(doc(db, "slots", targetSlot.id), { booked: true, status: "booked", patient: manualSlot.patient, paid: manualSlot.paid, notes: manualSlot.notes, migratedFrom: manualSlot.id, updatedAt: serverTimestamp() }); } catch (err) { console.error("Migration Error:", err); } }
 function timeToMinutes(timeStr) { const [h, m] = timeStr.split(":").map(Number); return h * 60 + m; }
 function showAdminNotification(message) { const notif = document.createElement("div"); notif.className = "admin-notif"; notif.innerHTML = "🔔 " + message; document.body.appendChild(notif); setTimeout(() => notif.remove(), 5000); }
 
-// ✅ قائمة "اختر ميعاد متاح" - باستخدام الكاش المحلي
+// Dropdown Booking
 window.loadAvailableSlots = function(date) {
   const select = $("availableSlots"); if (!select || !date) return;
   select.innerHTML = "<option value=''>⏳ جاري التحميل...</option>"; select.disabled = true;
@@ -277,9 +293,7 @@ window.loadAvailableSlots = function(date) {
     select.parentNode.insertBefore(manualWrapper, select.nextSibling);
   }
 };
-
 function ensureUseSlotButton() { if (document.getElementById("useSlotBtn")) return; const select = $("availableSlots"); if (!select) return; const btn = document.createElement("button"); btn.id = "useSlotBtn"; btn.textContent = "✅ استخدام هذا الميعاد"; btn.className = "btn"; btn.style.cssText = "background:linear-gradient(135deg,var(--success),#43a047);margin-top:12px;font-weight:600"; btn.onclick = function() { useSelectedSlot(); }; const manualWrapper = document.getElementById("manualTimeWrapper"); if (manualWrapper) { manualWrapper.parentNode.insertBefore(btn, manualWrapper.nextSibling); } else { select.parentNode.insertBefore(btn, select.nextSibling); } }
-
 window.useSelectedSlot = function() {
   const select = $("availableSlots"), slotId = select?.value, date = $("requestDate")?.value;
   if (!slotId || !date) return alert("⚠️ اختاري تاريخاً وميعاداً أولاً");
@@ -293,53 +307,11 @@ window.useSelectedSlot = function() {
     updateDoc(doc(db, "slots", slotId), { booked: true, status: status, patient: { name: name, phone: phone, notes: notes }, paid: paid, isManual: false, bookedBy: auth.currentUser?.uid || "admin", updatedAt: serverTimestamp() }).then(function() { alert("✅ تم الحجز بنجاح:\n📅 " + date + " | 🕒 " + slot.time); resetBookingForm(); }).catch(function(err) { console.error("❌ Slot Booking Error:", err); alert("❌ حدث خطأ أثناء الحجز: " + err.message); });
   }
 };
-
 function resetBookingForm() { $("pName").value = ""; $("pPhone").value = ""; $("pNotes").value = ""; $("pPaid").value = ""; const select = $("availableSlots"); select.innerHTML = "<option value=''>اختر ميعاد متاح</option>"; const manualWrapper = document.getElementById("manualTimeWrapper"); if (manualWrapper) manualWrapper.remove(); const useBtn = document.getElementById("useSlotBtn"); if (useBtn) useBtn.remove(); renderSlots(); }
-
 document.addEventListener("DOMContentLoaded", function() { ensureUseSlotButton(); });
 const originalDateChange = $("requestDate")?.onchange; $("requestDate")?.addEventListener("change", function(e) { if (originalDateChange) originalDateChange(e); setTimeout(function() { ensureUseSlotButton(); }, 150); });
-
-console.log("✅ Admin Loaded - System Colors + Closable Modal");
-
-  // ✅ دالة طي/فرد عمود اليوم
-window.toggleDayColumn = function(btn) {
-  const col = btn.closest('.day-col');
-  const body = col.querySelector('.day-body');
-  
-  if (body.style.display === 'none') {
-    body.style.display = 'block';
-    btn.textContent = '▼';
-    btn.title = 'تصغير اليوم';
-  } else {
-    body.style.display = 'none';
-    btn.textContent = '▶';
-    btn.title = 'توسيع اليوم';
-  }
-};
-
-  // ✅ دالة طي/فرد عمود اليوم (بتقلص المساحة فعلياً)
-window.toggleDay = function(date) {
-  const col = document.getElementById("day-" + date);
-  const body = document.getElementById("body-" + date);
-  const btn = col.querySelector(".day-toggle-btn");
-  
-  if (body.style.display === "none") {
-    // 🟢 فرد العمود
-    body.style.display = "block";
-    col.style.padding = ""; col.style.border = ""; col.style.boxShadow = ""; col.style.background = "";
-    btn.textContent = "▼";
-    btn.title = "تصغير اليوم";
-  } else {
-    // 🔴 طي العمود (إزالة المساحة الفارغة)
-    body.style.display = "none";
-    col.style.padding = "0";
-    col.style.border = "none";
-    col.style.boxShadow = "none";
-    col.style.background = "transparent";
-    btn.textContent = "▲";
-    btn.title = "توسيع اليوم";
-  }
-};
+window.diagnoseBookingCompatibility = async () => { try { const q = query(slotsRef, orderBy("createdAt", "desc")); const snap = await getDocs(q); const docs = snap.docs; if (docs.length === 0) return alert("⚠️ مفيش مواعيد"); const slot = docs[0].data(); const checks = { "date string": typeof slot.date==="string", "time string": typeof slot.time==="string", "booked boolean": typeof slot.booked==="boolean", "date format": /^\d{4}-\d{2}-\d{2}$/.test(slot.date), "time format": /^\d{2}:\d{2}$/.test(slot.time) }; console.table(checks); alert(Object.values(checks).every(v=>v) ? "✅ متوافق مع booking.html" : "⚠️ فيه مشكلة - راجع الكونسول"); } catch (err) { alert(err.message?.includes("index") ? "⚠️ محتاج إنديكس" : "❌ خطأ: " + err.message); } };
+console.log("✅ Admin Loaded - Premium UI + Smooth Collapsible Grid");
 </script>
 </body>
 </html>
