@@ -8,8 +8,6 @@
 :root{--main:#1a237e;--main-light:#3949ab;--bg:#f4f7f6;--white:#fff;--text:#333;--text-light:#64748b;--danger:#ef4444;--success:#22c55e;--warning:#f59e0b;--whatsapp:#25d366;--radius:14px;--shadow:0 4px 16px rgba(0,0,0,0.06)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);padding:20px;margin-right:240px;line-height:1.6}
-
-/* Sidebar */
 .side-nav{position:fixed;top:0;right:0;width:240px;height:100vh;background:linear-gradient(180deg,var(--main),var(--main-light));padding:25px 15px;display:flex;flex-direction:column;gap:10px;z-index:999;box-shadow:-5px 0 20px rgba(0,0,0,0.2)}
 .side-nav .logo{color:#fff;text-align:center;margin:10px 0 25px;font-size:17px;font-weight:bold;line-height:1.4}
 .side-nav a.active{background:var(--white);color:var(--main);font-weight:bold}
@@ -18,19 +16,13 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
 .side-nav a:hover{background:rgba(255,255,255,0.15)}
 .side-nav .logout-btn{margin-top:auto;background:#ef4444;color:#fff;border:none;padding:12px;border-radius:10px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px;transition:0.2s}
 .side-nav .logout-btn:hover{background:#dc2626}
-
-/* Main Content */
 .main-content{padding:25px;width:100%}
 .page-header{background:linear-gradient(180deg,#1e3a8a,#1d4ed8);color:#fff;padding:20px 25px;border-radius:var(--radius);margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
 .page-header h2{font-size:18px;display:flex;align-items:center;gap:8px}
-
-/* Search & Filters */
 .search-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:25px;background:var(--white);padding:15px;border-radius:var(--radius);box-shadow:var(--shadow)}
 .search-bar input,.search-bar select{padding:10px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;min-width:200px}
 .search-bar input:focus,.search-bar select:focus{border-color:var(--main);outline:none;box-shadow:0 0 0 3px rgba(26,35,126,0.15)}
 .search-bar .btn{padding:10px 20px}
-
-/* Patients Grid */
 .patients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
 .patient-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:0.3s;position:relative}
 .patient-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,0.12)}
@@ -49,8 +41,6 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
 .patient-actions .btn-edit{background:var(--warning);color:#000}
 .patient-actions .btn-delete{background:var(--danger);color:#fff}
 .patient-actions button:hover{transform:translateY(-2px);filter:brightness(0.95)}
-
-/* Patient Detail Modal */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(26,35,126,0.85);z-index:10000;display:flex;justify-content:center;align-items:center;padding:15px}
 .modal-content{background:var(--white);width:100%;max-width:600px;border-radius:15px;padding:25px;max-height:90vh;overflow-y:auto;position:relative}
 .modal-close{position:absolute;top:12px;left:12px;width:30px;height:30px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -73,49 +63,28 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
 .modal-btn-cancel{background:#f1f5f9;color:var(--text)}
 .modal-btn-cancel:hover{background:#e2e8f0}
 .modal-btn-whatsapp{background:var(--whatsapp);color:#fff}
-
-/* Session Form */
 .add-session-form{background:#f8fafc;padding:15px;border-radius:10px;margin-top:10px}
 .add-session-form input,.add-session-form textarea{margin-bottom:8px}
 .add-session-form .btn{width:100%;margin-top:5px}
-
-/* Empty & Loading */
 .empty-state{text-align:center;padding:50px 20px;color:var(--text-light)}
 .empty-state .icon{font-size:48px;margin-bottom:15px}
 .loading-state{text-align:center;padding:30px;color:var(--main);font-weight:500}
-
-/* Toast */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:14px 24px;border-radius:12px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,0.2);z-index:10001;animation:slideIn 0.3s ease, fadeOut 0.3s ease 3.7s forwards}
 .toast.error{background:var(--danger)}
 @keyframes slideIn{from{transform:translateX(-50%) translateY(100px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
 @keyframes fadeOut{from{opacity:1}to{opacity:0}}
-
-/* Responsive */
-@media(max-width:900px){
-  body{margin-right:0;padding:15px}
-  .side-nav{right:-240px;transition:right 0.3s}
-  .side-nav.open{right:0}
-  .main-content{margin-right:0}
-  .menu-toggle{display:flex!important}
-  .patients-grid{grid-template-columns:1fr}
-  .search-bar{flex-direction:column}
-  .search-bar input,.search-bar select{width:100%}
-}
+@media(max-width:900px){body{margin-right:0;padding:15px}.side-nav{right:-240px;transition:right 0.3s}.side-nav.open{right:0}.main-content{margin-right:0}.menu-toggle{display:flex!important}.patients-grid{grid-template-columns:1fr}.search-bar{flex-direction:column}.search-bar input,.search-bar select{width:100%}}
 .menu-toggle{display:none;position:fixed;top:15px;right:15px;z-index:1000;background:var(--main);color:#fff;border:none;width:44px;height:44px;border-radius:10px;font-size:20px;cursor:pointer}
-
-/* Badges */
 .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500}
 .badge-new{background:#dbeafe;color:#1e40af}
 .badge-regular{background:#dcfce7;color:#166534}
 .badge-vip{background:#fef3c7;color:#92400e}
+.loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--main);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-left:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
-<!-- Mobile Menu -->
 <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-
-<!-- Sidebar -->
 <div class="side-nav" id="sideNav">
   <h2 class="logo">🏥 عيادة الدكتور</h2>
   <a href="admin.html">🏠 لوحة المواعيد</a>
@@ -123,10 +92,7 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
   <a href="patients.html" class="active">📋 ملفات المرضى</a>
   <button class="logout-btn" onclick="logout()">🚪 خروج</button>
 </div>
-
-<!-- Main Content -->
 <div class="main-content">
-  
   <div class="page-header">
     <h2>📋 ملفات المرضى</h2>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -134,43 +100,30 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
       <button class="btn" style="background:#22c55e" onclick="exportPatients()">📥 تصدير Excel</button>
     </div>
   </div>
-
-  <!-- Search & Filters -->
   <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="🔍 بحث باسم المريض أو الهاتف..." onkeyup="filterPatients()">
-    <select id="filterType" onchange="filterPatients()">
+    <input type="text" id="searchInput" placeholder="🔍 بحث باسم المريض أو الهاتف..." onkeyup="debouncedFilter()">
+    <select id="filterType" onchange="applyOnlineFilter()">
       <option value="all">📋 الكل</option>
       <option value="new">✨ مرضى جدد</option>
       <option value="regular">🔄 مرضى منتظمين</option>
       <option value="vip">⭐ مرضى مميزين</option>
     </select>
-    <select id="sortBy" onchange="filterPatients()">
+    <select id="sortBy" onchange="applyOnlineFilter()">
       <option value="newest">📅 الأحدث أولاً</option>
       <option value="oldest">📅 الأقدم أولاً</option>
       <option value="name">🔤 حسب الاسم</option>
     </select>
-    <button class="btn" onclick="loadPatients()">🔄 تحديث</button>
+    <button class="btn" onclick="applyOnlineFilter()">🔄 تطبيق</button>
   </div>
-
-  <!-- Patients List -->
   <div id="patientsList" class="patients-grid">
-    <div class="empty-state">
-      <div class="icon">📭</div>
-      <p>لا توجد ملفات مرضى بعد</p>
-      <p style="font-size:13px;color:var(--text-light);margin-top:5px">سيظهر هنا المرضى بعد حجز أول موعد</p>
-    </div>
+    <div class="loading-state">⏳ جاري تحميل ملفات المرضى...</div>
   </div>
-
 </div>
-
-<!-- Patient Detail Modal -->
 <div id="patientModal" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <button class="modal-close" onclick="closeModal()">✕</button>
     <h3 class="modal-title">👤 ملف المريض</h3>
-    
     <input type="hidden" id="modalPatientId">
-    
     <div class="modal-section">
       <h4>📛 البيانات الأساسية</h4>
       <input type="text" id="modalName" placeholder="اسم المريض">
@@ -182,16 +135,13 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
         <option value="vip">⭐ مريض مميز</option>
       </select>
     </div>
-    
     <div class="modal-section">
       <h4>📝 ملاحظات عامة</h4>
       <textarea id="modalNotes" placeholder="ملاحظات هامة عن المريض..."></textarea>
     </div>
-    
     <div class="modal-section">
       <h4>📅 سجل الجلسات <span id="sessionsCount" style="font-size:11px;color:var(--text-light)">(0)</span></h4>
       <div id="sessionsList" class="sessions-list"></div>
-      
       <div class="add-session-form">
         <h4 style="margin:0 0 10px;font-size:13px">➕ إضافة جلسة جديدة</h4>
         <input type="date" id="newSessionDate">
@@ -201,7 +151,6 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
         <button class="btn btn-success" onclick="addSession()">💾 حفظ الجلسة</button>
       </div>
     </div>
-    
     <div class="modal-actions">
       <button class="modal-btn modal-btn-whatsapp" onclick="openWhatsApp()">💬 واتساب</button>
       <button class="modal-btn modal-btn-primary" onclick="savePatient()">💾 حفظ التعديلات</button>
@@ -211,12 +160,10 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
 </div>
 
 <script type="module">
-// ✅ Firebase Imports v10.12.2
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// ✅ Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -225,18 +172,15 @@ const firebaseConfig = {
   messagingSenderId: "123456789",
   appId: "1:123456789:web:abcdef123456"
 };
-
 const ADMIN_EMAIL = "admin@clinic.com";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const patientsRef = collection(db, "patients");
-const slotsRef = collection(db, "slots");
-
 let patientsCache = [];
 let $ = (id) => document.getElementById(id);
+let filterTimeout = null;
 
-// ✅ Auth Check
 onAuthStateChanged(auth, (user) => {
   if (!user || user.email !== ADMIN_EMAIL) {
     alert("⚠️ يرجى تسجيل الدخول بحساب الأدمن");
@@ -246,37 +190,48 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// ✅ Menu & Logout
 window.toggleMenu = () => $("sideNav").classList.toggle("open");
 window.logout = () => signOut(auth).then(() => location.href = "login.html");
 
-// ✅ Load Patients
+// ✅ تحميل المرضى - مع إصلاح اسم الحقل
 async function loadPatients() {
   try {
-    $("patientsList").innerHTML = '<div class="loading-state">⏳ جاري تحميل ملفات المرضى...</div>';
-    const q = query(patientsRef, orderBy("created_at", "desc"));
+    $("patientsList").innerHTML = '<div class="loading-state">⏳ جاري التحميل...</div>';
+    // ✅ استخدام createdAt (الاسم الصحيح اللي فايربيس بيستخدمه)
+    const q = query(patientsRef, orderBy("createdAt", "desc"));
     const snap = await getDocs(q);
     patientsCache = [];
-    snap.forEach(d => patientsCache.push({ id: d.id, ...d.data() }));
+    snap.forEach(d => {
+      const data = d.data();
+      // ✅ تصنيف أوتوماتيك بناءً على عدد الجلسات
+      const sessions = data.sessions || [];
+      if (!data.type) {
+        if (sessions.length >= 5) data.type = "vip";
+        else if (sessions.length >= 2) data.type = "regular";
+        else data.type = "new";
+      }
+      patientsCache.push({ id: d.id, ...data });
+    });
     renderPatients(patientsCache);
     $("patientsCount").textContent = `${patientsCache.length} مريض`;
   } catch (err) {
-    console.error("❌ Load Patients Error:", err);
-    $("patientsList").innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>فشل تحميل البيانات</p><small>${err.message}</small></div>`;
-    showToast("❌ فشل تحميل المرضى", "error");
+    console.error("❌ Load Error:", err);
+    $("patientsList").innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>فشل التحميل</p><small>${err.message}</small></div>`;
   }
 }
 
-// ✅ Render Patients
+// ✅ عرض المرضى
 function renderPatients(list) {
   const container = $("patientsList");
   if (!list.length) {
-    container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد ملفات مرضى بعد</p></div>';
+    container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد ملفات مرضى</p></div>';
     return;
   }
   container.innerHTML = list.map(p => {
     const sessions = p.sessions || [];
-    const badge = p.type === "vip" ? '<span class="badge badge-vip">⭐ مميز</span>' : p.type === "regular" ? '<span class="badge badge-regular">🔄 منتظم</span>' : '<span class="badge badge-new">✨ جديد</span>';
+    const badge = p.type === "vip" ? '<span class="badge badge-vip">⭐ مميز</span>' : 
+                  p.type === "regular" ? '<span class="badge badge-regular">🔄 منتظم</span>' : 
+                  '<span class="badge badge-new">✨ جديد</span>';
     const lastVisit = sessions.length ? sessions[sessions.length-1].date : "لا يوجد";
     return `
       <div class="patient-card">
@@ -300,76 +255,113 @@ function renderPatients(list) {
   }).join("");
 }
 
-// ✅ Filter & Search
-window.filterPatients = function() {
-  const search = $("searchInput").value.toLowerCase();
+// ✅ فلتر أونلاين من فايربيس (مباشر)
+window.applyOnlineFilter = async function() {
+  const search = $("searchInput").value.trim().toLowerCase();
   const type = $("filterType").value;
   const sort = $("sortBy").value;
   
-  let filtered = patientsCache.filter(p => {
-    const matchSearch = !search || (p.name?.toLowerCase().includes(search)) || (p.phone?.includes(search));
-    const matchType = type === "all" || p.type === type;
-    return matchSearch && matchType;
-  });
+  $("patientsList").innerHTML = '<div class="loading-state">🔄 جاري البحث... <span class="loading-spinner"></span></div>';
   
-  if (sort === "newest") filtered.sort((a,b) => (b.created_at?.seconds||0) - (a.created_at?.seconds||0));
-  else if (sort === "oldest") filtered.sort((a,b) => (a.created_at?.seconds||0) - (b.created_at?.seconds||0));
-  else if (sort === "name") filtered.sort((a,b) => (a.name||"").localeCompare(b.name||""));
-  
-  renderPatients(filtered);
-}
+  try {
+    let q;
+    
+    // ✅ بناء الكويري حسب الفلتر
+    if (type !== "all" && sort === "newest") {
+      q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "desc"));
+    } else if (type !== "all" && sort === "oldest") {
+      q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "asc"));
+    } else if (type === "all" && sort === "newest") {
+      q = query(patientsRef, orderBy("createdAt", "desc"));
+    } else if (type === "all" && sort === "oldest") {
+      q = query(patientsRef, orderBy("createdAt", "asc"));
+    } else {
+      // للفرز بالاسم أو عند وجود بحث، نجيب كل البيانات ونفلتر محلياً
+      q = query(patientsRef, orderBy("createdAt", "desc"));
+    }
+    
+    const snap = await getDocs(q);
+    let results = [];
+    snap.forEach(d => {
+      const data = d.data();
+      const sessions = data.sessions || [];
+      if (!data.type) {
+        if (sessions.length >= 5) data.type = "vip";
+        else if (sessions.length >= 2) data.type = "regular";
+        else data.type = "new";
+      }
+      results.push({ id: d.id, ...data });
+    });
+    
+    // ✅ تطبيق البحث المحلي (لأن فايربيس مش بيدعم search على نص)
+    if (search) {
+      results = results.filter(p => 
+        (p.name?.toLowerCase().includes(search)) || 
+        (p.phone?.includes(search))
+      );
+    }
+    
+    // ✅ تطبيق الفرز بالاسم لو مختار
+    if (sort === "name") {
+      results.sort((a,b) => (a.name||"").localeCompare(b.name||""));
+    }
+    
+    renderPatients(results);
+    $("patientsCount").textContent = `${results.length} مريض`;
+    
+  } catch (err) {
+    console.error("❌ Filter Error:", err);
+    showToast("❌ فشل تطبيق الفلتر", "error");
+    loadPatients(); // رجع للتحميل العادي
+  }
+};
 
-// ✅ Open Patient Modal
+// ✅ ديبنس للبحث (عشان مش يطلب من فايربيس مع كل حرف)
+window.debouncedFilter = function() {
+  if (filterTimeout) clearTimeout(filterTimeout);
+  filterTimeout = setTimeout(() => {
+    applyOnlineFilter();
+  }, 500); // انتظر نصف ثانية بعد آخر كتابة
+};
+
+// ✅ فتح ملف المريض
 window.openPatientModal = async function(id) {
   try {
     const snap = await getDoc(doc(db, "patients", id));
     if (!snap.exists()) return showToast("❌ المريض غير موجود", "error");
     const p = snap.data();
-    
     $("modalPatientId").value = id;
     $("modalName").value = p.name || "";
     $("modalPhone").value = p.phone || "";
     $("modalAge").value = p.age || "";
     $("modalType").value = p.type || "new";
     $("modalNotes").value = p.notes || "";
-    
-    // Render Sessions
     const sessions = p.sessions || [];
     $("sessionsCount").textContent = `(${sessions.length})`;
     const sessionsList = $("sessionsList");
     if (!sessions.length) {
-      sessionsList.innerHTML = '<div style="padding:15px;text-align:center;color:var(--text-light);font-size:13px">لا توجد جلسات مسجلة</div>';
+      sessionsList.innerHTML = '<div style="padding:15px;text-align:center;color:var(--text-light);font-size:13px">لا توجد جلسات</div>';
     } else {
       sessionsList.innerHTML = sessions.slice().reverse().map((s, idx) => `
         <div class="session-item">
-          <div>
-            <strong>📅 ${s.date || "-"} | ⏰ ${s.time || "-"}</strong>
-            ${s.note ? `<br><span style="color:var(--text-light);font-size:12px">${s.note}</span>` : ""}
-            ${s.paid ? `<br><span style="color:var(--success);font-size:12px">💰 ${s.paid} ج.م</span>` : ""}
-          </div>
-          <div class="actions">
-            <button onclick="deleteSession('${id}', ${idx})">🗑️</button>
-          </div>
+          <div><strong>📅 ${s.date||"-"} | ⏰ ${s.time||"-"}</strong>${s.note?`<br><span style="color:var(--text-light);font-size:12px">${s.note}</span>`:""}${s.paid?`<br><span style="color:var(--success);font-size:12px">💰 ${s.paid} ج.م</span>`:""}</div>
+          <div class="actions"><button onclick="deleteSession('${id}', ${idx})">🗑️</button></div>
         </div>`).join("");
     }
-    
-    // Set defaults for new session
     $("newSessionDate").value = new Date().toISOString().split("T")[0];
     $("newSessionTime").value = "";
     $("newSessionNote").value = "";
     $("newSessionPaid").value = "";
-    
     $("patientModal").style.display = "flex";
   } catch (err) {
-    console.error("❌ Open Modal Error:", err);
+    console.error("❌ Modal Error:", err);
     showToast("❌ فشل فتح الملف", "error");
   }
 };
 
-// ✅ Close Modal
 window.closeModal = function() { $("patientModal").style.display = "none"; };
 
-// ✅ Save Patient
+// ✅ حفظ تعديلات المريض
 window.savePatient = async function() {
   const id = $("modalPatientId").value;
   if (!id) return;
@@ -382,45 +374,39 @@ window.savePatient = async function() {
       notes: $("modalNotes").value.trim(),
       updated_at: serverTimestamp()
     });
-    showToast("✅ تم حفظ التعديلات");
+    showToast("✅ تم الحفظ");
     closeModal();
-    loadPatients();
+    applyOnlineFilter(); // تحديث القائمة بالفلتر الحالي
   } catch (err) {
     console.error("❌ Save Error:", err);
     showToast("❌ فشل الحفظ", "error");
   }
 };
 
-// ✅ Add Session
+// ✅ إضافة جلسة
 window.addSession = async function() {
   const id = $("modalPatientId").value;
   const date = $("newSessionDate").value;
   const time = $("newSessionTime").value;
   const note = $("newSessionNote").value.trim();
   const paid = $("newSessionPaid").value ? Number($("newSessionPaid").value) : null;
-  
   if (!date) return showToast("⚠️ اختر تاريخ الجلسة", "error");
-  
   try {
     const patientRef = doc(db, "patients", id);
     const snap = await getDoc(patientRef);
     const p = snap.data();
     const sessions = p.sessions || [];
-    
     sessions.push({ date, time, note, paid, added_at: serverTimestamp() });
-    
     await updateDoc(patientRef, { sessions, updated_at: serverTimestamp() });
     showToast("✅ تم إضافة الجلسة");
-    
-    // Refresh modal
     openPatientModal(id);
   } catch (err) {
     console.error("❌ Add Session Error:", err);
-    showToast("❌ فشل إضافة الجلسة", "error");
+    showToast("❌ فشل الإضافة", "error");
   }
 };
 
-// ✅ Delete Session
+// ✅ حذف جلسة
 window.deleteSession = async function(patientId, sessionIndex) {
   if (!confirm("⚠️ حذف هذه الجلسة؟")) return;
   try {
@@ -430,78 +416,77 @@ window.deleteSession = async function(patientId, sessionIndex) {
     const sessions = p.sessions || [];
     sessions.splice(sessionIndex, 1);
     await updateDoc(patientRef, { sessions, updated_at: serverTimestamp() });
-    showToast("✅ تم حذف الجلسة");
+    showToast("✅ تم الحذف");
     openPatientModal(patientId);
   } catch (err) {
     showToast("❌ فشل الحذف", "error");
   }
 };
 
-// ✅ Quick Edit (from card)
-window.quickEdit = async function(id) {
-  openPatientModal(id);
-};
+window.quickEdit = async function(id) { openPatientModal(id); };
 
-// ✅ Delete Patient
+// ✅ حذف مريض
 window.deletePatient = async function(id) {
-  if (!confirm("⚠️ هل أنت متأكد من حذف ملف هذا المريض نهائياً؟\nهذا الإجراء لا يمكن التراجع عنه!")) return;
+  if (!confirm("⚠️ حذف ملف المريض نهائياً؟")) return;
   try {
     await deleteDoc(doc(db, "patients", id));
-    showToast("✅ تم حذف ملف المريض");
-    loadPatients();
+    showToast("✅ تم الحذف");
+    applyOnlineFilter();
   } catch (err) {
     console.error("❌ Delete Error:", err);
     showToast("❌ فشل الحذف", "error");
   }
 };
 
-// ✅ Open WhatsApp
+// ✅ واتساب
 window.openWhatsApp = function(phone) {
-  if (!phone) return showToast("⚠️ لا يوجد رقم هاتف", "error");
-  let wa = phone.replace(/^0+/, "").replace(/\s+/g, "");
+  if (!phone) return showToast("⚠️ لا يوجد رقم", "error");
+  let wa = phone.replace(/^0+/,"").replace(/\s+/g,"");
   if (!wa.startsWith("20")) wa = "20" + wa;
-  const msg = encodeURIComponent(`مرحباً دكتور، بخصوص موعد المريض...`);
-  window.open(`https://wa.me/${wa}?text=${msg}`, "_blank");
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent("مرحباً دكتور، بخصوص موعد المريض...")}`, "_blank");
 };
 
-// ✅ Export to Excel (CSV)
-window.exportPatients = function() {
-  if (!patientsCache.length) return showToast("⚠️ لا توجد بيانات للتصدير", "error");
-  
-  const headers = ["الاسم", "الهاتف", "العمر", "النوع", "عدد الجلسات", "آخر زيارة", "ملاحظات"];
-  const rows = patientsCache.map(p => {
-    const sessions = p.sessions || [];
-    const lastVisit = sessions.length ? sessions[sessions.length-1].date : "-";
-    return [
-      p.name || "", p.phone || "", p.age || "", p.type || "new",
-      sessions.length, lastVisit, (p.notes || "").replace(/,/g, ";")
-    ];
-  });
-  
-  let csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `patients_${new Date().toISOString().split("T")[0]}.csv`;
-  link.click();
-  showToast("✅ تم تصدير الملف بنجاح");
+// ✅ تصدير Excel
+window.exportPatients = async function() {
+  try {
+    $("patientsList").innerHTML = '<div class="loading-state">📥 جاري التصدير...</div>';
+    const snap = await getDocs(query(patientsRef, orderBy("createdAt", "desc")));
+    const rows = [];
+    snap.forEach(d => {
+      const p = d.data();
+      const sessions = p.sessions || [];
+      rows.push([
+        p.name || "", p.phone || "", p.age || "", p.type || "new",
+        sessions.length, sessions[sessions.length-1]?.date || "-", (p.notes||"").replace(/,/g,";")
+      ]);
+    });
+    const headers = ["الاسم","الهاتف","العمر","النوع","الجلسات","آخر زيارة","ملاحظات"];
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `patients_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    showToast("✅ تم التصدير");
+    applyOnlineFilter();
+  } catch (err) {
+    console.error("❌ Export Error:", err);
+    showToast("❌ فشل التصدير", "error");
+  }
 };
 
 // ✅ Toast
-function showToast(msg, type = "success") {
+function showToast(msg, type="success") {
   const toast = document.createElement("div");
-  toast.className = `toast ${type === "error" ? "error" : ""}`;
+  toast.className = `toast ${type==="error"?"error":""}`;
   toast.textContent = msg;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 4000);
 }
 
-// ✅ Close modal on outside click
-$("patientModal")?.addEventListener("click", (e) => {
-  if (e.target === $("patientModal")) closeModal();
-});
+$("patientModal")?.addEventListener("click", (e) => { if (e.target === $("patientModal")) closeModal(); });
 
-console.log("✅ Patients Page Loaded - Firebase Connected");
+console.log("✅ Patients Page Loaded - Online Filter Enabled");
 </script>
 </body>
 </html>
