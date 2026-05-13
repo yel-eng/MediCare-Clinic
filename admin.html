@@ -233,11 +233,30 @@ window.confirmAssignRequest = async function() {
 
 window.deleteRequest = async function(requestId) { if (!confirm("تجاهل هذا الطلب؟")) return; try { await updateDoc(doc(db, "requests", requestId), { status: "dismissed", updatedAt: serverTimestamp() }); showAdminNotification("✅ تم تجاهل الطلب"); loadPendingRequests(); } catch (err) { alert("❌ فشل: " + err.message); } };
 
+// ✅ onSnapshot محدث لضمان نوع البيانات الصحيح
 unsubscribeSlots = onSnapshot(slotsRef, (snap) => {
-  cache = []; snap.forEach(d => cache.push({ id: d.id, ...d.data() }));
-  const preserved = {}; Object.keys(collapsedDays).forEach(date => { if (cache.some(s => s.date === date)) preserved[date] = collapsedDays[date]; });
-  renderSlots(preserved); loadPendingRequests();
-}, (error) => { console.error("❌ Firestore Error:", error); const grid = $("daysGrid"); if(grid) grid.innerHTML = `<div class="empty-state" style="color:var(--danger);">⚠️ فشل تحميل البيانات<br><small>${error.message}</small></div>`; });
+  cache = []; 
+  snap.forEach(d => {
+    const data = d.data();
+    // ✅ ضمان أن booked دائمًا boolean وstatus له قيمة افتراضية
+    cache.push({ 
+      id: d.id, 
+      ...data,
+      booked: data.booked === true,
+      status: data.status || (data.booked ? "booked" : "available")
+    });
+  });
+  const preserved = {}; 
+  Object.keys(collapsedDays).forEach(date => { 
+    if (cache.some(s => s.date === date)) preserved[date] = collapsedDays[date]; 
+  });
+  renderSlots(preserved); 
+  loadPendingRequests();
+}, (error) => { 
+  console.error("❌ Firestore Error:", error); 
+  const grid = $("daysGrid"); 
+  if(grid) grid.innerHTML = `<div class="empty-state" style="color:var(--danger);">⚠️ فشل تحميل البيانات<br><small>${error.message}</small></div>`; 
+});
 
 window.renderSlots = function(preserved = null) {
   const grid = $("daysGrid"); if (!grid) return;
@@ -268,7 +287,7 @@ window.renderSlots = function(preserved = null) {
   } catch (err) { console.error("❌ Render Error:", err); grid.innerHTML = `<div class="empty-state" style="color:var(--danger);">⚠️ خطأ في العرض: ${err.message}</div>`; }
 };
 
-window.forceRefresh = function() { const grid = $("daysGrid"); if(grid) grid.innerHTML = `<div class="loading-state">🔄 جاري التحديث...</div>`; if (unsubscribeSlots) unsubscribeSlots(); setTimeout(() => { unsubscribeSlots = onSnapshot(slotsRef, (snap) => { cache = []; snap.forEach(d => cache.push({ id: d.id, ...d.data() })); renderSlots(); loadPendingRequests(); }, (err) => { if(grid) grid.innerHTML = `<div class="empty-state" style="color:var(--danger);">⚠️ فشل: ${err.message}</div>`; }); }, 500); };
+window.forceRefresh = function() { const grid = $("daysGrid"); if(grid) grid.innerHTML = `<div class="loading-state">🔄 جاري التحديث...</div>`; if (unsubscribeSlots) unsubscribeSlots(); setTimeout(() => { unsubscribeSlots = onSnapshot(slotsRef, (snap) => { cache = []; snap.forEach(d => cache.push({ id: d.id, ...d.data(), booked: d.data().booked === true, status: d.data().status || (d.data().booked ? "booked" : "available") })); renderSlots(); loadPendingRequests(); }, (err) => { if(grid) grid.innerHTML = `<div class="empty-state" style="color:var(--danger);">⚠️ فشل: ${err.message}</div>`; }); }, 500); };
 window.toggleDay = function(date) { collapsedDays[date] = !collapsedDays[date]; renderSlots(); };
 window.cancelSlot = async (slotId) => { const slot = cache.find(s => s.id === slotId); if (!slot || !slot.booked) return alert("اختر ميعاداً محجوزاً"); if (!confirm("تأكيد الإلغاء؟")) return; try { await updateDoc(doc(db, "slots", slotId), { booked: false, status: "cancelled", patient: null, paid: 0, cancelledAt: serverTimestamp() }); showAdminNotification("✅ تم الإلغاء"); } catch (err) { alert("❌ خطأ: " + err.message); } };
 window.addSlotToDate = async (date) => { const time = prompt("أدخل وقت الميعاد الجديد (HH:MM):"); if (!time) return; if (!/^\d{2}:\d{2}$/.test(time)) return alert("⚠️ الصيغة غير صحيحة"); if (slotExists(date, time)) return alert("⚠️ هذا الوقت موجود"); try { await addDoc(slotsRef, { date, time, booked: false, status: "available", patient: null, paid: 0, notes: "يدوي", isManual: true, createdAt: serverTimestamp() }); showAdminNotification("✅ تم إضافة " + time); } catch (err) { alert("❌ فشل: " + err.message); } };
