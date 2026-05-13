@@ -443,7 +443,57 @@ window.generateQR = () => { const qrImg = $("qrImg"); if (!activeId) return aler
 
 window.openWhatsApp = (phone) => { if (!phone) return alert("⚠️ لا يوجد رقم"); let wa = phone.replace(/^0+/,"").replace(/\s+/g,""); if (!wa.startsWith("20")) wa = "20" + wa; window.open("https://wa.me/" + wa + "?text=" + encodeURIComponent("مرحباً، بخصوص موعد المريض..."), "_blank"); };
 
-window.savePatientFromSlot = async (slotId) => { const slot = cache.find(s => s.id === slotId); if (!slot || !slot.patient?.phone) return alert("⚠️ لا توجد بيانات"); const phone = cleanPhone(slot.patient.phone); try { const q = query(patientsRef, where("phone", "==", phone)); const snap = await getDocs(q); let patientId; if (snap.empty) { const newPatient = { name: slot.patient.name, phone, created_at: serverTimestamp(), updated_at: serverTimestamp(), sessions: [{ date: slot.date, time: slot.time, notes: slot.patient.notes || "", slot_id: slotId }] }; const docRef = await addDoc(patientsRef, newPatient); patientId = docRef.id; showAdminNotification("✅ تم إنشاء ملف لـ " + slot.patient.name); } else { patientId = snap.docs[0].id; await updateDoc(doc(db, "patients", patientId), { sessions: arrayUnion({ date: slot.date, time: slot.time, notes: slot.patient.notes || "", slot_id: slotId }), updated_at: serverTimestamp() }); showAdminNotification("✅ أضيفت جلسة لـ " + slot.patient.name); } await updateDoc(doc(db, "slots", slotId), { patient_id: patientId, is_saved_patient: true }); renderSlots(); } catch (err) { console.error("❌ Save patient error:", err); alert("❌ خطأ: " + err.message); } };
+// ✅ دالة savePatientFromSlot مُحسّنة مع رابط توجيه صحيح
+window.savePatientFromSlot = async (slotId) => { 
+  const slot = cache.find(s => s.id === slotId); 
+  if (!slot || !slot.patient?.phone) return alert("⚠️ لا توجد بيانات"); 
+  
+  const phone = cleanPhone(slot.patient.phone); 
+  
+  try { 
+    const q = query(patientsRef, where("phone", "==", phone)); 
+    const snap = await getDocs(q); 
+    let patientId; 
+    
+    if (snap.empty) { 
+      // إنشاء مريض جديد
+      const newPatient = { 
+        name: slot.patient.name, 
+        phone, 
+        created_at: serverTimestamp(), 
+        updated_at: serverTimestamp(), 
+        sessions: [{ date: slot.date, time: slot.time, notes: slot.patient.notes || "", slot_id: slotId }] 
+      }; 
+      const docRef = await addDoc(patientsRef, newPatient); 
+      patientId = docRef.id; 
+      showAdminNotification("✅ تم إنشاء ملف لـ " + slot.patient.name); 
+    } else { 
+      // تحديث مريض موجود
+      patientId = snap.docs[0].id; 
+      await updateDoc(doc(db, "patients", patientId), { 
+        sessions: arrayUnion({ date: slot.date, time: slot.time, notes: slot.patient.notes || "", slot_id: slotId }), 
+        updated_at: serverTimestamp() 
+      }); 
+      showAdminNotification("✅ أضيفت جلسة لـ " + slot.patient.name); 
+    } 
+    
+    // تحديث الميعاد في كوليكشن slots
+    await updateDoc(doc(db, "slots", slotId), { 
+      patient_id: patientId, 
+      is_saved_patient: true 
+    }); 
+    
+    renderSlots();
+    
+    // ✅ التوجيه لصفحة المريض مع بارامتر autoOpen
+    const phoneParam = encodeURIComponent(slot.patient?.phone || '');
+    window.location.href = `patient.html?phone=${phoneParam}&autoOpen=true`;
+    
+  } catch (err) { 
+    console.error("❌ Save patient error:", err); 
+    alert("❌ خطأ: " + err.message); 
+  } 
+};
 
 function cleanPhone(phone) { if (!phone) return ""; const p = String(phone).replace(/^0+/, '').replace(/\s/g, ''); return p.startsWith('20') ? p : '20' + p; }
 function isSavedPatient(phone) { if (!phone) return false; const clean = cleanPhone(phone); return cache.some(s => s.patient?.phone && cleanPhone(s.patient.phone) === clean && s.is_saved_patient); }
@@ -467,19 +517,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 loadPendingRequests();
 console.log("✅ Admin Page Loaded - Firebase Connected");
-
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('daysGrid')?.addEventListener('click', function(e) {
-    const slotItem = e.target.closest('.slot-item');
-    if (slotItem && typeof window.selectSlot === 'function') {
-      const id = slotItem.dataset.id;
-      if (id) {
-        e.stopPropagation();
-        window.selectSlot(id);
-      }
-    }
-  });
-});
 </script>
 </body>
 </html>
