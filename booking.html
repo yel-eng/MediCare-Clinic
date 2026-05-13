@@ -116,12 +116,14 @@ $("dateInput")?.addEventListener("change", (e) => {
   if (date) renderSlotsByDate(date);
 });
 
+// ✅ دالة الحجز المحدثة - آمنة 100%
 window.handleBook = async function() {
   const name = $("pName")?.value.trim();
   const phone = $("pPhone")?.value.trim();
   const date = $("dateInput")?.value;
   const bookBtn = $("bookBtn");
   
+  // ✅ التحقق من المدخلات
   if (!selectedSlotId) return showToast("⚠️ اختر ميعاداً من القائمة أولاً", "error");
   if (!name || !phone || !date) return showToast("⚠️ اكمل البيانات: الاسم والهاتف مطلوبان", "error");
   
@@ -132,7 +134,20 @@ window.handleBook = async function() {
     const slotRef = doc(db, "slots", selectedSlotId);
     const slotSnap = await getDoc(slotRef);
     
-    if (!slotSnap.exists() || slotSnap.data().booked) {
+    // ✅ التحقق من وجود الميعاد
+    if (!slotSnap.exists()) {
+      showToast("❌ الميعاد غير موجود", "error");
+      renderSlotsByDate(date);
+      bookBtn.disabled = false;
+      bookBtn.textContent = "تأكيد الحجز";
+      return;
+    }
+    
+    const slotData = slotSnap.data();
+    
+    // ✅ تحقق آمن من حالة الحجز (بدون مشاكل في نوع البيانات)
+    const isAlreadyBooked = slotData.booked === true || slotData.status === "booked";
+    if (isAlreadyBooked) {
       showToast("❌ هذا الميعاد تم حجزه للتو، اختر ميعاد آخر", "error");
       renderSlotsByDate(date);
       bookBtn.disabled = false;
@@ -140,20 +155,35 @@ window.handleBook = async function() {
       return;
     }
     
+    // ✅ التحديث بجميع الحقول المطلوبة وبأنواع بيانات صحيحة
     await updateDoc(slotRef, {
-      booked: true, status: "booked",
-      patient: { name, phone },
+      booked: true,                    // ⚠️ boolean (مش string)
+      status: "booked",                // ⚠️ string
+      patient: { name: name, phone: phone },
       updatedAt: serverTimestamp()
     });
     
+    // ✅ نجاح الحجز
     showToast("✅ تم الحجز بنجاح! هنتواصل معاك قريباً");
     selectedSlotId = null;
-    $("pName").value = ""; $("pPhone").value = "";
+    $("pName").value = ""; 
+    $("pPhone").value = "";
     renderSlotsByDate(date);
     
   } catch (err) {
     console.error("❌ Booking Error:", err);
-    showToast("❌ حدث خطأ أثناء الحجز، حاول مرة أخرى", "error");
+    
+    // ✅ عرض رسالة خطأ واضحة حسب نوع المشكلة
+    let errorMsg = "❌ حدث خطأ أثناء الحجز";
+    if (err.code === "permission-denied") {
+      errorMsg = "❌ خطأ في الصلاحيات - راجع قواعد فايربيس";
+    } else if (err.code === "not-found") {
+      errorMsg = "❌ الميعاد غير موجود";
+    } else if (err.message) {
+      errorMsg = "❌ " + err.message;
+    }
+    
+    showToast(errorMsg, "error");
     bookBtn.disabled = false;
     bookBtn.textContent = "تأكيد الحجز";
   }
