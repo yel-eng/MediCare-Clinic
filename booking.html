@@ -33,7 +33,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);pad
 <body>
 <div class="booking-box">
   <h2>📅 احجز موعدك</h2>
-  <p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">عيادة الدكتور [اسم_الطبيب]</p>
+  <p style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">عيادة الدكتور</p>
   
   <div class="form-group"><label>الاسم الكامل *</label><input type="text" id="pName" placeholder="أدخل اسمك الثلاثي"></div>
   <div class="form-group"><label>رقم الهاتف *</label><input type="tel" id="pPhone" placeholder="01xxxxxxxxx"></div>
@@ -46,11 +46,9 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);pad
 </div>
 
 <script type="module">
-// ✅ Firebase Imports v10.12.2
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ✅ Firebase Config - من المشروع الشغال
 const firebaseConfig = {
   apiKey: "AIzaSyA8FEgNeXAMZ1Sbg12zFCzwwxUD3sVl99o",
   authDomain: "mydoctor-clinic.firebaseapp.com",
@@ -60,7 +58,6 @@ const firebaseConfig = {
   appId: "1:123456789:web:abcdef123456"
 };
 
-// ✅ Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const slotsRef = collection(db, "slots");
@@ -70,7 +67,6 @@ let slotsCache = [];
 let selectedSlotId = null;
 const $ = (id) => document.getElementById(id);
 
-// ✅ Realtime Listener for Slots
 onSnapshot(slotsRef, (snap) => {
   slotsCache = [];
   snap.forEach(d => slotsCache.push({ id: d.id, ...d.data() }));
@@ -78,7 +74,6 @@ onSnapshot(slotsRef, (snap) => {
   if (selectedDate) renderSlotsByDate(selectedDate);
 });
 
-// ✅ Render Slots for Selected Date
 function renderSlotsByDate(date) {
   const container = $("slotsContainer");
   const bookBtn = $("bookBtn");
@@ -116,13 +111,11 @@ function renderSlotsByDate(date) {
   }
 }
 
-// ✅ Date Change Handler
 $("dateInput")?.addEventListener("change", (e) => {
   const date = e.target.value;
   if (date) renderSlotsByDate(date);
 });
 
-// ✅ Handle Booking
 window.handleBook = async function() {
   const name = $("pName")?.value.trim();
   const phone = $("pPhone")?.value.trim();
@@ -148,16 +141,14 @@ window.handleBook = async function() {
     }
     
     await updateDoc(slotRef, {
-      booked: true,
-      status: "booked",
+      booked: true, status: "booked",
       patient: { name, phone },
       updatedAt: serverTimestamp()
     });
     
     showToast("✅ تم الحجز بنجاح! هنتواصل معاك قريباً");
     selectedSlotId = null;
-    $("pName").value = "";
-    $("pPhone").value = "";
+    $("pName").value = ""; $("pPhone").value = "";
     renderSlotsByDate(date);
     
   } catch (err) {
@@ -168,7 +159,6 @@ window.handleBook = async function() {
   }
 };
 
-// ✅ Handle Send Request (when no slots)
 window.handleSendBookingRequest = async function(date) {
   const name = $("pName")?.value.trim();
   const phone = $("pPhone")?.value.trim();
@@ -177,21 +167,17 @@ window.handleSendBookingRequest = async function(date) {
   
   try {
     await addDoc(requestsRef, {
-      name, phone, date,
-      status: "pending",
-      source: "booking_page",
-      createdAt: serverTimestamp()
+      name, phone, date, status: "pending",
+      source: "booking_page", createdAt: serverTimestamp()
     });
     showToast("✅ تم إرسال طلبك! هنتواصل معاك لتأكيد الميعاد");
-    $("pName").value = "";
-    $("pPhone").value = "";
+    $("pName").value = ""; $("pPhone").value = "";
   } catch (err) {
     console.error("❌ Request Error:", err);
     showToast("❌ فشل إرسال الطلب، حاول مرة أخرى", "error");
   }
 };
 
-// ✅ Toast Notification
 function showToast(msg, type = "success") {
   const toast = document.createElement("div");
   toast.className = "toast";
@@ -200,7 +186,6 @@ function showToast(msg, type = "success") {
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 4000);
 }
-
 console.log("✅ Booking Page Loaded - Firebase Connected");
 </script>
 </body>
