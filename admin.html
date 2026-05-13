@@ -467,6 +467,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 loadPendingRequests();
 console.log("✅ Admin Page Loaded - Firebase Connected");
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('daysGrid')?.addEventListener('click', function(e) {
+    const slotItem = e.target.closest('.slot-item');
+    if (slotItem && typeof window.selectSlot === 'function') {
+      const id = slotItem.dataset.id;
+      if (id) {
+        e.stopPropagation();
+        window.selectSlot(id);
+      }
+    }
+  });
+});
 </script>
 </body>
 </html>
