@@ -81,9 +81,6 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
 .badge-vip{background:#fef3c7;color:#92400e}
 .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--main);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-left:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.debug-panel{position:fixed;bottom:10px;right:10px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11px;max-width:300px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
-.debug-panel h4{margin:0 0 8px;font-size:12px;color:#60a5fa}
-.debug-panel pre{margin:0;white-space:pre-wrap;max-height:150px;overflow:auto}
 </style>
 </head>
 <body>
@@ -101,7 +98,6 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <span id="patientsCount" style="background:rgba(255,255,255,0.2);padding:6px 14px;border-radius:20px;font-size:13px">0 مريض</span>
       <button class="btn" style="background:#22c55e" onclick="exportPatients()">📥 تصدير Excel</button>
-      <button class="btn" style="background:#64748b" onclick="debugFetch()">🔍 فحص البيانات</button>
     </div>
   </div>
   <div class="search-bar">
@@ -123,8 +119,6 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
     <div class="loading-state">⏳ جاري تحميل ملفات المرضى...</div>
   </div>
 </div>
-
-<!-- مودال المريض -->
 <div id="patientModal" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -165,12 +159,6 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
   </div>
 </div>
 
-<!-- لوحة ديباج -->
-<div id="debugPanel" class="debug-panel" style="display:none">
-  <h4>🔧 حالة البيانات</h4>
-  <pre id="debugContent">جاري الفحص...</pre>
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -205,98 +193,61 @@ onAuthStateChanged(auth, (user) => {
 window.toggleMenu = () => $("sideNav").classList.toggle("open");
 window.logout = () => signOut(auth).then(() => location.href = "login.html");
 
-// ✅ تحميل المرضى - مع معالجة شاملة للأخطاء
+// ✅ تحميل المرضى - متوافق مع created_at و createdAt
 async function loadPatients() {
   try {
     $("patientsList").innerHTML = '<div class="loading-state">⏳ جاري التحميل...</div>';
     
-    let snap, fetchMethod = "orderBy";
+    let snap;
+    // ✅ نجرب created_at الأول (الموجود في بياناتك)، ثم createdAt، ثم بدون ترتيب
+    try { const q = query(patientsRef, orderBy("created_at", "desc")); snap = await getDocs(q); }
+    catch (e1) { try { const q = query(patientsRef, orderBy("createdAt", "desc")); snap = await getDocs(q); } 
+    catch (e2) { const q = query(patientsRef); snap = await getDocs(q); } }
     
-    // ✅ المحاولة الأولى: مع orderBy
-    try {
-      const q = query(patientsRef, orderBy("createdAt", "desc"));
-      snap = await getDocs(q);
-      console.log("✅ Fetched with orderBy:", snap.size, "docs");
-    } catch (orderError) {
-      console.warn("⚠️ orderBy failed:", orderError.message);
-      fetchMethod = "simple";
-      // ✅ المحاولة الثانية: بدون orderBy
-      const q = query(patientsRef);
-      snap = await getDocs(q);
-      console.log("✅ Fetched without orderBy:", snap.size, "docs");
-    }
-    
-    // ✅ معالجة البيانات
     patientsCache = [];
     snap.forEach(d => {
       const data = d.data();
+      // ✅ توحيد اسم حقل التاريخ عشان ما يبقاش فيه فرق بين created_at و createdAt
+      data._ts = data.created_at || data.createdAt || data.updated_at;
+      
       const sessions = data.sessions || [];
       if (!data.type) {
         if (sessions.length >= 5) data.type = "vip";
         else if (sessions.length >= 2) data.type = "regular";
         else data.type = "new";
       }
-      if (!data.createdAt && data.updatedAt) data.createdAt = data.updatedAt;
       patientsCache.push({ id: d.id, ...data });
     });
-    
-    // ✅ ترتيب يدوي لو استخدمنا fetch بسيط
-    if (fetchMethod === "simple") {
-      patientsCache.sort((a, b) => {
-        const aTime = a.createdAt?.seconds || a.updatedAt?.seconds || 0;
-        const bTime = b.createdAt?.seconds || b.updatedAt?.seconds || 0;
-        return bTime - aTime;
-      });
+
+    // ✅ ترتيب يدوي لو فشل orderBy أو استخدمنا الجلب البسيط
+    if (!snap.docs[0]?.data().created_at && !snap.docs[0]?.data().createdAt) {
+      patientsCache.sort((a, b) => (b._ts?.seconds || 0) - (a._ts?.seconds || 0));
     }
     
-    console.log("📊 Patients loaded:", patientsCache.length);
     renderPatients(patientsCache);
     $("patientsCount").textContent = `${patientsCache.length} مريض`;
-    
-    // ✅ معالجة الفتح التلقائي
     handleAutoOpenFromUrl();
     
-    // ✅ لو مافيش بيانات، اعرض رسالة مفيدة
     if (patientsCache.length === 0) {
-      $("patientsList").innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <div class="icon">📭</div>
-          <p>لا توجد ملفات مرضى حتى الآن</p>
-          <small style="color:var(--text-light)">اضغط على 💾 بجانب أي حجز في لوحة التحكم لحفظ مريض</small>
-          <br><button class="btn" style="margin-top:10px;background:#64748b" onclick="debugFetch()">🔍 فحص قاعدة البيانات</button>
-        </div>`;
+      $("patientsList").innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">📭</div><p>لا توجد ملفات مرضى</p><small>اضغط 💾 في لوحة التحكم لحفظ مريض</small></div>`;
     }
-    
   } catch (err) {
     console.error("❌ Load Error:", err);
-    $("patientsList").innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1;color:var(--danger)">
-        <div class="icon">❌</div>
-        <p>فشل تحميل البيانات</p>
-        <small>${err.message || "خطأ غير معروف"}</small>
-        <br><br>
-        <button class="btn" style="background:#ef4444" onclick="debugFetch()">🔍 فحص المشكلة</button>
-        <button class="btn" style="background:#64748b;margin-right:5px" onclick="loadPatients()">🔄 إعادة المحاولة</button>
-      </div>`;
+    $("patientsList").innerHTML = `<div class="empty-state" style="grid-column:1/-1;color:var(--danger)"><div class="icon">❌</div><p>فشل التحميل</p><small>${err.message}</small><br><button class="btn" style="margin-top:10px" onclick="loadPatients()">🔄 إعادة المحاولة</button></div>`;
   }
 }
 
 function renderPatients(list) {
   const container = $("patientsList");
   if (!list || list.length === 0) return;
-  
   container.innerHTML = list.map(p => {
     const sessions = p.sessions || [];
     const badge = p.type === "vip" ? '<span class="badge badge-vip">⭐ مميز</span>' : 
                   p.type === "regular" ? '<span class="badge badge-regular">🔄 منتظم</span>' : 
                   '<span class="badge badge-new">✨ جديد</span>';
     const lastVisit = sessions.length ? sessions[sessions.length-1].date : "لا يوجد";
-    return `
-      <div class="patient-card" data-id="${p.id}">
-        <div class="patient-header">
-          <h3>${p.name || "بدون اسم"}</h3>
-          <span class="phone">📞 ${p.phone || "-"}</span>
-        </div>
+    return `<div class="patient-card" data-id="${p.id}">
+        <div class="patient-header"><h3>${p.name || "بدون اسم"}</h3><span class="phone">📞 ${p.phone || "-"}</span></div>
         <div class="patient-body">
           <div class="patient-row"><span class="label">عدد الجلسات</span><span class="value">${sessions.length}</span></div>
           <div class="patient-row"><span class="label">آخر زيارة</span><span class="value">${lastVisit}</span></div>
@@ -313,111 +264,32 @@ function renderPatients(list) {
   }).join("");
 }
 
-// ✅ فحص البيانات للديباج
-window.debugFetch = async function() {
-  const panel = $("debugPanel");
-  const content = $("debugContent");
-  panel.style.display = "block";
-  content.textContent = "🔄 جاري الفحص...\n";
-  
-  try {
-    // فحص 1: عدد الوثائق
-    const snap = await getDocs(patientsRef);
-    content.textContent += `📦 إجمالي الوثائق: ${snap.size}\n`;
-    
-    if (snap.size === 0) {
-      content.textContent += `⚠️ الكوليكشن 'patients' فاضي!\n`;
-      content.textContent += `💡 تأكد إن زر 💾 في admin.html بيحفظ في الكوليكشن الصحيح`;
-      return;
-    }
-    
-    // فحص 2: عينة من البيانات
-    content.textContent += `\n📋 عينة من البيانات:\n`;
-    snap.docs.slice(0, 3).forEach((d, i) => {
-      const data = d.data();
-      content.textContent += `${i+1}. ID: ${d.id}\n`;
-      content.textContent += `   الاسم: ${data.name || "-"}\n`;
-      content.textContent += `   الهاتف: ${data.phone || "-"}\n`;
-      content.textContent += `   createdAt: ${data.createdAt?.seconds ? new Date(data.createdAt.seconds*1000).toLocaleString('ar-EG') : "غير موجود"}\n`;
-      content.textContent += `   sessions: ${(data.sessions||[]).length}\n\n`;
-    });
-    
-    // فحص 3: قواعد الأمان
-    content.textContent += `🔐 لفحص Security Rules:\n`;
-    content.textContent += `اذهب إلى: Firebase Console > Firestore > Rules\n`;
-    content.textContent += `تأكد إن فيها: allow read, write: if request.auth != null;`;
-    
-  } catch (err) {
-    content.textContent += `❌ خطأ في الفحص: ${err.message}`;
-    if (err.message?.includes("index")) {
-      content.textContent += `\n\n🔗 لإنشاء الفهرس المطلوب:\n`;
-      content.textContent += `انسخ الرابط من رسالة الخطأ في Console وافتحه في المتصفح`;
-    }
-  }
-};
-
 window.applyOnlineFilter = async function() {
   const search = $("searchInput").value.trim().toLowerCase();
   const type = $("filterType").value;
   const sort = $("sortBy").value;
   $("patientsList").innerHTML = '<div class="loading-state">🔄 جاري البحث... <span class="loading-spinner"></span></div>';
-  
   try {
-    let q, snap;
-    // ✅ نجرب نجيب البيانات مع fallback
+    let snap;
     try {
-      if (type !== "all" && sort === "newest") {
-        q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "desc"));
-      } else if (type !== "all" && sort === "oldest") {
-        q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "asc"));
-      } else if (type === "all" && sort === "newest") {
-        q = query(patientsRef, orderBy("createdAt", "desc"));
-      } else if (type === "all" && sort === "oldest") {
-        q = query(patientsRef, orderBy("createdAt", "asc"));
-      } else {
-        q = query(patientsRef, orderBy("createdAt", "desc"));
-      }
-      snap = await getDocs(q);
-    } catch {
-      // Fallback بدون orderBy أو where معقد
-      snap = await getDocs(query(patientsRef));
-    }
+      if (type !== "all" && sort === "newest") { snap = await getDocs(query(patientsRef, where("type", "==", type), orderBy("created_at", "desc"))); }
+      else if (type !== "all" && sort === "oldest") { snap = await getDocs(query(patientsRef, where("type", "==", type), orderBy("created_at", "asc"))); }
+      else { snap = await getDocs(query(patientsRef, orderBy("created_at", "desc"))); }
+    } catch { snap = await getDocs(query(patientsRef)); }
     
     let results = [];
     snap.forEach(d => {
       const data = d.data();
-      const sessions = data.sessions || [];
-      if (!data.type) {
-        if (sessions.length >= 5) data.type = "vip";
-        else if (sessions.length >= 2) data.type = "regular";
-        else data.type = "new";
-      }
+      data._ts = data.created_at || data.createdAt || data.updated_at;
+      if (!data.type) data.type = (data.sessions||[]).length >= 5 ? "vip" : (data.sessions||[]).length >= 2 ? "regular" : "new";
       results.push({ id: d.id, ...data });
     });
-    
-    if (search) {
-      results = results.filter(p => 
-        (p.name?.toLowerCase().includes(search)) || 
-        (p.phone?.includes(search))
-      );
-    }
-    
-    if (sort === "name") {
-      results.sort((a,b) => (a.name||"").localeCompare(b.name||""));
-    }
-    
+    if (search) results = results.filter(p => (p.name?.toLowerCase().includes(search)) || (p.phone?.includes(search)));
+    if (sort === "name") results.sort((a,b) => (a.name||"").localeCompare(b.name||""));
     renderPatients(results);
     $("patientsCount").textContent = `${results.length} مريض`;
-    
-    if (results.length === 0) {
-      $("patientsList").innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🔍</div><p>لا توجد نتائج للبحث</p></div>`;
-    }
-    
-  } catch (err) {
-    console.error("❌ Filter Error:", err);
-    showToast("❌ فشل تطبيق الفلتر", "error");
-    loadPatients();
-  }
+    if (results.length === 0) $("patientsList").innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🔍</div><p>لا توجد نتائج</p></div>`;
+  } catch (err) { showToast("❌ فشل الفلتر", "error"); loadPatients(); }
 };
 
 window.debouncedFilter = function() {
@@ -442,21 +314,17 @@ window.openPatientModal = async function(id) {
     if (!sessions.length) {
       sessionsList.innerHTML = '<div style="padding:15px;text-align:center;color:var(--text-light);font-size:13px">لا توجد جلسات</div>';
     } else {
+      // ✅ يدعم notes و note عشان يتوافق مع كل البيانات
       sessionsList.innerHTML = sessions.slice().reverse().map((s, idx) => `
         <div class="session-item">
-          <div><strong>📅 ${s.date||"-"} | ⏰ ${s.time||"-"}</strong>${s.note?`<br><span style="color:var(--text-light);font-size:12px">${s.note}</span>`:""}${s.paid?`<br><span style="color:var(--success);font-size:12px">💰 ${s.paid} ج.م</span>`:""}</div>
+          <div><strong>📅 ${s.date||"-"} | ⏰ ${s.time||"-"}</strong>${(s.note||s.notes)?`<br><span style="color:var(--text-light);font-size:12px">${s.note||s.notes}</span>`:""}${s.paid?`<br><span style="color:var(--success);font-size:12px">💰 ${s.paid} ج.م</span>`:""}</div>
           <div class="actions"><button onclick="deleteSession('${id}', ${idx})">🗑️</button></div>
         </div>`).join("");
     }
     $("newSessionDate").value = new Date().toISOString().split("T")[0];
-    $("newSessionTime").value = "";
-    $("newSessionNote").value = "";
-    $("newSessionPaid").value = "";
+    $("newSessionTime").value = ""; $("newSessionNote").value = ""; $("newSessionPaid").value = "";
     $("patientModal").style.display = "flex";
-  } catch (err) {
-    console.error("❌ Modal Error:", err);
-    showToast("❌ فشل فتح الملف", "error");
-  }
+  } catch (err) { showToast("❌ فشل فتح الملف", "error"); }
 };
 
 window.closeModal = function() { $("patientModal").style.display = "none"; };
@@ -466,42 +334,27 @@ window.savePatient = async function() {
   if (!id) return;
   try {
     await updateDoc(doc(db, "patients", id), {
-      name: $("modalName").value.trim(),
-      phone: $("modalPhone").value.trim(),
-      age: $("modalAge").value.trim(),
-      type: $("modalType").value,
-      notes: $("modalNotes").value.trim(),
-      updatedAt: serverTimestamp()
+      name: $("modalName").value.trim(), phone: $("modalPhone").value.trim(),
+      age: $("modalAge").value.trim(), type: $("modalType").value,
+      notes: $("modalNotes").value.trim(), updated_at: serverTimestamp()
     });
-    showToast("✅ تم الحفظ");
-    closeModal();
-    applyOnlineFilter();
-  } catch (err) {
-    console.error("❌ Save Error:", err);
-    showToast("❌ فشل الحفظ", "error");
-  }
+    showToast("✅ تم الحفظ"); closeModal(); applyOnlineFilter();
+  } catch (err) { showToast("❌ فشل الحفظ", "error"); }
 };
 
 window.addSession = async function() {
   const id = $("modalPatientId").value;
   const date = $("newSessionDate").value;
-  const time = $("newSessionTime").value;
-  const note = $("newSessionNote").value.trim();
-  const paid = $("newSessionPaid").value ? Number($("newSessionPaid").value) : null;
   if (!date) return showToast("⚠️ اختر تاريخ الجلسة", "error");
   try {
     const patientRef = doc(db, "patients", id);
     const snap = await getDoc(patientRef);
     const p = snap.data();
     const sessions = p.sessions || [];
-    sessions.push({ date, time, note, paid, createdAt: serverTimestamp() });
-    await updateDoc(patientRef, { sessions, updatedAt: serverTimestamp() });
-    showToast("✅ تم إضافة الجلسة");
-    openPatientModal(id);
-  } catch (err) {
-    console.error("❌ Add Session Error:", err);
-    showToast("❌ فشل الإضافة", "error");
-  }
+    sessions.push({ date, time: $("newSessionTime").value, note: $("newSessionNote").value.trim(), paid: $("newSessionPaid").value ? Number($("newSessionPaid").value) : null, created_at: serverTimestamp() });
+    await updateDoc(patientRef, { sessions, updated_at: serverTimestamp() });
+    showToast("✅ تم إضافة الجلسة"); openPatientModal(id);
+  } catch (err) { showToast("❌ فشل الإضافة", "error"); }
 };
 
 window.deleteSession = async function(patientId, sessionIndex) {
@@ -512,26 +365,16 @@ window.deleteSession = async function(patientId, sessionIndex) {
     const p = snap.data();
     const sessions = p.sessions || [];
     sessions.splice(sessionIndex, 1);
-    await updateDoc(patientRef, { sessions, updatedAt: serverTimestamp() });
-    showToast("✅ تم الحذف");
-    openPatientModal(patientId);
-  } catch (err) {
-    showToast("❌ فشل الحذف", "error");
-  }
+    await updateDoc(patientRef, { sessions, updated_at: serverTimestamp() });
+    showToast("✅ تم الحذف"); openPatientModal(patientId);
+  } catch (err) { showToast("❌ فشل الحذف", "error"); }
 };
 
 window.quickEdit = async function(id) { openPatientModal(id); };
-
 window.deletePatient = async function(id) {
   if (!confirm("⚠️ حذف ملف المريض نهائياً؟")) return;
-  try {
-    await deleteDoc(doc(db, "patients", id));
-    showToast("✅ تم الحذف");
-    applyOnlineFilter();
-  } catch (err) {
-    console.error("❌ Delete Error:", err);
-    showToast("❌ فشل الحذف", "error");
-  }
+  try { await deleteDoc(doc(db, "patients", id)); showToast("✅ تم الحذف"); applyOnlineFilter(); }
+  catch (err) { showToast("❌ فشل الحذف", "error"); }
 };
 
 window.openWhatsApp = function(phone) {
@@ -544,83 +387,52 @@ window.openWhatsApp = function(phone) {
 window.exportPatients = async function() {
   try {
     $("patientsList").innerHTML = '<div class="loading-state">📥 جاري التصدير...</div>';
-    const snap = await getDocs(query(patientsRef));
+    const snap = await getDocs(query(patientsRef, orderBy("created_at", "desc")));
     const rows = [];
     snap.forEach(d => {
-      const p = d.data();
-      const sessions = p.sessions || [];
-      rows.push([p.name || "", p.phone || "", p.age || "", p.type || "new", sessions.length, sessions[sessions.length-1]?.date || "-", (p.notes||"").replace(/,/g,";")]);
+      const p = d.data(); const s = p.sessions || [];
+      rows.push([p.name||"", p.phone||"", p.age||"", p.type||"new", s.length, s[s.length-1]?.date||"-", (p.notes||"").replace(/,/g,";")]);
     });
-    const headers = ["الاسم","الهاتف","العمر","النوع","الجلسات","آخر زيارة","ملاحظات"];
-    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `patients_${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
-    showToast("✅ تم التصدير");
-    applyOnlineFilter();
-  } catch (err) {
-    console.error("❌ Export Error:", err);
-    showToast("❌ فشل التصدير", "error");
-  }
+    const blob = new Blob(["\uFEFF"+["الاسم","الهاتف","العمر","النوع","الجلسات","آخر زيارة","ملاحظات"].join(",")+","+rows.map(r=>r.join(",")).join("\n")], {type:"text/csv;charset=utf-8;"});
+    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `patients_${new Date().toISOString().split("T")[0]}.csv`; link.click();
+    showToast("✅ تم التصدير"); applyOnlineFilter();
+  } catch (err) { showToast("❌ فشل التصدير", "error"); }
 };
 
 function showToast(msg, type="success") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type==="error"?"error":""}`;
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
+  const toast = document.createElement("div"); toast.className = `toast ${type==="error"?"error":""}`;
+  toast.textContent = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 4000);
 }
 
 $("patientModal")?.addEventListener("click", (e) => { if (e.target === $("patientModal")) closeModal(); });
 
-function cleanPhone(phone) { 
-  if (!phone) return ""; 
-  const p = String(phone).replace(/^0+/, '').replace(/\s/g, ''); 
-  return p.startsWith('20') ? p : '20' + p; 
-}
+function cleanPhone(phone) { if (!phone) return ""; let p = String(phone).replace(/[^0-9]/g, ''); p = p.replace(/^0+/, ''); return p.startsWith('20') ? p : '20' + p; }
 
 async function handleAutoOpenFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const autoOpen = params.get('autoOpen');
   const phoneParam = params.get('phone');
   const pidParam = params.get('pid');
-  
   if (autoOpen === 'true' && (phoneParam || pidParam)) {
     setTimeout(async () => {
       try {
         let targetPatient = null;
-        
-        if (pidParam) {
-          const snap = await getDoc(doc(db, "patients", pidParam));
-          if (snap.exists()) targetPatient = { id: snap.id, ...snap.data() };
-        }
-        
+        if (pidParam) { const snap = await getDoc(doc(db, "patients", pidParam)); if (snap.exists()) targetPatient = { id: snap.id, ...snap.data() }; }
         if (!targetPatient && phoneParam) {
           const fullPhone = cleanPhone(phoneParam);
-          const found = patientsCache.find(p => cleanPhone(p.phone || "") === fullPhone);
-          if (found) targetPatient = found;
+          targetPatient = patientsCache.find(p => cleanPhone(p.phone || "") === fullPhone) || null;
         }
-        
         if (targetPatient) {
           await openPatientModal(targetPatient.id);
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, newUrl);
+          window.history.replaceState({}, document.title, window.location.pathname);
           showToast("📋 تم فتح ملف: " + (targetPatient.name || "مريض"));
-        } else {
-          console.warn("⚠️ Patient not found for params:", { phoneParam, pidParam });
-          showToast("⚠️ لم يتم العثور على المريض", "error");
         }
-      } catch (err) { 
-        console.error("❌ Auto-open error:", err); 
-      }
+      } catch (err) { console.error("❌ Auto-open error:", err); }
     }, 1500);
   }
 }
 
-console.log("✅ Patients Page Loaded - Online Filter Enabled");
+console.log("✅ Patients Page Loaded - Fixed for created_at");
 </script>
 </body>
 </html>
