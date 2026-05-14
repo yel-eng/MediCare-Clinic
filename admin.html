@@ -383,7 +383,7 @@ window.generateQR = () => { const qrImg = $("qrImg"); if (!activeId) return aler
 
 window.openWhatsApp = (phone) => { if (!phone) return alert("⚠️ لا يوجد رقم"); let wa = phone.replace(/^0+/,"").replace(/\s+/g,""); if (!wa.startsWith("20")) wa = "20" + wa; window.open("https://wa.me/" + wa + "?text=" + encodeURIComponent("مرحباً، بخصوص موعد المريض..."), "_blank"); };
 
-// ✅ دالة savePatientFromSlot المُصححة نهائيًا
+// ✅ دالة savePatientFromSlot المُصححة نهائيًا - ✅ createdAt camelCase ✅ note مفرد ✅ patients.html جمع
 window.savePatientFromSlot = async (slotId) => { 
   const slot = cache.find(s => s.id === slotId); 
   if (!slot || !slot.patient?.phone) return alert("⚠️ لا توجد بيانات"); 
@@ -394,33 +394,33 @@ window.savePatientFromSlot = async (slotId) => {
     const snap = await getDocs(q); 
     let patientId; 
     if (snap.empty) { 
-      // ✅ إنشاء مريض جديد - باستخدام createdAt/updatedAt (camelCase) وملاحظة الجلسة باسم 'note'
+      // ✅ إنشاء مريض جديد - باستخدام createdAt/updatedAt (camelCase) وملاحظة الجلسة باسم 'note' (مفرد)
       const newPatient = { 
         name: cleanName, 
         phone: phone, 
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),  // ✅ camelCase - ضروري لـ orderBy في patients.html
+        updatedAt: serverTimestamp(),   // ✅ camelCase
         age: "", type: "new", notes: "",
-        sessions: [{ date: slot.date, time: slot.time, note: slot.patient.notes || "", paid: slot.paid || 0, slot_id: slotId, createdAt: serverTimestamp() }] 
+        sessions: [{ date: slot.date, time: slot.time, note: slot.patient.notes || "", paid: slot.paid || 0, slot_id: slotId, createdAt: serverTimestamp() }] // ✅ note مفرد
       }; 
       const docRef = await addDoc(patientsRef, newPatient); 
       patientId = docRef.id; 
       showAdminNotification("✅ تم إنشاء ملف لـ " + cleanName); 
     } else { 
-      // ✅ تحديث مريض موجود - إضافة جلسة باسم 'note'
+      // ✅ تحديث مريض موجود - إضافة جلسة باسم 'note' (مفرد)
       patientId = snap.docs[0].id; 
       await updateDoc(doc(db, "patients", patientId), { 
         sessions: arrayUnion({ date: slot.date, time: slot.time, note: slot.patient.notes || "", paid: slot.paid || 0, slot_id: slotId, createdAt: serverTimestamp() }), 
-        updatedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),  // ✅ camelCase
         name: cleanName
       }); 
       showAdminNotification("✅ أضيفت جلسة لـ " + cleanName); 
     } 
     await updateDoc(doc(db, "slots", slotId), { patient_id: patientId, is_saved_patient: true }); 
     renderSlots();
-    // ✅ التوجيه للصفحة الصحيحة مع بارامترات
+    // ✅ التوجيه للصفحة الصحيحة: patients.html (جمع) مع بارامترات
     const phoneParam = encodeURIComponent(phone);
-    window.location.href = `patients.html?phone=${phoneParam}&autoOpen=true&pid=${patientId}`;
+    window.location.href = `patients.html?phone=${phoneParam}&autoOpen=true&pid=${patientId}`; // ✅ patients.html جمع + pid
   } catch (err) { console.error("❌ Save patient error:", err); alert("❌ خطأ: " + err.message); } 
 };
 
