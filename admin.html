@@ -79,7 +79,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--main);outline:none;bo
   <h2 class="logo">🏥 عيادة الدكتور</h2>
   <a href="admin.html" class="active">🏠 لوحة التحكم</a>
   <a href="index-admin.html">📂 إدارة المحتوى</a>
-  <a href="patient.html">📋 ملفات المرضى</a>
+  <a href="patients.html">📋 ملفات المرضى</a>
   <button onclick="logout()" class="btn" style="margin-top:auto;">🚪 خروج</button>
 </div>
 <div class="total-box" id="globalTotal">💰 إجمالي العيادة: 0</div>
@@ -233,7 +233,6 @@ window.confirmAssignRequest = async function() {
 
 window.deleteRequest = async function(requestId) { if (!confirm("تجاهل هذا الطلب؟")) return; try { await updateDoc(doc(db, "requests", requestId), { status: "dismissed", updatedAt: serverTimestamp() }); showAdminNotification("✅ تم تجاهل الطلب"); loadPendingRequests(); } catch (err) { alert("❌ فشل: " + err.message); } };
 
-// ✅ onSnapshot محدث لضمان نوع البيانات الصحيح
 unsubscribeSlots = onSnapshot(slotsRef, (snap) => {
   cache = []; 
   snap.forEach(d => {
@@ -274,8 +273,7 @@ window.renderSlots = function(preserved = null) {
         const isSaved = x.is_saved_patient || isSavedPatient(x.patient?.phone);
         const nameClass = isSaved ? "saved-patient" : "";
         const savedBadge = isSaved ? '<span style="margin-right:4px;color:#2e7d32;font-size:11px;">💾</span>' : '';
-        let actions = ""; if (isBooked) actions = `<div class='action-buttons'><button onclick='event.stopPropagation();openWhatsApp("${x.patient?.phone || ""}")'>💬</button>${isSaved ? `<button onclick='event.stopPropagation();window.location.href="patient.html?phone=${x.patient?.phone}"' style='background:#6a1b9a'>📋</button>` : `<button onclick='event.stopPropagation();savePatientFromSlot("${x.id}")' style='background:#2e7d32'>💾</button>`}<button onclick='event.stopPropagation();editSlotData("${x.id}")' style='background:#0ea5e9'>✏️</button><button onclick='event.stopPropagation();cancelSlot("${x.id}")'>🗑️</button></div>`;
-        // ✅ تم إصلاح onclick باستخدام &apos; بدلاً من '
+        let actions = ""; if (isBooked) actions = `<div class='action-buttons'><button onclick='event.stopPropagation();openWhatsApp("${x.patient?.phone || ""}")'>💬</button>${isSaved ? `<button onclick='event.stopPropagation();window.location.href="patients.html?phone=${x.patient?.phone}"' style='background:#6a1b9a'>📋</button>` : `<button onclick='event.stopPropagation();savePatientFromSlot("${x.id}")' style='background:#2e7d32'>💾</button>`}<button onclick='event.stopPropagation();editSlotData("${x.id}")' style='background:#0ea5e9'>✏️</button><button onclick='event.stopPropagation();cancelSlot("${x.id}")'>🗑️</button></div>`;
         return `<div class='slot-item ${isBooked?'booked':(x.status==='cancelled'?'cancel':'')}' data-id="${x.id}" onclick='selectSlot(&apos;${x.id}&apos;)'><span class='slot-time'>${x.time}</span><span class='slot-name ${nameClass}'>${savedBadge}${pname}</span><span class='status-badge ${badgeClass}'>${statusLabel}</span>${actions}</div>`;
       }).join("");
       const toggleIcon = collapsedDays[date] ? "▲" : "▼";
@@ -295,30 +293,17 @@ window.safeLoad = () => { const searchTerm = $("search")?.value.toLowerCase(), f
 function showAdminNotification(message) { const notif = document.createElement("div"); notif.className = "admin-notif"; notif.innerHTML = "🔔 " + message; document.body.appendChild(notif); setTimeout(() => notif.remove(), 5000); }
 window.loadAvailableSlots = function(date) { const select = $("availableSlots"); const manualWrapper = $("manualTimeWrapper"); if (!select || !date) return; select.innerHTML = "<option value=''>⏳ جاري التحميل...</option>"; select.disabled = true; if(manualWrapper) manualWrapper.style.display = "none"; const daySlots = cache.filter(s => s.date === date); const available = daySlots.filter(s => !s.booked && s.status !== "cancelled"); if (available.length > 0) { available.sort((a,b) => (a.time||"").localeCompare(b.time||"")); select.innerHTML = "<option value=''>-- اختر ميعاد متاح --</option>"; available.forEach(slot => { const opt = document.createElement("option"); opt.value = slot.id; opt.textContent = "🕒 " + slot.time + " - متاح"; select.appendChild(opt); }); select.disabled = false; } else { select.innerHTML = "<option value='__MANUAL__' selected>⏰ أدخل وقت يدوي</option>"; select.disabled = false; if(manualWrapper) { manualWrapper.style.display = "block"; $("manualSlotTime").value = "18:00"; } } };
 
-// ✅ دالة selectSlot مُحسّنة مع تحقق أفضل
 window.selectSlot = async (id) => { 
-  if (!id) {
-    console.warn("⚠️ selectSlot called with empty id");
-    return;
-  }
-  
+  if (!id) { console.warn("⚠️ selectSlot called with empty id"); return; }
   activeId = id; 
   const activeSlotInput = $("activeSlotId");
   if (activeSlotInput) activeSlotInput.value = id;
-  
   document.querySelectorAll('.slot-item.selected').forEach(el => el.classList.remove('selected')); 
   const currentEl = document.querySelector(`.slot-item[data-id="${id}"]`);
-  if(currentEl) {
-    currentEl.classList.add('selected');
-    console.log("✅ Slot selected:", id);
-  }
-  
+  if(currentEl) { currentEl.classList.add('selected'); console.log("✅ Slot selected:", id); }
   try {
     const snap = await getDoc(doc(db, "slots", id)); 
-    if (!snap.exists()) {
-      console.error("❌ Slot not found in Firestore:", id);
-      return;
-    }
+    if (!snap.exists()) { console.error("❌ Slot not found in Firestore:", id); return; }
     const d = snap.data(); 
     const pName = $("pName"), pPhone = $("pPhone"), pNotes = $("pNotes"), pPaid = $("pPaid"), pStatus = $("pStatus"), targetTime = $("targetTime");
     if (pName) pName.value = d.patient?.name || ""; 
@@ -327,41 +312,23 @@ window.selectSlot = async (id) => {
     if (pPaid) pPaid.value = d.paid || 0; 
     if (pStatus) pStatus.value = d.status || "حجز"; 
     if (targetTime) targetTime.innerText = `${d.date || '-'} - ${d.time || '-'}`; 
-    
     editSlotDate = d.date || ""; 
     editSlotTime = d.time || ""; 
-    const requestDate = $("requestDate");
-    if (requestDate) requestDate.value = "";
-    const availableSlots = $("availableSlots");
-    if (availableSlots) availableSlots.innerHTML = "<option value=''>اختر ميعاد متاح (للنقل فقط)</option>"; 
-    const manualWrapper = $("manualTimeWrapper");
-    if (manualWrapper) manualWrapper.style.display = "none"; 
-    const manualSlotTime = $("manualSlotTime");
-    if (manualSlotTime) manualSlotTime.value = "18:00"; 
-    
+    const requestDate = $("requestDate"); if (requestDate) requestDate.value = "";
+    const availableSlots = $("availableSlots"); if (availableSlots) availableSlots.innerHTML = "<option value=''>اختر ميعاد متاح (للنقل فقط)</option>"; 
+    const manualWrapper = $("manualTimeWrapper"); if (manualWrapper) manualWrapper.style.display = "none"; 
+    const manualSlotTime = $("manualSlotTime"); if (manualSlotTime) manualSlotTime.value = "18:00"; 
     console.log("✅ Slot data loaded:", { id, date: d.date, time: d.time });
-  } catch (err) {
-    console.error("❌ Error loading slot:", err);
-  }
+  } catch (err) { console.error("❌ Error loading slot:", err); }
 };
 
-// ✅ دالة updateSlot مُحسّنة مع رسائل خطأ أوضح
 window.updateSlot = async () => { 
   const activeSlotInput = $("activeSlotId");
   const currentId = (activeSlotInput && activeSlotInput.value) || activeId; 
-  
-  if (!currentId) {
-    console.error("❌ No slot ID found. activeId:", activeId, "activeSlotId value:", activeSlotInput?.value);
-    return alert("⚠️ اختر ميعاداً من الجدول أولاً (انقر على الميعاد ليظهر باللون الأزرق)");
-  }
-  
+  if (!currentId) { console.error("❌ No slot ID found"); return alert("⚠️ اختر ميعاداً من الجدول أولاً"); }
   activeId = currentId; 
   const saveBtn = $("saveBtn"); 
-  if (saveBtn) {
-    saveBtn.disabled = true; 
-    saveBtn.innerText = "⏳ جاري الحفظ...";
-  }
-  
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "⏳ جاري الحفظ..."; }
   try {
     const newName = $("pName")?.value.trim();
     const newPhone = $("pPhone")?.value.trim();
@@ -372,27 +339,17 @@ window.updateSlot = async () => {
     const newDate = $("requestDate")?.value;
     const patientData = { name: newName, phone: newPhone, notes: newNotes };
     const isBooked = newName !== "";
-    
     let targetSlotId = activeId;
     let isNewSlotCreated = false;
-    
     if (selectedNewSlotId && selectedNewSlotId !== activeId && selectedNewSlotId !== '__MANUAL__') {
       targetSlotId = selectedNewSlotId;
     } else if (selectedNewSlotId === '__MANUAL__' && newDate) {
       const manualTime = $("manualSlotTime")?.value;
-      if (!manualTime || !/^\d{2}:\d{2}$/.test(manualTime)) {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "حفظ"; }
-        return alert("⚠️ أدخل وقتاً صحيحاً");
-      }
-      if (slotExists(newDate, manualTime)) {
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "حفظ"; }
-        return alert("⚠️ الوقت موجود");
-      }
+      if (!manualTime || !/^\d{2}:\d{2}$/.test(manualTime)) { if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "حفظ"; } return alert("⚠️ أدخل وقتاً صحيحاً"); }
+      if (slotExists(newDate, manualTime)) { if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "حفظ"; } return alert("⚠️ الوقت موجود"); }
       const newSlotRef = await addDoc(slotsRef, { date: newDate, time: manualTime, booked: false, status: "available", patient: null, paid: 0, notes: "تم إنشاؤه عند نقل", isManual: true, createdAt: serverTimestamp() });
-      targetSlotId = newSlotRef.id;
-      isNewSlotCreated = true;
+      targetSlotId = newSlotRef.id; isNewSlotCreated = true;
     }
-    
     if (targetSlotId !== activeId) {
       const newSlotRef = doc(db, "slots", targetSlotId);
       const oldSlotRef = doc(db, "slots", activeId);
@@ -403,34 +360,17 @@ window.updateSlot = async () => {
       await updateDoc(doc(db, "slots", activeId), { booked: isBooked, status: isBooked ? newStatus : "available", paid: isBooked ? newPaid : 0, patient: isBooked ? patientData : null, updatedAt: serverTimestamp() });
       showAdminNotification("✅ تم التعديل");
     }
-    
-    activeId = null;
-    if (activeSlotInput) activeSlotInput.value = "";
-    if ($("pName")) $("pName").value = "";
-    if ($("pPhone")) $("pPhone").value = "";
-    if ($("pNotes")) $("pNotes").value = "";
-    if ($("pPaid")) $("pPaid").value = "";
-    if ($("pStatus")) $("pStatus").value = "حجز";
-    if ($("targetTime")) $("targetTime").innerText = "اختر ميعاداً";
-    if ($("availableSlots")) $("availableSlots").value = "";
-    if ($("requestDate")) $("requestDate").value = "";
-    const manualWrapper = $("manualTimeWrapper");
-    if (manualWrapper) manualWrapper.style.display = "none";
+    activeId = null; if (activeSlotInput) activeSlotInput.value = "";
+    if ($("pName")) $("pName").value = ""; if ($("pPhone")) $("pPhone").value = "";
+    if ($("pNotes")) $("pNotes").value = ""; if ($("pPaid")) $("pPaid").value = "";
+    if ($("pStatus")) $("pStatus").value = "حجز"; if ($("targetTime")) $("targetTime").innerText = "اختر ميعاداً";
+    if ($("availableSlots")) $("availableSlots").value = ""; if ($("requestDate")) $("requestDate").value = "";
+    const manualWrapper = $("manualTimeWrapper"); if (manualWrapper) manualWrapper.style.display = "none";
     if ($("manualSlotTime")) $("manualSlotTime").value = "18:00";
     document.querySelectorAll('.slot-item.selected').forEach(el => el.classList.remove('selected'));
-    editSlotDate = "";
-    editSlotTime = "";
-    
-  } catch (err) {
-    console.error("❌ Update Error:", err);
-    alert("❌ فشل: " + err.message);
-  } finally {
-    const saveBtn = $("saveBtn");
-    if (saveBtn) {
-      saveBtn.disabled = false;
-      saveBtn.innerText = "حفظ";
-    }
-  }
+    editSlotDate = ""; editSlotTime = "";
+  } catch (err) { console.error("❌ Update Error:", err); alert("❌ فشل: " + err.message);
+  } finally { const saveBtn = $("saveBtn"); if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "حفظ"; } }
 };
 
 window.editSlotData = async function(slotId) { const slot = cache.find(s => s.id === slotId); if (!slot) return; const name = prompt("تعديل الاسم:", slot.patient?.name || ""); if (name === null) return; const phone = prompt("تعديل الهاتف:", slot.patient?.phone || ""); if (phone === null) return; const notes = prompt("تعديل الملاحظات:", slot.patient?.notes || ""); if (notes === null) return; const paid = prompt("تعديل المبلغ:", slot.paid || 0); if (paid === null) return; const status = prompt("تعديل الحالة:", slot.status || "حجز"); if (status === null) return; try { await updateDoc(doc(db, "slots", slotId), { patient: { name: name || "", phone: phone || "", notes: notes || "" }, paid: Number(paid) || 0, status: status || "حجز", updatedAt: serverTimestamp() }); showAdminNotification("✅ تم التعديل"); } catch (err) { alert("❌ فشل: " + err.message); } };
@@ -443,62 +383,50 @@ window.generateQR = () => { const qrImg = $("qrImg"); if (!activeId) return aler
 
 window.openWhatsApp = (phone) => { if (!phone) return alert("⚠️ لا يوجد رقم"); let wa = phone.replace(/^0+/,"").replace(/\s+/g,""); if (!wa.startsWith("20")) wa = "20" + wa; window.open("https://wa.me/" + wa + "?text=" + encodeURIComponent("مرحباً، بخصوص موعد المريض..."), "_blank"); };
 
-// ✅ دالة savePatientFromSlot مُحسّنة مع رابط توجيه صحيح
+// ✅ دالة savePatientFromSlot المُصححة نهائيًا
 window.savePatientFromSlot = async (slotId) => { 
   const slot = cache.find(s => s.id === slotId); 
   if (!slot || !slot.patient?.phone) return alert("⚠️ لا توجد بيانات"); 
-  
   const phone = cleanPhone(slot.patient.phone); 
-  
+  const cleanName = (slot.patient.name || "").trim();
   try { 
     const q = query(patientsRef, where("phone", "==", phone)); 
     const snap = await getDocs(q); 
     let patientId; 
-    
     if (snap.empty) { 
-      // إنشاء مريض جديد
+      // ✅ إنشاء مريض جديد - باستخدام createdAt/updatedAt (camelCase) وملاحظة الجلسة باسم 'note'
       const newPatient = { 
-        name: slot.patient.name, 
-        phone, 
-        created_at: serverTimestamp(), 
-        updated_at: serverTimestamp(), 
-        sessions: [{ date: slot.date, time: slot.time, notes: slot.patient.notes || "", slot_id: slotId }] 
+        name: cleanName, 
+        phone: phone, 
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        age: "", type: "new", notes: "",
+        sessions: [{ date: slot.date, time: slot.time, note: slot.patient.notes || "", paid: slot.paid || 0, slot_id: slotId, createdAt: serverTimestamp() }] 
       }; 
       const docRef = await addDoc(patientsRef, newPatient); 
       patientId = docRef.id; 
-      showAdminNotification("✅ تم إنشاء ملف لـ " + slot.patient.name); 
+      showAdminNotification("✅ تم إنشاء ملف لـ " + cleanName); 
     } else { 
-      // تحديث مريض موجود
+      // ✅ تحديث مريض موجود - إضافة جلسة باسم 'note'
       patientId = snap.docs[0].id; 
       await updateDoc(doc(db, "patients", patientId), { 
-        sessions: arrayUnion({ date: slot.date, time: slot.time, notes: slot.patient.notes || "", slot_id: slotId }), 
-        updated_at: serverTimestamp() 
+        sessions: arrayUnion({ date: slot.date, time: slot.time, note: slot.patient.notes || "", paid: slot.paid || 0, slot_id: slotId, createdAt: serverTimestamp() }), 
+        updatedAt: serverTimestamp(),
+        name: cleanName
       }); 
-      showAdminNotification("✅ أضيفت جلسة لـ " + slot.patient.name); 
+      showAdminNotification("✅ أضيفت جلسة لـ " + cleanName); 
     } 
-    
-    // تحديث الميعاد في كوليكشن slots
-    await updateDoc(doc(db, "slots", slotId), { 
-      patient_id: patientId, 
-      is_saved_patient: true 
-    }); 
-    
+    await updateDoc(doc(db, "slots", slotId), { patient_id: patientId, is_saved_patient: true }); 
     renderSlots();
-    
-    // ✅ التوجيه لصفحة المريض مع بارامتر autoOpen
-    const phoneParam = encodeURIComponent(slot.patient?.phone || '');
-    window.location.href = `patient.html?phone=${phoneParam}&autoOpen=true`;
-    
-  } catch (err) { 
-    console.error("❌ Save patient error:", err); 
-    alert("❌ خطأ: " + err.message); 
-  } 
+    // ✅ التوجيه للصفحة الصحيحة مع بارامترات
+    const phoneParam = encodeURIComponent(phone);
+    window.location.href = `patients.html?phone=${phoneParam}&autoOpen=true&pid=${patientId}`;
+  } catch (err) { console.error("❌ Save patient error:", err); alert("❌ خطأ: " + err.message); } 
 };
 
 function cleanPhone(phone) { if (!phone) return ""; const p = String(phone).replace(/^0+/, '').replace(/\s/g, ''); return p.startsWith('20') ? p : '20' + p; }
 function isSavedPatient(phone) { if (!phone) return false; const clean = cleanPhone(phone); return cache.some(s => s.patient?.phone && cleanPhone(s.patient.phone) === clean && s.is_saved_patient); }
 
-// ✅ إضافة مستمع نقر مباشر كاحتياطي
 document.addEventListener('DOMContentLoaded', function() {
   const daysGrid = document.getElementById('daysGrid');
   if (daysGrid) {
@@ -506,10 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const slotItem = e.target.closest('.slot-item');
       if (slotItem && typeof window.selectSlot === 'function') {
         const id = slotItem.dataset.id;
-        if (id) {
-          e.stopPropagation();
-          window.selectSlot(id);
-        }
+        if (id) { e.stopPropagation(); window.selectSlot(id); }
       }
     });
   }
