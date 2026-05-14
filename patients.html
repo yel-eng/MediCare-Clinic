@@ -193,17 +193,14 @@ onAuthStateChanged(auth, (user) => {
 window.toggleMenu = () => $("sideNav").classList.toggle("open");
 window.logout = () => signOut(auth).then(() => location.href = "login.html");
 
-// ✅ تحميل المرضى - مع إصلاح اسم الحقل
 async function loadPatients() {
   try {
     $("patientsList").innerHTML = '<div class="loading-state">⏳ جاري التحميل...</div>';
-    // ✅ استخدام createdAt (الاسم الصحيح اللي فايربيس بيستخدمه)
     const q = query(patientsRef, orderBy("createdAt", "desc"));
     const snap = await getDocs(q);
     patientsCache = [];
     snap.forEach(d => {
       const data = d.data();
-      // ✅ تصنيف أوتوماتيك بناءً على عدد الجلسات
       const sessions = data.sessions || [];
       if (!data.type) {
         if (sessions.length >= 5) data.type = "vip";
@@ -214,13 +211,13 @@ async function loadPatients() {
     });
     renderPatients(patientsCache);
     $("patientsCount").textContent = `${patientsCache.length} مريض`;
+    handleAutoOpenFromUrl();
   } catch (err) {
     console.error("❌ Load Error:", err);
     $("patientsList").innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>فشل التحميل</p><small>${err.message}</small></div>`;
   }
 }
 
-// ✅ عرض المرضى
 function renderPatients(list) {
   const container = $("patientsList");
   if (!list.length) {
@@ -255,18 +252,13 @@ function renderPatients(list) {
   }).join("");
 }
 
-// ✅ فلتر أونلاين من فايربيس (مباشر)
 window.applyOnlineFilter = async function() {
   const search = $("searchInput").value.trim().toLowerCase();
   const type = $("filterType").value;
   const sort = $("sortBy").value;
-  
   $("patientsList").innerHTML = '<div class="loading-state">🔄 جاري البحث... <span class="loading-spinner"></span></div>';
-  
   try {
     let q;
-    
-    // ✅ بناء الكويري حسب الفلتر
     if (type !== "all" && sort === "newest") {
       q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "desc"));
     } else if (type !== "all" && sort === "oldest") {
@@ -276,10 +268,8 @@ window.applyOnlineFilter = async function() {
     } else if (type === "all" && sort === "oldest") {
       q = query(patientsRef, orderBy("createdAt", "asc"));
     } else {
-      // للفرز بالاسم أو عند وجود بحث، نجيب كل البيانات ونفلتر محلياً
       q = query(patientsRef, orderBy("createdAt", "desc"));
     }
-    
     const snap = await getDocs(q);
     let results = [];
     snap.forEach(d => {
@@ -292,39 +282,26 @@ window.applyOnlineFilter = async function() {
       }
       results.push({ id: d.id, ...data });
     });
-    
-    // ✅ تطبيق البحث المحلي (لأن فايربيس مش بيدعم search على نص)
     if (search) {
-      results = results.filter(p => 
-        (p.name?.toLowerCase().includes(search)) || 
-        (p.phone?.includes(search))
-      );
+      results = results.filter(p => (p.name?.toLowerCase().includes(search)) || (p.phone?.includes(search)));
     }
-    
-    // ✅ تطبيق الفرز بالاسم لو مختار
     if (sort === "name") {
       results.sort((a,b) => (a.name||"").localeCompare(b.name||""));
     }
-    
     renderPatients(results);
     $("patientsCount").textContent = `${results.length} مريض`;
-    
   } catch (err) {
     console.error("❌ Filter Error:", err);
     showToast("❌ فشل تطبيق الفلتر", "error");
-    loadPatients(); // رجع للتحميل العادي
+    loadPatients();
   }
 };
 
-// ✅ ديبنس للبحث (عشان مش يطلب من فايربيس مع كل حرف)
 window.debouncedFilter = function() {
   if (filterTimeout) clearTimeout(filterTimeout);
-  filterTimeout = setTimeout(() => {
-    applyOnlineFilter();
-  }, 500); // انتظر نصف ثانية بعد آخر كتابة
+  filterTimeout = setTimeout(() => { applyOnlineFilter(); }, 500);
 };
 
-// ✅ فتح ملف المريض
 window.openPatientModal = async function(id) {
   try {
     const snap = await getDoc(doc(db, "patients", id));
@@ -361,7 +338,6 @@ window.openPatientModal = async function(id) {
 
 window.closeModal = function() { $("patientModal").style.display = "none"; };
 
-// ✅ حفظ تعديلات المريض
 window.savePatient = async function() {
   const id = $("modalPatientId").value;
   if (!id) return;
@@ -372,18 +348,17 @@ window.savePatient = async function() {
       age: $("modalAge").value.trim(),
       type: $("modalType").value,
       notes: $("modalNotes").value.trim(),
-      updated_at: serverTimestamp()
+      updatedAt: serverTimestamp()
     });
     showToast("✅ تم الحفظ");
     closeModal();
-    applyOnlineFilter(); // تحديث القائمة بالفلتر الحالي
+    applyOnlineFilter();
   } catch (err) {
     console.error("❌ Save Error:", err);
     showToast("❌ فشل الحفظ", "error");
   }
 };
 
-// ✅ إضافة جلسة
 window.addSession = async function() {
   const id = $("modalPatientId").value;
   const date = $("newSessionDate").value;
@@ -396,8 +371,8 @@ window.addSession = async function() {
     const snap = await getDoc(patientRef);
     const p = snap.data();
     const sessions = p.sessions || [];
-    sessions.push({ date, time, note, paid, added_at: serverTimestamp() });
-    await updateDoc(patientRef, { sessions, updated_at: serverTimestamp() });
+    sessions.push({ date, time, note, paid, createdAt: serverTimestamp() });
+    await updateDoc(patientRef, { sessions, updatedAt: serverTimestamp() });
     showToast("✅ تم إضافة الجلسة");
     openPatientModal(id);
   } catch (err) {
@@ -406,7 +381,6 @@ window.addSession = async function() {
   }
 };
 
-// ✅ حذف جلسة
 window.deleteSession = async function(patientId, sessionIndex) {
   if (!confirm("⚠️ حذف هذه الجلسة؟")) return;
   try {
@@ -415,7 +389,7 @@ window.deleteSession = async function(patientId, sessionIndex) {
     const p = snap.data();
     const sessions = p.sessions || [];
     sessions.splice(sessionIndex, 1);
-    await updateDoc(patientRef, { sessions, updated_at: serverTimestamp() });
+    await updateDoc(patientRef, { sessions, updatedAt: serverTimestamp() });
     showToast("✅ تم الحذف");
     openPatientModal(patientId);
   } catch (err) {
@@ -425,7 +399,6 @@ window.deleteSession = async function(patientId, sessionIndex) {
 
 window.quickEdit = async function(id) { openPatientModal(id); };
 
-// ✅ حذف مريض
 window.deletePatient = async function(id) {
   if (!confirm("⚠️ حذف ملف المريض نهائياً؟")) return;
   try {
@@ -438,7 +411,6 @@ window.deletePatient = async function(id) {
   }
 };
 
-// ✅ واتساب
 window.openWhatsApp = function(phone) {
   if (!phone) return showToast("⚠️ لا يوجد رقم", "error");
   let wa = phone.replace(/^0+/,"").replace(/\s+/g,"");
@@ -446,7 +418,6 @@ window.openWhatsApp = function(phone) {
   window.open(`https://wa.me/${wa}?text=${encodeURIComponent("مرحباً دكتور، بخصوص موعد المريض...")}`, "_blank");
 };
 
-// ✅ تصدير Excel
 window.exportPatients = async function() {
   try {
     $("patientsList").innerHTML = '<div class="loading-state">📥 جاري التصدير...</div>';
@@ -455,10 +426,7 @@ window.exportPatients = async function() {
     snap.forEach(d => {
       const p = d.data();
       const sessions = p.sessions || [];
-      rows.push([
-        p.name || "", p.phone || "", p.age || "", p.type || "new",
-        sessions.length, sessions[sessions.length-1]?.date || "-", (p.notes||"").replace(/,/g,";")
-      ]);
+      rows.push([p.name || "", p.phone || "", p.age || "", p.type || "new", sessions.length, sessions[sessions.length-1]?.date || "-", (p.notes||"").replace(/,/g,";")]);
     });
     const headers = ["الاسم","الهاتف","العمر","النوع","الجلسات","آخر زيارة","ملاحظات"];
     const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
@@ -475,7 +443,6 @@ window.exportPatients = async function() {
   }
 };
 
-// ✅ Toast
 function showToast(msg, type="success") {
   const toast = document.createElement("div");
   toast.className = `toast ${type==="error"?"error":""}`;
@@ -485,6 +452,37 @@ function showToast(msg, type="success") {
 }
 
 $("patientModal")?.addEventListener("click", (e) => { if (e.target === $("patientModal")) closeModal(); });
+
+function cleanPhone(phone) { if (!phone) return ""; const p = String(phone).replace(/^0+/, '').replace(/\s/g, ''); return p.startsWith('20') ? p : '20' + p; }
+
+async function handleAutoOpenFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const autoOpen = params.get('autoOpen');
+  const phoneParam = params.get('phone');
+  const pidParam = params.get('pid');
+  if (autoOpen === 'true' && (phoneParam || pidParam)) {
+    setTimeout(async () => {
+      try {
+        let targetPatient = null;
+        if (pidParam) {
+          const snap = await getDoc(doc(db, "patients", pidParam));
+          if (snap.exists()) targetPatient = { id: snap.id, ...snap.data() };
+        }
+        if (!targetPatient && phoneParam) {
+          const fullPhone = cleanPhone(phoneParam);
+          const found = patientsCache.find(p => cleanPhone(p.phone || "") === fullPhone);
+          if (found) targetPatient = found;
+        }
+        if (targetPatient) {
+          await openPatientModal(targetPatient.id);
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+          showToast("📋 تم فتح ملف: " + (targetPatient.name || "مريض"));
+        }
+      } catch (err) { console.error("❌ Auto-open error:", err); }
+    }, 1500);
+  }
+}
 
 console.log("✅ Patients Page Loaded - Online Filter Enabled");
 </script>
