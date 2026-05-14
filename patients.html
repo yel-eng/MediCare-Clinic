@@ -81,6 +81,9 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
 .badge-vip{background:#fef3c7;color:#92400e}
 .loading-spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--main);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin-left:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
+.debug-panel{position:fixed;bottom:10px;right:10px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11px;max-width:300px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+.debug-panel h4{margin:0 0 8px;font-size:12px;color:#60a5fa}
+.debug-panel pre{margin:0;white-space:pre-wrap;max-height:150px;overflow:auto}
 </style>
 </head>
 <body>
@@ -98,6 +101,7 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <span id="patientsCount" style="background:rgba(255,255,255,0.2);padding:6px 14px;border-radius:20px;font-size:13px">0 مريض</span>
       <button class="btn" style="background:#22c55e" onclick="exportPatients()">📥 تصدير Excel</button>
+      <button class="btn" style="background:#64748b" onclick="debugFetch()">🔍 فحص البيانات</button>
     </div>
   </div>
   <div class="search-bar">
@@ -119,6 +123,8 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
     <div class="loading-state">⏳ جاري تحميل ملفات المرضى...</div>
   </div>
 </div>
+
+<!-- مودال المريض -->
 <div id="patientModal" class="modal-overlay" style="display:none">
   <div class="modal-content">
     <button class="modal-close" onclick="closeModal()">✕</button>
@@ -159,6 +165,12 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:v
   </div>
 </div>
 
+<!-- لوحة ديباج -->
+<div id="debugPanel" class="debug-panel" style="display:none">
+  <h4>🔧 حالة البيانات</h4>
+  <pre id="debugContent">جاري الفحص...</pre>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -193,45 +205,43 @@ onAuthStateChanged(auth, (user) => {
 window.toggleMenu = () => $("sideNav").classList.toggle("open");
 window.logout = () => signOut(auth).then(() => location.href = "login.html");
 
-// ✅ تحميل المرضى - مع معالجة أمان للحقول الناقصة
+// ✅ تحميل المرضى - مع معالجة شاملة للأخطاء
 async function loadPatients() {
   try {
     $("patientsList").innerHTML = '<div class="loading-state">⏳ جاري التحميل...</div>';
     
-    let snap;
+    let snap, fetchMethod = "orderBy";
+    
+    // ✅ المحاولة الأولى: مع orderBy
     try {
-      // ✅ نجرب نجيب البيانات مرتبة بـ createdAt
       const q = query(patientsRef, orderBy("createdAt", "desc"));
       snap = await getDocs(q);
+      console.log("✅ Fetched with orderBy:", snap.size, "docs");
     } catch (orderError) {
-      // ✅ لو فشل الترتيب (لوجود وثائق ناقصها createdAt)، نجيب بدون ترتيب
-      console.warn("⚠️ orderBy failed, fetching without order:", orderError);
+      console.warn("⚠️ orderBy failed:", orderError.message);
+      fetchMethod = "simple";
+      // ✅ المحاولة الثانية: بدون orderBy
       const q = query(patientsRef);
       snap = await getDocs(q);
+      console.log("✅ Fetched without orderBy:", snap.size, "docs");
     }
     
+    // ✅ معالجة البيانات
     patientsCache = [];
     snap.forEach(d => {
       const data = d.data();
       const sessions = data.sessions || [];
-      
-      // ✅ تصنيف أوتوماتيك بناءً على عدد الجلسات
       if (!data.type) {
         if (sessions.length >= 5) data.type = "vip";
         else if (sessions.length >= 2) data.type = "regular";
         else data.type = "new";
       }
-      
-      // ✅ ضمان وجود createdAt للوثائق الجديدة/الناقصة
-      if (!data.createdAt && data.updatedAt) {
-        data.createdAt = data.updatedAt;
-      }
-      
+      if (!data.createdAt && data.updatedAt) data.createdAt = data.updatedAt;
       patientsCache.push({ id: d.id, ...data });
     });
     
-    // ✅ ترتيب يدوي لو كان الاستعلام الأصلي فشل
-    if (snap.docs.length > 0 && !snap.docs[0].data().createdAt) {
+    // ✅ ترتيب يدوي لو استخدمنا fetch بسيط
+    if (fetchMethod === "simple") {
       patientsCache.sort((a, b) => {
         const aTime = a.createdAt?.seconds || a.updatedAt?.seconds || 0;
         const bTime = b.createdAt?.seconds || b.updatedAt?.seconds || 0;
@@ -239,22 +249,42 @@ async function loadPatients() {
       });
     }
     
+    console.log("📊 Patients loaded:", patientsCache.length);
     renderPatients(patientsCache);
     $("patientsCount").textContent = `${patientsCache.length} مريض`;
+    
+    // ✅ معالجة الفتح التلقائي
     handleAutoOpenFromUrl();
+    
+    // ✅ لو مافيش بيانات، اعرض رسالة مفيدة
+    if (patientsCache.length === 0) {
+      $("patientsList").innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="icon">📭</div>
+          <p>لا توجد ملفات مرضى حتى الآن</p>
+          <small style="color:var(--text-light)">اضغط على 💾 بجانب أي حجز في لوحة التحكم لحفظ مريض</small>
+          <br><button class="btn" style="margin-top:10px;background:#64748b" onclick="debugFetch()">🔍 فحص قاعدة البيانات</button>
+        </div>`;
+    }
     
   } catch (err) {
     console.error("❌ Load Error:", err);
-    $("patientsList").innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>فشل التحميل</p><small>${err.message}</small><br><button class="btn" style="margin-top:10px" onclick="loadPatients()">🔄 إعادة المحاولة</button></div>`;
+    $("patientsList").innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1;color:var(--danger)">
+        <div class="icon">❌</div>
+        <p>فشل تحميل البيانات</p>
+        <small>${err.message || "خطأ غير معروف"}</small>
+        <br><br>
+        <button class="btn" style="background:#ef4444" onclick="debugFetch()">🔍 فحص المشكلة</button>
+        <button class="btn" style="background:#64748b;margin-right:5px" onclick="loadPatients()">🔄 إعادة المحاولة</button>
+      </div>`;
   }
 }
 
 function renderPatients(list) {
   const container = $("patientsList");
-  if (!list.length) {
-    container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد ملفات مرضى</p></div>';
-    return;
-  }
+  if (!list || list.length === 0) return;
+  
   container.innerHTML = list.map(p => {
     const sessions = p.sessions || [];
     const badge = p.type === "vip" ? '<span class="badge badge-vip">⭐ مميز</span>' : 
@@ -262,7 +292,7 @@ function renderPatients(list) {
                   '<span class="badge badge-new">✨ جديد</span>';
     const lastVisit = sessions.length ? sessions[sessions.length-1].date : "لا يوجد";
     return `
-      <div class="patient-card">
+      <div class="patient-card" data-id="${p.id}">
         <div class="patient-header">
           <h3>${p.name || "بدون اسم"}</h3>
           <span class="phone">📞 ${p.phone || "-"}</span>
@@ -283,25 +313,76 @@ function renderPatients(list) {
   }).join("");
 }
 
+// ✅ فحص البيانات للديباج
+window.debugFetch = async function() {
+  const panel = $("debugPanel");
+  const content = $("debugContent");
+  panel.style.display = "block";
+  content.textContent = "🔄 جاري الفحص...\n";
+  
+  try {
+    // فحص 1: عدد الوثائق
+    const snap = await getDocs(patientsRef);
+    content.textContent += `📦 إجمالي الوثائق: ${snap.size}\n`;
+    
+    if (snap.size === 0) {
+      content.textContent += `⚠️ الكوليكشن 'patients' فاضي!\n`;
+      content.textContent += `💡 تأكد إن زر 💾 في admin.html بيحفظ في الكوليكشن الصحيح`;
+      return;
+    }
+    
+    // فحص 2: عينة من البيانات
+    content.textContent += `\n📋 عينة من البيانات:\n`;
+    snap.docs.slice(0, 3).forEach((d, i) => {
+      const data = d.data();
+      content.textContent += `${i+1}. ID: ${d.id}\n`;
+      content.textContent += `   الاسم: ${data.name || "-"}\n`;
+      content.textContent += `   الهاتف: ${data.phone || "-"}\n`;
+      content.textContent += `   createdAt: ${data.createdAt?.seconds ? new Date(data.createdAt.seconds*1000).toLocaleString('ar-EG') : "غير موجود"}\n`;
+      content.textContent += `   sessions: ${(data.sessions||[]).length}\n\n`;
+    });
+    
+    // فحص 3: قواعد الأمان
+    content.textContent += `🔐 لفحص Security Rules:\n`;
+    content.textContent += `اذهب إلى: Firebase Console > Firestore > Rules\n`;
+    content.textContent += `تأكد إن فيها: allow read, write: if request.auth != null;`;
+    
+  } catch (err) {
+    content.textContent += `❌ خطأ في الفحص: ${err.message}`;
+    if (err.message?.includes("index")) {
+      content.textContent += `\n\n🔗 لإنشاء الفهرس المطلوب:\n`;
+      content.textContent += `انسخ الرابط من رسالة الخطأ في Console وافتحه في المتصفح`;
+    }
+  }
+};
+
 window.applyOnlineFilter = async function() {
   const search = $("searchInput").value.trim().toLowerCase();
   const type = $("filterType").value;
   const sort = $("sortBy").value;
   $("patientsList").innerHTML = '<div class="loading-state">🔄 جاري البحث... <span class="loading-spinner"></span></div>';
+  
   try {
-    let q;
-    if (type !== "all" && sort === "newest") {
-      q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "desc"));
-    } else if (type !== "all" && sort === "oldest") {
-      q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "asc"));
-    } else if (type === "all" && sort === "newest") {
-      q = query(patientsRef, orderBy("createdAt", "desc"));
-    } else if (type === "all" && sort === "oldest") {
-      q = query(patientsRef, orderBy("createdAt", "asc"));
-    } else {
-      q = query(patientsRef, orderBy("createdAt", "desc"));
+    let q, snap;
+    // ✅ نجرب نجيب البيانات مع fallback
+    try {
+      if (type !== "all" && sort === "newest") {
+        q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "desc"));
+      } else if (type !== "all" && sort === "oldest") {
+        q = query(patientsRef, where("type", "==", type), orderBy("createdAt", "asc"));
+      } else if (type === "all" && sort === "newest") {
+        q = query(patientsRef, orderBy("createdAt", "desc"));
+      } else if (type === "all" && sort === "oldest") {
+        q = query(patientsRef, orderBy("createdAt", "asc"));
+      } else {
+        q = query(patientsRef, orderBy("createdAt", "desc"));
+      }
+      snap = await getDocs(q);
+    } catch {
+      // Fallback بدون orderBy أو where معقد
+      snap = await getDocs(query(patientsRef));
     }
-    const snap = await getDocs(q);
+    
     let results = [];
     snap.forEach(d => {
       const data = d.data();
@@ -313,14 +394,25 @@ window.applyOnlineFilter = async function() {
       }
       results.push({ id: d.id, ...data });
     });
+    
     if (search) {
-      results = results.filter(p => (p.name?.toLowerCase().includes(search)) || (p.phone?.includes(search)));
+      results = results.filter(p => 
+        (p.name?.toLowerCase().includes(search)) || 
+        (p.phone?.includes(search))
+      );
     }
+    
     if (sort === "name") {
       results.sort((a,b) => (a.name||"").localeCompare(b.name||""));
     }
+    
     renderPatients(results);
     $("patientsCount").textContent = `${results.length} مريض`;
+    
+    if (results.length === 0) {
+      $("patientsList").innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🔍</div><p>لا توجد نتائج للبحث</p></div>`;
+    }
+    
   } catch (err) {
     console.error("❌ Filter Error:", err);
     showToast("❌ فشل تطبيق الفلتر", "error");
@@ -452,7 +544,7 @@ window.openWhatsApp = function(phone) {
 window.exportPatients = async function() {
   try {
     $("patientsList").innerHTML = '<div class="loading-state">📥 جاري التصدير...</div>';
-    const snap = await getDocs(query(patientsRef, orderBy("createdAt", "desc")));
+    const snap = await getDocs(query(patientsRef));
     const rows = [];
     snap.forEach(d => {
       const p = d.data();
@@ -484,33 +576,46 @@ function showToast(msg, type="success") {
 
 $("patientModal")?.addEventListener("click", (e) => { if (e.target === $("patientModal")) closeModal(); });
 
-function cleanPhone(phone) { if (!phone) return ""; const p = String(phone).replace(/^0+/, '').replace(/\s/g, ''); return p.startsWith('20') ? p : '20' + p; }
+function cleanPhone(phone) { 
+  if (!phone) return ""; 
+  const p = String(phone).replace(/^0+/, '').replace(/\s/g, ''); 
+  return p.startsWith('20') ? p : '20' + p; 
+}
 
 async function handleAutoOpenFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const autoOpen = params.get('autoOpen');
   const phoneParam = params.get('phone');
   const pidParam = params.get('pid');
+  
   if (autoOpen === 'true' && (phoneParam || pidParam)) {
     setTimeout(async () => {
       try {
         let targetPatient = null;
+        
         if (pidParam) {
           const snap = await getDoc(doc(db, "patients", pidParam));
           if (snap.exists()) targetPatient = { id: snap.id, ...snap.data() };
         }
+        
         if (!targetPatient && phoneParam) {
           const fullPhone = cleanPhone(phoneParam);
           const found = patientsCache.find(p => cleanPhone(p.phone || "") === fullPhone);
           if (found) targetPatient = found;
         }
+        
         if (targetPatient) {
           await openPatientModal(targetPatient.id);
           const newUrl = window.location.pathname;
           window.history.replaceState({}, document.title, newUrl);
           showToast("📋 تم فتح ملف: " + (targetPatient.name || "مريض"));
+        } else {
+          console.warn("⚠️ Patient not found for params:", { phoneParam, pidParam });
+          showToast("⚠️ لم يتم العثور على المريض", "error");
         }
-      } catch (err) { console.error("❌ Auto-open error:", err); }
+      } catch (err) { 
+        console.error("❌ Auto-open error:", err); 
+      }
     }, 1500);
   }
 }
