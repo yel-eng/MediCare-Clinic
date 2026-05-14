@@ -193,28 +193,59 @@ onAuthStateChanged(auth, (user) => {
 window.toggleMenu = () => $("sideNav").classList.toggle("open");
 window.logout = () => signOut(auth).then(() => location.href = "login.html");
 
+// ✅ تحميل المرضى - مع معالجة أمان للحقول الناقصة
 async function loadPatients() {
   try {
     $("patientsList").innerHTML = '<div class="loading-state">⏳ جاري التحميل...</div>';
-    const q = query(patientsRef, orderBy("createdAt", "desc"));
-    const snap = await getDocs(q);
+    
+    let snap;
+    try {
+      // ✅ نجرب نجيب البيانات مرتبة بـ createdAt
+      const q = query(patientsRef, orderBy("createdAt", "desc"));
+      snap = await getDocs(q);
+    } catch (orderError) {
+      // ✅ لو فشل الترتيب (لوجود وثائق ناقصها createdAt)، نجيب بدون ترتيب
+      console.warn("⚠️ orderBy failed, fetching without order:", orderError);
+      const q = query(patientsRef);
+      snap = await getDocs(q);
+    }
+    
     patientsCache = [];
     snap.forEach(d => {
       const data = d.data();
       const sessions = data.sessions || [];
+      
+      // ✅ تصنيف أوتوماتيك بناءً على عدد الجلسات
       if (!data.type) {
         if (sessions.length >= 5) data.type = "vip";
         else if (sessions.length >= 2) data.type = "regular";
         else data.type = "new";
       }
+      
+      // ✅ ضمان وجود createdAt للوثائق الجديدة/الناقصة
+      if (!data.createdAt && data.updatedAt) {
+        data.createdAt = data.updatedAt;
+      }
+      
       patientsCache.push({ id: d.id, ...data });
     });
+    
+    // ✅ ترتيب يدوي لو كان الاستعلام الأصلي فشل
+    if (snap.docs.length > 0 && !snap.docs[0].data().createdAt) {
+      patientsCache.sort((a, b) => {
+        const aTime = a.createdAt?.seconds || a.updatedAt?.seconds || 0;
+        const bTime = b.createdAt?.seconds || b.updatedAt?.seconds || 0;
+        return bTime - aTime;
+      });
+    }
+    
     renderPatients(patientsCache);
     $("patientsCount").textContent = `${patientsCache.length} مريض`;
     handleAutoOpenFromUrl();
+    
   } catch (err) {
     console.error("❌ Load Error:", err);
-    $("patientsList").innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>فشل التحميل</p><small>${err.message}</small></div>`;
+    $("patientsList").innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>فشل التحميل</p><small>${err.message}</small><br><button class="btn" style="margin-top:10px" onclick="loadPatients()">🔄 إعادة المحاولة</button></div>`;
   }
 }
 
