@@ -15,8 +15,6 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);pad
 .side-nav a.disabled{opacity:0.5;pointer-events:none}
 .side-nav a{text-decoration:none;color:#fff;padding:12px;border-radius:10px;transition:0.3s;font-size:14px;white-space:nowrap;display:flex;align-items:center;gap:8px}
 .side-nav a:hover{background:rgba(255,255,255,0.15)}
-.side-nav .logout-btn{margin-top:auto;background:#ef4444;color:#fff;border:none;padding:12px;border-radius:10px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px;transition:0.2s}
-.side-nav .logout-btn:hover{background:#dc2626}
 .main-content{padding:25px;width:100%}
 .page-header{background:linear-gradient(180deg,#1e3a8a,#1d4ed8);color:#fff;padding:20px 25px;border-radius:var(--radius);margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
 .page-header h2{font-size:18px;display:flex;align-items:center;gap:8px}
@@ -91,7 +89,6 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);pad
   <a href="admin.html">🏠 لوحة المواعيد</a>
   <a href="index-admin.html">📂 إدارة الموقع</a>
   <a href="patients.html" class="active">📋 ملفات المرضى</a>
-  <button class="logout-btn" onclick="logout()">🚪 خروج</button>
 </div>
 <div class="main-content">
   <div class="page-header">
@@ -170,7 +167,6 @@ body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);pad
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* =========================
    🔥 FIREBASE CONFIG - مشروع الدكتور تامر خطاب 🔥
@@ -185,11 +181,8 @@ const firebaseConfig = {
   measurementId: "G-F341FN0EL6"
 };
 
-const ADMIN_EMAIL = "admin@dr-tamer-khatab.com";
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 const patientsRef = collection(db, "patients");
 
 let patientsCache = [];
@@ -197,22 +190,14 @@ const $ = (id) => document.getElementById(id);
 let filterTimeout = null;
 
 /* =========================
-   🔐 حماية الصفحة: التأكد من أن المستخدم أدمن
+   ✅ الصفحة مفتوحة - بدون حماية
 ========================= */
-onAuthStateChanged(auth, (user) => {
-  if (!user || user.email !== ADMIN_EMAIL) {
-    alert("⚠️ يرجى تسجيل الدخول بحساب الأدمن");
-    window.location.href = "login.html";
-  } else {
-    loadPatients();
-  }
-});
+loadPatients();
 
 /* =========================
    دوال الواجهة
 ========================= */
 window.toggleMenu = () => $("sideNav").classList.toggle("open");
-window.logout = () => signOut(auth).then(() => location.href = "login.html");
 
 // ✅ تحميل المرضى - متوافق مع createdAt (camelCase)
 async function loadPatients() {
@@ -421,7 +406,6 @@ window.savePatient = async function() {
   }
 };
 
-// ✅ ✅ ✅ دالة addSession المُصححة: باستخدام new Date() بدل serverTimestamp() داخل المصفوفة
 window.addSession = async function() {
   const id = $("modalPatientId").value;
   const date = $("newSessionDate").value;
@@ -434,18 +418,17 @@ window.addSession = async function() {
     const p = snap.data();
     const sessions = p.sessions || [];
     
-    // ✅ استخدام new Date() بدل serverTimestamp() (لأن فايربيس لا يدعمه داخل المصفوفات)
     sessions.push({ 
       date, 
       time: $("newSessionTime").value, 
       note: $("newSessionNote").value.trim(),
       paid: $("newSessionPaid").value ? Number($("newSessionPaid").value) : null, 
-      createdAt: new Date()  // ✅ ✅ ✅ هذا هو التصحيح المطلوب
+      createdAt: new Date()
     });
     
     await updateDoc(patientRef, { 
       sessions, 
-      updatedAt: serverTimestamp()  // ✅ هذا بره المصفوفة فمسموح
+      updatedAt: serverTimestamp()
     });
     
     showToast("✅ تم إضافة الجلسة"); 
@@ -604,7 +587,7 @@ async function handleAutoOpenFromUrl() {
   }
 }
 
-console.log("✅ Patients Page Loaded - dr-tamer-khatab Connected");
+console.log("✅ Patients Page Loaded - No Protection");
 </script>
 </body>
 </html>
